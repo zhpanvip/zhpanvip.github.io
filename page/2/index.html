@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
-  <title>归档 - Hexo</title>
+  <title>Hexo</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 
@@ -43,7 +43,7 @@
 
 
 <body>
-  <header style="height: 60vh;">
+  <header style="height: 100vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -150,6 +150,10 @@
           </div>
 
           
+            <div class="scroll-down-bar">
+              <i class="iconfont icon-arrowdown"></i>
+            </div>
+          
         </div>
       </div>
     </div>
@@ -159,91 +163,159 @@
     
       <div class="container nopadding-md">
         <div class="py-5" id="board"
-          >
+          style=margin-top:0>
           
           <div class="container">
             <div class="row">
               <div class="col-12 col-md-10 m-auto">
                 
 
-<div class="list-group">
-  <p class="h4">共计 14 篇文章</p>
-  <hr>
-  
+
+  <div class="row mx-auto index-card">
     
-      
-      <p class="h5">2018</p>
     
-    <a href="/2018/07/14/%E8%87%AA%E5%AE%9A%E4%B9%89View%E4%B9%8B%E5%BC%B9%E6%80%A7%E6%BB%91%E5%8A%A8%E7%9A%84LockView/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">自定义View之弹性滑动的LockView</span>
-      <time style="float: right;">07-14</time>
-    </a>
-  
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2016/09/25/RecyclerView-ListView%E5%B5%8C%E5%A5%97CheckBox%E9%80%89%E4%B8%AD%E7%8A%B6%E6%80%81%E9%94%99%E4%B9%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2016/09/25/RecyclerView-ListView%E5%B5%8C%E5%A5%97CheckBox%E9%80%89%E4%B8%AD%E7%8A%B6%E6%80%81%E9%94%99%E4%B9%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+          
+          
+            
+          
+          在讨论这个问题之前应该先了解ListView的复用机制ListView复用的原理：ListView中的每一个Item显示都需要Adapter调用一次getView的方法，这个方法会传入一个convertView的参数，返回的View就是这个Item显示的View。如果当Item的数量足够大，再为每一个Item都创建一个View对象，必将占用很多内存，创建View对象（mInflater.infla
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-09-25 22:58" pubdate>
+              2016-09-25
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
     
-    <a href="/2018/06/21/Android-Widget%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Android Widget开发详解</span>
-      <time style="float: right;">06-21</time>
-    </a>
-  
     
-    <a href="/2018/02/12/%E5%85%B3%E4%BA%8EHttps%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">关于Https的那些事儿</span>
-      <time style="float: right;">02-12</time>
-    </a>
-  
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2016/07/26/%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%89%EF%BC%89/">浅析Java设计模式（三）</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2016/07/26/%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%89%EF%BC%89/">
+          
+          
+            
+          
+          本篇文章继续来学习Java的设计模式，这篇文章来解析行为型模式种的几种比较常用的设计模式。
+一、观察者模式观察者模式定义了一种一对多的依赖关系，让多个观察者对象同时监听某一个主题对象。这个主题对象在状态发生变化时，会通知所有的观察者对象，使它们能够自动更新自己。以微信推送腾讯新闻为例，用户在微信订阅了腾讯新闻后，用户会收到腾讯的新闻推送。如果用户取消了新闻订阅，那么就不会再收到推送。1.创建一个被
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-07-26 10:26" pubdate>
+              2016-07-26
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
     
-      
-      <p class="h5">2017</p>
     
-    <a href="/2017/09/10/%E8%BF%BD%E6%A0%B9%E6%BA%AF%E6%BA%90-%E6%8E%A2%E7%A9%B6Handler%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">追根溯源--探究Handler的实现原理</span>
-      <time style="float: right;">09-10</time>
-    </a>
-  
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2016/07/25/%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%BA%8C%EF%BC%89/">浅析Java设计模式（二）</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2016/07/25/%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%BA%8C%EF%BC%89/">
+          
+          
+            
+          
+          上篇文章我们学习了几种创建型模式 的设计模式，那么本篇文章就继续来学习一下结构型模式的几个常用设计模式。
+一、代理模式（Proxy Pattern）代理模式即为其它对象提供一种代理控制对这个对象的访问。在代理模式中，一个类代表另一个类的功能。这种类型的设计模式属于结构型模式。在代理模式中，我们创建具有现有对象的对象，以便向外界提供功能接口。代理模式的机构图如下：
+Subject类中定义一个抽象re
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-07-25 10:21" pubdate>
+              2016-07-25
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
     
-    <a href="/2017/07/27/Android%E5%A4%9C%E9%97%B4%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Android夜间模式实现方案</span>
-      <time style="float: right;">07-27</time>
-    </a>
-  
     
-    <a href="/2017/07/27/RxJava-Retrofit%E4%B9%8Btoken%E8%87%AA%E5%8A%A8%E5%88%B7%E6%96%B0%EF%BC%88%E4%BA%8C%EF%BC%89/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">RxJava+Retrofit之token自动刷新（二）</span>
-      <time style="float: right;">07-27</time>
-    </a>
-  
-    
-    <a href="/2017/04/30/RxJava-Retrofit%E5%AE%8C%E7%BE%8E%E5%B0%81%E8%A3%85%EF%BC%88%E4%B8%80%EF%BC%89/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">RxJava+Retrofit完美封装（一）</span>
-      <time style="float: right;">04-30</time>
-    </a>
-  
-    
-    <a href="/2017/04/28/BaseActivity%E4%B8%AD%E5%B0%81%E8%A3%85%E9%80%9A%E7%94%A8%E7%9A%84Toolbar/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">BaseActivity中封装通用的Toolbar</span>
-      <time style="float: right;">04-28</time>
-    </a>
-  
-    
-    <a href="/2017/03/16/%E8%87%AA%E5%AE%9A%E4%B9%89View%E4%B9%8B%E9%A2%9C%E8%89%B2%E6%B8%90%E5%8F%98%E6%8A%98%E7%BA%BF%E5%9B%BE/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">自定义View之颜色渐变折线图</span>
-      <time style="float: right;">03-16</time>
-    </a>
-  
-    
-      
-      <p class="h5">2016</p>
-    
-    <a href="/2016/12/15/Android%E6%90%9C%E7%B4%A2%E5%85%B3%E9%94%AE%E5%AD%97%E9%AB%98%E4%BA%AE%E6%98%BE%E7%A4%BA%E5%8F%8A%E5%BC%80%E5%8F%91%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E5%9D%91/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Android搜索关键字高亮显示及开发中遇到的坑</span>
-      <time style="float: right;">12-15</time>
-    </a>
-  
-</div>
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2016/07/24/%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%80%EF%BC%89/">浅析Java设计模式（一）</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2016/07/24/%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%80%EF%BC%89/">
+          
+          
+            
+          
+          设计模式可以分为三大类1.创建型模式 这些设计模式提供了一种在创建对象的同时隐藏创建逻辑的方式，而不是使用 new 运算符直接实例化对象。这使得程序在判断针对某个给定实例需要创建哪些对象时更加灵活。该类设计模式有五种:
+
+简单工厂模式（Factory Pattern） 
+建造者模式（Builder Pattern）
+单例模式（SingletonPattern）    
+原型模式（Prototype
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-07-24 16:58" pubdate>
+              2016-07-24
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="extend next" rel="next" href="/archives/page/2/"><i class="iconfont icon-arrowright"></i></a>
+      <a class="extend prev" rel="prev" href="/"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
     </span>
   </nav>
   
@@ -344,7 +416,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "归档&nbsp;",
+        "Talk is cheap, show me the code.&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
