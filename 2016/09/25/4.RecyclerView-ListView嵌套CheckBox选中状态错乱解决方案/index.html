@@ -171,7 +171,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.5k 字
+      1.4k 字
     </span>
   
 
@@ -181,7 +181,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      20
+      19
        分钟
     </span>
   
@@ -365,8 +365,6 @@ public <span class="hljs-keyword">class</span> MyAdapter extends BaseAdapter &#1
 <p>针对这个问题我们子Adapter中加入了一个Map集合，其中Map的key用来存储条被选中的checkbox的position，value用来存储checkbox被选中。代码中还添加了checkbox的监听事件，在监听事件中判断点击的checkbox是否被选中，如果被选中了则将position添加到集合，并设置状态未true，否则就将该checkbox从集合中移除。然后通过if语句判断集合中是否存在该checkbox，如果存在则证明是被选中的,遂将该checkbox设置为选中状态setChecked(true)，否则证明checkbox没有选中则设置setChecked(false)。这样就解决了checkbox选中状态错乱的问题。<br>看下优化后的效果图<br><img src="https://raw.githubusercontent.com/zhpanvip/Resource/master/image/0403.jfif" srcset="/img/loading.gif"></p>
 <p>可以看到优化后CheckBox的选中状态不会再出现错乱问题了。</p>
 <p><a target="_blank" rel="noopener" href="http://download.csdn.net/detail/qq_20521573/9639225">源码下载</a></p>
-<h3 id="好库推荐"><a href="#好库推荐" class="headerlink" title="好库推荐"></a>好库推荐</h3><p>给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>。这是一个基于ViewPager实现的具有强大功能的无限轮播库。通过<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>可以实现腾讯视频、QQ音乐、酷狗音乐、支付宝、天猫、淘宝、优酷视频、喜马拉雅、网易云音乐、哔哩哔哩等APP的Banner样式以及指示器样式。</p>
-<p>欢迎大家到github关注<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>！</p>
 
             </div>
             <hr>
@@ -376,7 +374,8 @@ public <span class="hljs-keyword">class</span> MyAdapter extends BaseAdapter &#1
                 
               </div>
               
-                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <h5>开源库推荐</h5> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">1.BannerViewPager</a> <p> 一个基于ViewPager2实现的具有强大功能的无限轮播库。支持多种页面切换效果和指示器样式。 </p>
+<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">2.ViewPagerIndicator</a> <p> 一个适用于ViewPager和ViewPager2的指示器，支持多种滑块样式及滑动模式 </p></p>
               
               
                 <div class="post-prevnext row">
@@ -415,7 +414,7 @@ public <span class="hljs-keyword">class</span> MyAdapter extends BaseAdapter &#1
       addScript('https://cdn.staticfile.org/valine/1.4.14/Valine.min.js', function () {
         new Valine({
           el: "#vcomments",
-          app_id: "hXIROaIM5y9qnieojJRWP5hS-gzGzoHsz",
+          app_id: "hXIROaIM5y9qnieojJRWP5hS",
           app_key: "y0f3w3aqd1MF7JL9ma4WECTy",
           placeholder: "说点什么",
           path: window.location.pathname,
@@ -425,7 +424,7 @@ public <span class="hljs-keyword">class</span> MyAdapter extends BaseAdapter &#1
           lang: "zh-CN",
           highlight: false,
           recordIP: false,
-          serverURLs: "https://zhpanvip.github.io",
+          serverURLs: "https://zhangpan.site",
         });
       });
     }

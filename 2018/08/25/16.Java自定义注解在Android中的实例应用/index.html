@@ -171,7 +171,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      2.5k 字
+      2.4k 字
     </span>
   
 
@@ -181,7 +181,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      31
+      30
        分钟
     </span>
   
@@ -405,8 +405,6 @@ public <span class="hljs-keyword">class</span> MainActivity extends AppCompatAct
 <p>可以看到，我们并没有在onCreate方法中调用setContentView方法，也没有去为Button按钮findViewById，更没有为其设置监听事件，我们统统都是用上面自定义的注解实现的。那么效果如何呢？我们来看下运行及起来的效果：<br><img src="https://raw.githubusercontent.com/zhpanvip/Resource/master/image/1501.gif" srcset="/img/loading.gif"></p>
 <p>效果貌似还不错，实现了与ButterKnife的部分功能，甚至我们还比ButterKnife多了一个注入布局的功能。但是，我们要知道的是ButterKnife并非是直接用反射实现的，因为反射是在运行时处理的，会影响到程序的效率。但对于神一般存在的Jake，怎么会做如此没有效率的事情。关于ButterKnife是如何实现注解，我们在下篇文章中在做探讨。</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/MAnnotation/blob/master/app/src/main/java/com/zhpan/mannotation/BindProcessor.java">源码参考</a></p>
-<h3 id="好库推荐"><a href="#好库推荐" class="headerlink" title="好库推荐"></a>好库推荐</h3><p>给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>。这是一个基于ViewPager实现的具有强大功能的无限轮播库。通过<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>可以实现腾讯视频、QQ音乐、酷狗音乐、支付宝、天猫、淘宝、优酷视频、喜马拉雅、网易云音乐、哔哩哔哩等APP的Banner样式以及指示器样式。</p>
-<p>欢迎大家到github关注<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>！</p>
 
             </div>
             <hr>
@@ -423,7 +421,8 @@ public <span class="hljs-keyword">class</span> MainActivity extends AppCompatAct
                 
               </div>
               
-                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <h5>开源库推荐</h5> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">1.BannerViewPager</a> <p> 一个基于ViewPager2实现的具有强大功能的无限轮播库。支持多种页面切换效果和指示器样式。 </p>
+<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">2.ViewPagerIndicator</a> <p> 一个适用于ViewPager和ViewPager2的指示器，支持多种滑块样式及滑动模式 </p></p>
               
               
                 <div class="post-prevnext row">
@@ -462,7 +461,7 @@ public <span class="hljs-keyword">class</span> MainActivity extends AppCompatAct
       addScript('https://cdn.staticfile.org/valine/1.4.14/Valine.min.js', function () {
         new Valine({
           el: "#vcomments",
-          app_id: "hXIROaIM5y9qnieojJRWP5hS-gzGzoHsz",
+          app_id: "hXIROaIM5y9qnieojJRWP5hS",
           app_key: "y0f3w3aqd1MF7JL9ma4WECTy",
           placeholder: "说点什么",
           path: window.location.pathname,
@@ -472,7 +471,7 @@ public <span class="hljs-keyword">class</span> MainActivity extends AppCompatAct
           lang: "zh-CN",
           highlight: false,
           recordIP: false,
-          serverURLs: "https://zhpanvip.github.io",
+          serverURLs: "https://zhangpan.site",
         });
       });
     }
