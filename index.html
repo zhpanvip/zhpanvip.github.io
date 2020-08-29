@@ -176,18 +176,16 @@
     
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
-        <a href="/2018/07/14/%E8%87%AA%E5%AE%9A%E4%B9%89View%E4%B9%8B%E5%BC%B9%E6%80%A7%E6%BB%91%E5%8A%A8%E7%9A%84LockView/">自定义View之弹性滑动的LockView</a>
+        <a href="/2020/01/02/24.%E5%AD%A6%E4%B8%8D%E5%8A%A8%E4%B9%9F%E8%A6%81%E5%AD%A6%EF%BC%81%E6%8E%A2%E7%A9%B6Fragment%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/">学不动也要学！探究Fragment延迟加载的前世今生</a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2018/07/14/%E8%87%AA%E5%AE%9A%E4%B9%89View%E4%B9%8B%E5%BC%B9%E6%80%A7%E6%BB%91%E5%8A%A8%E7%9A%84LockView/">
+        <a href="/2020/01/02/24.%E5%AD%A6%E4%B8%8D%E5%8A%A8%E4%B9%9F%E8%A6%81%E5%AD%A6%EF%BC%81%E6%8E%A2%E7%A9%B6Fragment%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E7%9A%84%E5%89%8D%E4%B8%96%E4%BB%8A%E7%94%9F/">
           
           
             
           
-          本文已发表在掘金，转载请注明出处。
-本篇文章我们来实现一个带有弹性滑动效果的自定义View。当然，文章的侧重点是自定义View但也会涉及到View的事件分发以及一些其他方面的知识，例如使用Scroller实现带有阻尼效果的弹性滑动。因此，我相信看完这篇文章你不仅能学到自定义View的相关知识，还会了解到View的事件分发！还是老规矩，看下最终实现效果。
- 分析图中效果会发现其核心功能类似于一个简单
+          上周在《学不动也要学！深入了解ViewPager2》一篇文章的留言中，大家普遍对于Fragment懒加载的问题比较关心。其实，对于Fragment懒加载问题的处理由来已久，网上不乏相关的优秀文章。但是，由于Fragment生命周期的原因使得懒加载问题的处理并不是那么的优雅。显然，Google也意识到了问题所在。因此，在Androidx的库中对于Fragment的生命周期状态的控制进行了深度优化，使
         </a>
       </p>
 
@@ -195,76 +193,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2018-07-14 20:30" pubdate>
-              2018-07-14
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        <a href="/2018/06/21/Android-Widget%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/">Android Widget开发详解</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2018/06/21/Android-Widget%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/">
-          
-          
-            
-          
-          好久没博客更新了，本篇文章来学习一下如何实现一个Android列表小部件，效果可以参看下图：
-这个页面如果是在App内部实现，相信只要有一点Android基础的童鞋都能很轻松写出来。但是如果放到Widget中可能就不是那么简单了。因为Widget并没有运行在我们App的进程中，而是运行在系统的SystemServer进程中。你可能会惊讶，Whf！竟然不在我们App进程中！那么是不是意味着我们也不能
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2018-06-21 13:35" pubdate>
-              2018-06-21
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        <a href="/2018/02/12/%E5%85%B3%E4%BA%8EHttps%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/">关于Https的那些事儿</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2018/02/12/%E5%85%B3%E4%BA%8EHttps%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/">
-          
-          
-            
-          
-          ** 本篇文章已授权微信公众号 guolin_blog （郭霖）独家发布*
-由于前不久苹果公司已经强制IOS应用必须使用HTTPS协议开发，虽然Google没有强制开发者使用HTTPS，但相信不久的将来Android也会跟随IOS全面转向HTTPS。因此，HTTPS的学习也是相当重要。本篇文章涉及到的代码不多，主要内容是对HTTPS协议的讲解，最后将结合Retrofit实现HTTPS的单双向认证。
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2018-02-12 01:24" pubdate>
-              2018-02-12
+            <time datetime="2020-01-02 17:31" pubdate>
+              2020-01-02
             </time>
           </div>
         
@@ -273,7 +203,9 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/https/">https</a>
+              <a href="/tags/Fragment/">Fragment</a>
+            
+              <a href="/tags/%E6%87%92%E5%8A%A0%E8%BD%BD/">懒加载</a>
             
           </div>
         
@@ -286,19 +218,17 @@
     
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
-        <a href="/2017/09/10/%E8%BF%BD%E6%A0%B9%E6%BA%AF%E6%BA%90-%E6%8E%A2%E7%A9%B6Handler%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">追根溯源--探究Handler的实现原理</a>
+        <a href="/2019/12/14/23.%E5%AD%A6%E4%B8%8D%E5%8A%A8%E4%B9%9F%E8%A6%81%E5%AD%A6%EF%BC%81%E6%B7%B1%E5%85%A5%E4%BA%86%E8%A7%A3ViewPager2/">学不动也要学！深入了解ViewPager2</a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2017/09/10/%E8%BF%BD%E6%A0%B9%E6%BA%AF%E6%BA%90-%E6%8E%A2%E7%A9%B6Handler%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+        <a href="/2019/12/14/23.%E5%AD%A6%E4%B8%8D%E5%8A%A8%E4%B9%9F%E8%A6%81%E5%AD%A6%EF%BC%81%E6%B7%B1%E5%85%A5%E4%BA%86%E8%A7%A3ViewPager2/">
           
           
             
           
-          一、初识Handler要分析一个框架的源码，首先需要了解它的使用。我们就从最基础的知识开始吧！
-场景1：将数据从子线程发送到主线程。我们知道Android系统中更新UI只能在主线程中进行。而通常网络请求实在子线程中进行的。在获取到服务器数据后我们需要切换到主线程来更新UI。通常在这种情况下我们会考虑使用Handler来进行线程切换。我们来模拟一个网络请求，并通过Handler将数据发送出去：
-
-p
+          就在上个月20号(2019年11月20号)，期待已久的ViewPager2 正式版终于发布了！不知道你是否已经蠢蠢欲动着手用ViewPager2去改造你项目的ViewPager了？什么？你还不知道ViewPager2？那么请你马上系好安全带，本篇文章将带你一览ViewPager2的风采。
+一、ViewPager2的新特性ViewPager2从名字就可以看出来它是ViewPager的升级版，既然是升
         </a>
       </p>
 
@@ -306,79 +236,8 @@ p
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2017-09-10 02:27" pubdate>
-              2017-09-10
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        <a href="/2017/07/27/Android%E5%A4%9C%E9%97%B4%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">Android夜间模式实现方案</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2017/07/27/Android%E5%A4%9C%E9%97%B4%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">
-          
-          
-            
-          
-          对于一款阅读类的软件，夜间模式是不可缺少的。最初看到这个需求时候觉得无从下手，没有一点头绪。后来通过查阅资料发现Android官方在Support Library 23.2.0中已经加入了夜间主题。也就是只需要通过更换主题便可实现日间模式和夜间模式的切换。下面截取项目实现的夜间模式效果图：
-效果看起来还比较nice，没有闪屏，过度也比较平滑。那么项目中的这个日间、夜间模式切换效果是如何实现的呢？下
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2017-07-27 23:45" pubdate>
-              2017-07-27
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        <a href="/2017/07/27/RxJava-Retrofit%E4%B9%8Btoken%E8%87%AA%E5%8A%A8%E5%88%B7%E6%96%B0%EF%BC%88%E4%BA%8C%EF%BC%89/">RxJava+Retrofit之token自动刷新（二）</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2017/07/27/RxJava-Retrofit%E4%B9%8Btoken%E8%87%AA%E5%8A%A8%E5%88%B7%E6%96%B0%EF%BC%88%E4%BA%8C%EF%BC%89/">
-          
-          
-            
-          
-           上篇文章主要对Retrofit做了封装，使之使用起来更加方便。在之前的封装中token过期再次刷新token后需要手动调用之前的请求，这种处理方式不够优雅，因此，在原有的基础上，本篇文章将基于上篇文章的封装并优化Token验证机制。使之能够实现过期自动刷新并重新调用请求。接下来将通过以下几个小节来学习如何实现token验证。
-
-为什么要引入token机制
-token机制的验证流程
-RxJava+
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2017-07-27 00:34" pubdate>
-              2017-07-27
+            <time datetime="2019-12-14 16:47" pubdate>
+              2019-12-14
             </time>
           </div>
         
@@ -387,7 +246,7 @@ RxJava+
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/RxJava/">RxJava</a>
+              <a href="/tags/ViewPager2/">ViewPager2</a>
             
           </div>
         
@@ -400,17 +259,17 @@ RxJava+
     
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
-        <a href="/2017/04/30/RxJava-Retrofit%E5%AE%8C%E7%BE%8E%E5%B0%81%E8%A3%85%EF%BC%88%E4%B8%80%EF%BC%89/">RxJava+Retrofit完美封装（一）</a>
+        <a href="/2019/12/05/22.%E5%B9%B2%E8%B4%A7%E6%BB%A1%E6%BB%A1%EF%BC%8C%E6%95%B4%E7%90%86%E7%BB%99%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%8415%E6%AC%BE%E5%BC%80%E5%8F%91%E5%88%A9%E5%99%A8/">干货满满，整理给程序员的15款开发利器</a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2017/04/30/RxJava-Retrofit%E5%AE%8C%E7%BE%8E%E5%B0%81%E8%A3%85%EF%BC%88%E4%B8%80%EF%BC%89/">
+        <a href="/2019/12/05/22.%E5%B9%B2%E8%B4%A7%E6%BB%A1%E6%BB%A1%EF%BC%8C%E6%95%B4%E7%90%86%E7%BB%99%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%8415%E6%AC%BE%E5%BC%80%E5%8F%91%E5%88%A9%E5%99%A8/">
           
           
             
           
-          本篇文章已授权微信公众号 guolin_blog （郭霖）独家发布
-要说2016年最火的Android技术是什么，毫无疑问肯定是RxJava+Retrofit+Mvp。现如今2017年也已经过了快一半了。相信做android开发的小伙伴对RxJava和Retrofit也不再陌生。即使没有刻意的去学习过，也应该对RxJava和Retrofit有个一知半解。去年的时候学习了Rxjava和Retrofi
+          今天给大家分享一些开发者必备的神器，这些都是笔者在几年的工作中收集到的，对于开发者非常有用的小工具。我将这些工具分为了四个部分来介绍，分别时—图片篇、文档篇、开发篇和插件篇。文章会对于各个小工具的功能及用途做一个简单介绍，并会给出星级评分，当然评分只能作为参考，因为不同工具对于不同的人有不同的重要性，这些评分是站在笔者角度来分析的。
+一、图片篇1.GIF神器–ezgif星级评分：★★★★★这是一个
         </a>
       </p>
 
@@ -418,8 +277,8 @@ RxJava+
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2017-04-30 03:29" pubdate>
-              2017-04-30
+            <time datetime="2019-12-05 00:27" pubdate>
+              2019-12-05
             </time>
           </div>
         
@@ -428,7 +287,7 @@ RxJava+
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/RxJava/">RxJava</a>
+              <a href="/tags/%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7/">开发工具</a>
             
           </div>
         
@@ -441,16 +300,16 @@ RxJava+
     
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
-        <a href="/2017/04/28/BaseActivity%E4%B8%AD%E5%B0%81%E8%A3%85%E9%80%9A%E7%94%A8%E7%9A%84Toolbar/">BaseActivity中封装通用的Toolbar</a>
+        <a href="/2019/11/24/21.%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86%E8%BF%99%E4%B9%88%E7%94%A8%EF%BC%9F-%E8%81%8A%E4%B8%80%E8%81%8AViewPagerIndicator%E9%87%8D%E6%9E%84%E7%9A%84%E4%B8%80%E4%BA%9B%E7%BB%8F%E9%AA%8C/">静态代理这么用？--聊一聊ViewPagerIndicator重构的一些经验</a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2017/04/28/BaseActivity%E4%B8%AD%E5%B0%81%E8%A3%85%E9%80%9A%E7%94%A8%E7%9A%84Toolbar/">
+        <a href="/2019/11/24/21.%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86%E8%BF%99%E4%B9%88%E7%94%A8%EF%BC%9F-%E8%81%8A%E4%B8%80%E8%81%8AViewPagerIndicator%E9%87%8D%E6%9E%84%E7%9A%84%E4%B8%80%E4%BA%9B%E7%BB%8F%E9%AA%8C/">
           
           
             
           
-          之前写过一篇关于如何使用Toolbar的文章，最近在搭建新项目时对Toolbar做了封装。封装的预期目标是只在BaseActivity中引入Toolbar，然后子Activity通过继承BaseActivity就能显示Toolbar。接下来就看看如何实现这样的功能。因为我们使用toolbar作为titlebar，因此首先需要去掉Actionbar。在style文件下修改默认Theme的parent
+          ViewPagerIndicator的代码可谓一波三折，在不久前ViewPagerIndicator作为一个单独的库从BannerViewPager中拆分了出来。拆分后的indicator已经不仅仅适用于BannerViewPager，还可以用于ViewPager和ViewPager2。现在，经历了几次代码重构后,总算可以拿得出手了。本篇文章就来写一写关于重构indicator的一些经验，了解下该
         </a>
       </p>
 
@@ -458,13 +317,22 @@ RxJava+
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2017-04-28 23:35" pubdate>
-              2017-04-28
+            <time datetime="2019-11-24 12:05" pubdate>
+              2019-11-24
             </time>
           </div>
         
         
         
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/indicator/">indicator</a>
+            
+              <a href="/tags/ViewPager2/">ViewPager2</a>
+            
+          </div>
+        
       </div>
     </article>
   </div>
@@ -474,19 +342,19 @@ RxJava+
     
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
-        <a href="/2017/03/16/%E8%87%AA%E5%AE%9A%E4%B9%89View%E4%B9%8B%E9%A2%9C%E8%89%B2%E6%B8%90%E5%8F%98%E6%8A%98%E7%BA%BF%E5%9B%BE/">自定义View之颜色渐变折线图</a>
+        <a href="/2019/09/08/20.BannerViewPager%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90(%E4%BA%8C)/">BannerViewPager源码剖析(二)</a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2017/03/16/%E8%87%AA%E5%AE%9A%E4%B9%89View%E4%B9%8B%E9%A2%9C%E8%89%B2%E6%B8%90%E5%8F%98%E6%8A%98%E7%BA%BF%E5%9B%BE/">
+        <a href="/2019/09/08/20.BannerViewPager%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90(%E4%BA%8C)/">
           
           
             
           
-          首先看下要实现的效果图。
-折线图的绘制主要有一下几个步骤。一、定义LineChartView类并继承View。二、添加自定义属性。以在value目录下创建attrs.xml文件,文件中我们可以定义一些用到的属性，比如折线颜色、字体大小等属性。文件内容如下：
-&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-&lt;re
+          BannerViewPager系列文章共三篇，此文为第二篇，另外两篇参看下面链接：
+《打造一个丝滑般自动轮播无限循环Android库》
+《剖析BannerViewPager中Indicator的设计思想》
+上篇文章《打造一个丝滑般自动轮播无限循环Android库》非常详细的介绍了BannerViewPager的基础功能及使用方法。我们知道BannerViewPager不但可以支持任意的页面布局，而
         </a>
       </p>
 
@@ -494,8 +362,8 @@ RxJava+
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2017-03-16 14:14" pubdate>
-              2017-03-16
+            <time datetime="2019-09-08 15:06" pubdate>
+              2019-09-08
             </time>
           </div>
         
@@ -506,6 +374,8 @@ RxJava+
             
               <a href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a>
             
+              <a href="/tags/Banner/">Banner</a>
+            
           </div>
         
       </div>
@@ -517,16 +387,20 @@ RxJava+
     
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
-        <a href="/2016/12/15/Android%E6%90%9C%E7%B4%A2%E5%85%B3%E9%94%AE%E5%AD%97%E9%AB%98%E4%BA%AE%E6%98%BE%E7%A4%BA%E5%8F%8A%E5%BC%80%E5%8F%91%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E5%9D%91/">Android搜索关键字高亮显示及开发中遇到的坑</a>
+        <a href="/2019/09/01/19.%E6%89%93%E9%80%A0%E4%B8%80%E4%B8%AA%E4%B8%9D%E6%BB%91%E8%88%AC%E8%87%AA%E5%8A%A8%E8%BD%AE%E6%92%AD%E6%97%A0%E9%99%90%E5%BE%AA%E7%8E%AFAndroid%E5%BA%93(%E4%B8%80)/">打造一个丝滑般自动轮播无限循环Android库(一)</a>
       </h1>
 
       <p class="index-excerpt">
-        <a href="/2016/12/15/Android%E6%90%9C%E7%B4%A2%E5%85%B3%E9%94%AE%E5%AD%97%E9%AB%98%E4%BA%AE%E6%98%BE%E7%A4%BA%E5%8F%8A%E5%BC%80%E5%8F%91%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E5%9D%91/">
+        <a href="/2019/09/01/19.%E6%89%93%E9%80%A0%E4%B8%80%E4%B8%AA%E4%B8%9D%E6%BB%91%E8%88%AC%E8%87%AA%E5%8A%A8%E8%BD%AE%E6%92%AD%E6%97%A0%E9%99%90%E5%BE%AA%E7%8E%AFAndroid%E5%BA%93(%E4%B8%80)/">
           
           
             
           
-          公司项目中有一个搜索功能，需求是要把搜索关键字高亮显示出来。本来觉得是一个很简单的问题，开发过程也比较顺利。但在测试阶段还是出了些Bug。而且有些问题还挺莫名其妙！最初的想法，定义一个工具类，然后封装一个处理高亮的方法，需要高亮显示的直接调用这个工具类就行了。工具类封装了一个matcherSearchContent()的静态方法，然后用SpannableStringBuilder去处理关键字高亮显
+          本文同步发布在掘金，如需转载请注明出处。
+BannerViewPager系列文章共三篇，此文为第一篇，另外两篇参看下面链接：
+BannerViewPager源码剖析
+剖析BannerViewPager中Indicator的设计思想
+最近公司项目在升级AndroidX，由于项目中用到的一些比较老的库都已停止更新维护，因此需要将这些库替换掉，其中就包括自动轮播的Banner库。恰逢笔者在之前写过一个轮
         </a>
       </p>
 
@@ -534,12 +408,196 @@ RxJava+
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2016-12-15 14:53" pubdate>
-              2016-12-15
+            <time datetime="2019-09-01 22:14" pubdate>
+              2019-09-01
             </time>
           </div>
         
         
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a>
+            
+              <a href="/tags/ViewPager2/">ViewPager2</a>
+            
+              <a href="/tags/Banner/">Banner</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2019/08/26/18.%E6%89%8B%E6%92%95%E9%BB%84%E6%B2%B9%E5%88%80-%E6%8E%A2%E7%A9%B6ButterKnife%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">手撕黄油刀--探究ButterKnife的实现原理</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2019/08/26/18.%E6%89%8B%E6%92%95%E9%BB%84%E6%B2%B9%E5%88%80-%E6%8E%A2%E7%A9%B6ButterKnife%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+          
+          
+            
+          
+          上篇文章《Java编译时注解处理器（APT）详解》中学习了Java APT技术在Android中的使用，并且我们知道，当前Android开发中常用的许多框架都使用了APT技术，并且ButterKnife就是利用APT来实现的。那么本篇内容我们就来探究一下ButterKnife的实现原理。
+一、ButterKnife的bind过程当然，在探究源码，还是首先应该了解如何使用，我们以ButterKnif
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2019-08-26 10:02" pubdate>
+              2019-08-26
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a>
+            
+              <a href="/tags/APT/">APT</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2018/09/10/17.Java%E7%BC%96%E8%AF%91%E6%97%B6%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8/">Java编译时注解处理器</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2018/09/10/17.Java%E7%BC%96%E8%AF%91%E6%97%B6%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8/">
+          
+          
+            
+          
+          本文同步发布在掘金,未经本人允许不得转载
+上篇文章我们使用注解+反射实现了一个仿ButterKnife功能的示例。考虑到反射是在运行时完成的，多少会影响程序性能。因此，ButterKnife本身并非基于注解+反射来实现的，而是用APT技术在编译时处理的。APT什么呢？接下来一起来看。
+一、APT简介1.什么是APT？APT即为Annotation Processing Tool，它是javac的一
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2018-09-10 23:42" pubdate>
+              2018-09-10
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Annotation/">Annotation</a>
+            
+              <a href="/tags/APT/">APT</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2018/08/25/16.Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%9C%A8Android%E4%B8%AD%E7%9A%84%E5%AE%9E%E4%BE%8B%E5%BA%94%E7%94%A8/">Java自定义注解在Android中的实例应用</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2018/08/25/16.Java%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3%E5%9C%A8Android%E4%B8%AD%E7%9A%84%E5%AE%9E%E4%BE%8B%E5%BA%94%E7%94%A8/">
+          
+          
+            
+          
+          Java注解在我们项目开发 中是非常常见的。比如经常用到的几种java内置的注解：
+
+ @Override，表示当前的方法定义将覆盖超类中的方法。    @Deprecated，表示当前方法即将废弃，不推荐使用。    @SuppressWarnings，表示忽略编译器的警告信息。
+
+对于上面几个注解想必大家都不会陌生。除此之外，我们还经常在一些第三方框架中看到一些自定义注解。比如大名鼎鼎的But
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2018-08-25 18:34" pubdate>
+              2018-08-25
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Annotation/">Annotation</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        <a href="/2018/07/26/15.%E5%9F%BA%E4%BA%8EArouter%E7%9A%84%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">基于Arouter的路由实现方案</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2018/07/26/15.%E5%9F%BA%E4%BA%8EArouter%E7%9A%84%E8%B7%AF%E7%94%B1%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">
+          
+          
+            
+          
+          这本是一篇应该写在去年的文章，但仅仅因为…懒，这篇文章在草稿箱里静静的躺了一年多，被无限期推迟到了现在。最近刚好完成了公司项目的路由改造，借此机会来对这篇文章做一个了结。
+一、为什么要在项目中引入路由？在开始之前我们先来思考一下这个问题。为什么要在项目中引入路由？相信大家的答案可能会有所不同，但是应该也不外乎以下几点：
+1.为了实现项目组件化想必很多开发者引入路由的目的都是因为要实现项目组件化。我
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2018-07-26 00:39" pubdate>
+              2018-07-26
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Arouter/">Arouter</a>
+            
+          </div>
         
       </div>
     </article>
@@ -549,7 +607,7 @@ RxJava+
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="iconfont icon-arrowright"></i></a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
   

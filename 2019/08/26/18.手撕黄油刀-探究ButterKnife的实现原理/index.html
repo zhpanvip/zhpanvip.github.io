@@ -1,0 +1,709 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  <title>手撕黄油刀--探究ButterKnife的实现原理 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>zhangpan</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2019-08-26 10:02" pubdate>
+      2019年8月26日 上午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      32
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">手撕黄油刀--探究ButterKnife的实现原理</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>上篇文章《Java编译时注解处理器（APT）详解》中学习了Java APT技术在Android中的使用，并且我们知道，当前Android开发中常用的许多框架都使用了APT技术，并且ButterKnife就是利用APT来实现的。那么本篇内容我们就来探究一下ButterKnife的实现原理。</p>
+<h1 id="一、ButterKnife的bind过程"><a href="#一、ButterKnife的bind过程" class="headerlink" title="一、ButterKnife的bind过程"></a>一、ButterKnife的bind过程</h1><p>当然，在探究源码，还是首先应该了解如何使用，我们以ButterKnife的BindView为例。首先在Activity的onCreate方法中通过ButterKnife.bind()方法绑定，然后为TextView添加BindView注解即可拿到TextView的实例。代码如下：</p>
+<pre><code class="hljs scala"><span class="hljs-keyword">package</span> com.zhpan.app;
+
+public <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppCompatActivity</span> </span>&#123;
+	 <span class="hljs-meta">@BindView</span>(<span class="hljs-type">R</span>.id.text_view)
+	 <span class="hljs-type">TextView</span> mTextView;
+	
+	    <span class="hljs-meta">@Override</span>
+	    <span class="hljs-keyword">protected</span> void onCreate(<span class="hljs-type">Bundle</span> savedInstanceState) &#123;
+	        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);
+	        setContentView(<span class="hljs-type">R</span>.layout.activity_main);
+	        <span class="hljs-type">ButterKnife</span>.bind(<span class="hljs-keyword">this</span>);
+	    &#125;
+    &#125;</code></pre>
+<p>ButterKnife是怎么做到通过注解获取TextView的实例的呢？我们就从bind方法开始吧，点击ButterKnife的bind方法，其代码如下：</p>
+<pre><code class="hljs aspectj"><span class="hljs-comment">//	ButterKnife中有很多bind的重载方法，仅以此为例</span>
+ <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-function">Unbinder <span class="hljs-title">bind</span><span class="hljs-params">(@NonNull Activity <span class="hljs-keyword">target</span>)</span> </span>&#123;
+    View sourceView = <span class="hljs-keyword">target</span>.getWindow().getDecorView();
+    <span class="hljs-function"><span class="hljs-keyword">return</span> <span class="hljs-title">createBinding</span><span class="hljs-params">(<span class="hljs-keyword">target</span>, sourceView)</span></span>;
+  &#125;</code></pre>
+<p>可以看到在bind方法中通过Activity拿到了DecorView（至于不懂DecorView是什么的同学可以自行Google）。然后调用了createBinding方法，并传入Activity对象和DecorView两个参数。我们追踪createBinding的代码如下：</p>
+<pre><code class="hljs typescript"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Unbinder createBinding(<span class="hljs-meta">@NonNull</span> <span class="hljs-built_in">Object</span> target, <span class="hljs-meta">@NonNull</span> View source) &#123;
+    Class&lt;?&gt; targetClass = target.getClass();
+    <span class="hljs-comment">//	获取到了与target相关的类的构造方法</span>
+    Constructor&lt;? <span class="hljs-keyword">extends</span> Unbinder&gt; <span class="hljs-keyword">constructor</span> = findBindingConstructorForClass(<span class="hljs-params">targetClass</span>);
+
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">constructor</span> == null) &#123;
+      <span class="hljs-keyword">return</span> Unbinder.EMPTY;
+    &#125;
+
+    <span class="hljs-comment">//noinspection TryWithIdenticalCatches Resolves to API 19+ only type.</span>
+    <span class="hljs-keyword">try</span> &#123;
+    <span class="hljs-comment">//	通过构造方法反射实例化了这个类，这个类接收两个参数，分别是上边的Activity和DecorView</span>
+      <span class="hljs-keyword">return</span> constructor.newInstance(target, source);
+    &#125; <span class="hljs-keyword">catch</span> (IllegalAccessException e) &#123;
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">&quot;Unable to invoke &quot;</span> + <span class="hljs-keyword">constructor</span>, e);
+    &#125; <span class="hljs-keyword">catch</span> (InstantiationException e) &#123;
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">&quot;Unable to invoke &quot;</span> + <span class="hljs-keyword">constructor</span>, e);
+    &#125; <span class="hljs-keyword">catch</span> (InvocationTargetException e) &#123;
+      Throwable cause = e.getCause();
+      <span class="hljs-keyword">if</span> (cause <span class="hljs-keyword">instanceof</span> RuntimeException) &#123;
+        <span class="hljs-keyword">throw</span> (RuntimeException) cause;
+      &#125;
+      <span class="hljs-keyword">if</span> (cause <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Error</span>) &#123;
+        <span class="hljs-keyword">throw</span> (<span class="hljs-built_in">Error</span>) cause;
+      &#125;
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">&quot;Unable to create binding instance.&quot;</span>, cause);
+    &#125;
+  &#125;</code></pre>
+<p>上述代码中通过findBindingConstructorForClass()方法得到了某个类的构造方法，并在接下来的代码中通过反射 constructor.newInstance(target, source)实例化了这个类，我们点进findBindingConstructorForClass()方法看这里做了什么。</p>
+<pre><code class="hljs reasonml"><span class="hljs-keyword">private</span> static Constructor&lt;? extends Unbinder&gt; find<span class="hljs-constructor">BindingConstructorForClass(Class&lt;?&gt; <span class="hljs-params">cls</span>)</span> &#123;
+	<span class="hljs-comment">//	从BINDINGS中获取cls对应的Unbinder</span>
+    Constructor&lt;? extends Unbinder&gt; bindingCtor = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">BINDINGS</span>.</span></span>get(cls);
+    <span class="hljs-keyword">if</span> (bindingCtor != null) &#123; 如果已存在直接return
+      <span class="hljs-keyword">if</span> (debug) <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Log</span>.</span></span>d(TAG, <span class="hljs-string">&quot;HIT: Cached in binding map.&quot;</span>);
+      return bindingCtor;
+    &#125;
+    <span class="hljs-comment">//	这里拿到的clsName应该为“com.zhpan.app.MainActivity”</span>
+    String clsName = cls.get<span class="hljs-constructor">Name()</span>;
+    <span class="hljs-keyword">if</span> (clsName.starts<span class="hljs-constructor">With(<span class="hljs-string">&quot;android.&quot;</span>)</span><span class="hljs-operator"> || </span>clsName.starts<span class="hljs-constructor">With(<span class="hljs-string">&quot;java.&quot;</span>)</span>) &#123;
+      <span class="hljs-keyword">if</span> (debug) <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Log</span>.</span></span>d(TAG, <span class="hljs-string">&quot;MISS: Reached framework class. Abandoning search.&quot;</span>);
+      return null;
+    &#125;
+    <span class="hljs-keyword">try</span> &#123;
+    <span class="hljs-comment">//	从类加载器中获取“com.zhpan.app.MainActivity_ViewBinding”</span>
+      Class&lt;?&gt; bindingClass = cls.get<span class="hljs-constructor">ClassLoader()</span>.load<span class="hljs-constructor">Class(<span class="hljs-params">clsName</span> + <span class="hljs-string">&quot;_ViewBinding&quot;</span>)</span>;
+      <span class="hljs-comment">// 获取“com.zhpan.app.MainActivity_ViewBinding”类中的构造方法</span>
+      bindingCtor = (Constructor&lt;? extends Unbinder&gt;) bindingClass.get<span class="hljs-constructor">Constructor(<span class="hljs-params">cls</span>, View.<span class="hljs-params">class</span>)</span>;
+    &#125; catch (ClassNotFoundException e) &#123;
+      <span class="hljs-keyword">if</span> (debug) <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Log</span>.</span></span>d(TAG, <span class="hljs-string">&quot;Not found. Trying superclass &quot;</span> + cls.get<span class="hljs-constructor">Superclass()</span>.get<span class="hljs-constructor">Name()</span>);
+      bindingCtor = find<span class="hljs-constructor">BindingConstructorForClass(<span class="hljs-params">cls</span>.<span class="hljs-params">getSuperclass</span>()</span>);
+    &#125; catch (NoSuchMethodException e) &#123;
+      throw <span class="hljs-keyword">new</span> <span class="hljs-constructor">RuntimeException(<span class="hljs-string">&quot;Unable to find binding constructor for &quot;</span> + <span class="hljs-params">clsName</span>, <span class="hljs-params">e</span>)</span>;
+    &#125;
+    <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">BINDINGS</span>.</span></span>put(cls, bindingCtor);
+    return bindingCtor;
+  &#125;</code></pre>
+<p>直接看第7行，通过 cls.getName()得到了bind方法中参数的名字，由于我们是再MainActivity中调用的bind方法，因此，这里拿到的名字就是“com.zhpan.app.MainActivity”,接下来再第13行中通过ClassLoader拿到了一个名字是”clsName”+”_ViewBinding”的类，也就是名字为MainActivity_ViewBinding的类。我们在项目里搜索一下，发现果真能找到这个类，其代码如下：</p>
+<pre><code class="hljs aspectj"><span class="hljs-keyword">package</span> com.zhpan.app;
+
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity_ViewBinding</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Unbinder</span> </span>&#123;
+  <span class="hljs-keyword">private</span> MainActivity <span class="hljs-keyword">target</span>;
+
+  <span class="hljs-meta">@UiThread</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">MainActivity_ViewBinding</span><span class="hljs-params">(MainActivity <span class="hljs-keyword">target</span>)</span> </span>&#123;
+    <span class="hljs-keyword">this</span>(<span class="hljs-keyword">target</span>, <span class="hljs-keyword">target</span>.getWindow().getDecorView());
+  &#125;
+
+  <span class="hljs-meta">@UiThread</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">MainActivity_ViewBinding</span><span class="hljs-params">(MainActivity <span class="hljs-keyword">target</span>, View source)</span> </span>&#123;
+    <span class="hljs-keyword">this</span>.<span class="hljs-keyword">target</span> = <span class="hljs-keyword">target</span>;
+
+    <span class="hljs-keyword">target</span>.mTextView = Utils.findRequiredViewAsType(source, R.id.text_view, <span class="hljs-string">&quot;field &#x27;mTextView&#x27;&quot;</span>, TextView.class);
+  &#125;
+
+  <span class="hljs-meta">@Override</span>
+  <span class="hljs-meta">@CallSuper</span>
+  <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">unbind</span><span class="hljs-params">()</span> </span>&#123;
+    MainActivity <span class="hljs-keyword">target</span> = <span class="hljs-keyword">this</span>.<span class="hljs-keyword">target</span>;
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">target</span> == <span class="hljs-keyword">null</span>) <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalStateException(<span class="hljs-string">&quot;Bindings already cleare![在这里插入图片描述](https://img-blog.csdnimg.cn/20190825162306549.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70)d.&quot;</span>);
+    <span class="hljs-keyword">this</span>.<span class="hljs-keyword">target</span> = <span class="hljs-keyword">null</span>;
+
+    <span class="hljs-keyword">target</span>.mTextView = <span class="hljs-keyword">null</span>;
+  &#125;
+&#125;</code></pre>
+<p>在这个类的构造方法中我们可以看到</p>
+<pre><code class="hljs reasonml">target.mTextView = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Utils</span>.</span></span>find<span class="hljs-constructor">RequiredViewAsType(<span class="hljs-params">source</span>, R.<span class="hljs-params">id</span>.<span class="hljs-params">text_view</span>, <span class="hljs-string">&quot;field &#x27;mTextView&#x27;&quot;</span>, TextView.<span class="hljs-params">class</span>)</span>;</code></pre>
+<p>通过这句代码给Activity中的mTextView赋了值，到这里也就不奇怪为什通过一个BindView的注解就得到了mTextView的对象了。而MainActivity_ViewBinding这个类是从哪里来的呢？想必看过上篇文章同学应该都知道了，就是通过APT在代码编译期间自动生成的。其实后面的代码其实已经没有必要去看了，无非就是通过AbstractProcessor来处理注解，然后根据注解自动生成所需代码的。但是写文章要有始有终，也本着负责任的态度，还是深入ButtereKnife内部一探究竟。</p>
+<h1 id="二、探究ButterKnife的注解处理器ButterKnifeProcessor"><a href="#二、探究ButterKnife的注解处理器ButterKnifeProcessor" class="headerlink" title="二、探究ButterKnife的注解处理器ButterKnifeProcessor"></a>二、探究ButterKnife的注解处理器ButterKnifeProcessor</h1><p>现在我们来看一下ButterKnife的代码的模块结构：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190825162330432.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>看到butterknife-annotations和butterknife-compiler很眼熟？和上篇文章我们自己写的代码结构是一样的，butterknife-annotations模块下存放的是butterknife的所有注解，butterknife-compiler是用来处理butterknife-annotations注解的。所以们直接看butterknife-compiler模块下的ButterKnifeProcessor类。</p>
+<h2 id="1-ButterKnifeProcessor的getSupportedAnnotationTypes-方法"><a href="#1-ButterKnifeProcessor的getSupportedAnnotationTypes-方法" class="headerlink" title="1.ButterKnifeProcessor的getSupportedAnnotationTypes()方法"></a>1.ButterKnifeProcessor的getSupportedAnnotationTypes()方法</h2><p>我们知道ButterKnife除了BindView注解之外还有许多其它注解，比如常用的BindColor注解、OnClick注解等。这些注解的名字都会被添加到getSupportedAnnotationTypes方法中的Set集合里。来看getSupportedAnnotationTypes的源码：</p>
+<pre><code class="hljs crystal">@Override public Set&lt;String&gt; getSupportedAnnotationTypes() &#123;
+    Set&lt;String&gt; types = new LinkedHashSet&lt;&gt;();
+    /<span class="hljs-regexp">/	遍历ButterKnife中的所有注解，并将注解名字添加到Set集合</span>
+<span class="hljs-regexp">    for (Class&lt;? extends Annotation&gt; annotation : getSupportedAnnotations()) &#123;</span>
+<span class="hljs-regexp">      types.add(annotation.getCanonicalName());</span>
+<span class="hljs-regexp">    &#125;</span>
+<span class="hljs-regexp">    return types;</span>
+<span class="hljs-regexp">  &#125;</span></code></pre>
+
+<h2 id="2-ButterKnifeProcessor的process方法"><a href="#2-ButterKnifeProcessor的process方法" class="headerlink" title="2.ButterKnifeProcessor的process方法"></a>2.ButterKnifeProcessor的process方法</h2><p>我们知道process方法是整个注解处理其的核心方法，对注解的处理以及代码的生成都是在这个方法里边实现的。那么接下来，就一步步看ButterKnife是怎么处理注解和生成代码的。<br>**(1)解析RoundEnviroment**<br>在process方法的第一行我们看到通过findAndParseTargets方法得到了一个 Map&lt;TypeElement, BindingSet&gt;集合，代码如下：</p>
+<pre><code class="hljs lasso"><span class="hljs-keyword">public</span> <span class="hljs-built_in">boolean</span> process(<span class="hljs-built_in">Set</span>&lt;? extends TypeElement&gt; elements, RoundEnvironment env) &#123;
+    <span class="hljs-comment">//	通过findAndParseTargets处理注解得到BindingSet的集合</span>
+    <span class="hljs-built_in">Map</span>&lt;TypeElement, BindingSet&gt; bindingMap = findAndParseTargets(env);
+    
+     <span class="hljs-params">...</span>
+  
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+  &#125;</code></pre>
+<p>而在findAndParseTargets(env)是对一系列注解的处理，这里我们仅以处理BindView为例：</p>
+<pre><code class="hljs reasonml"><span class="hljs-keyword">private</span> Map&lt;TypeElement, BindingSet&gt; find<span class="hljs-constructor">AndParseTargets(RoundEnvironment <span class="hljs-params">env</span>)</span> &#123;
+    Map&lt;TypeElement, BindingSet.Builder&gt; builderMap = <span class="hljs-keyword">new</span> LinkedHashMap&lt;&gt;<span class="hljs-literal">()</span>;
+    Set&lt;TypeElement&gt; erasedTargetNames = <span class="hljs-keyword">new</span> LinkedHashSet&lt;&gt;<span class="hljs-literal">()</span>;
+
+    <span class="hljs-keyword">for</span> (Element element : env.get<span class="hljs-constructor">ElementsAnnotatedWith(BindView.<span class="hljs-params">class</span>)</span>) &#123;
+      <span class="hljs-keyword">try</span> &#123;
+        parse<span class="hljs-constructor">BindView(<span class="hljs-params">element</span>, <span class="hljs-params">builderMap</span>, <span class="hljs-params">erasedTargetNames</span>)</span>;
+      &#125; catch (Exception e) &#123;
+        log<span class="hljs-constructor">ParsingError(<span class="hljs-params">element</span>, BindView.<span class="hljs-params">class</span>, <span class="hljs-params">e</span>)</span>;
+      &#125;
+    &#125;
+
+	<span class="hljs-comment">//	省略处理其它注解的代码</span>
+		...</code></pre>
+<p>第9行在parseBindView方法中对BindView注解进行了一系列的校验，通过校验后解析BindView的数据，比如view的Id等信息封装到了BindingSet.Builder中,并最终将封装好的BindingSet.Builder放入builderMap 中。由于parseBindView方法的代码比较多，这里就不再贴出了，有兴趣的可以直接下载源码查看。<br>接下来得到builderMap的集合之后，由于findAndParseTargets方法返回值是Map&lt;TypeElement, BindingSet&gt;，因此接下来又对builderMap集合进行了遍历并最终存储到了 Map&lt;TypeElement, BindingSet&gt;中。代码如下：</p>
+<pre><code class="hljs reasonml"><span class="hljs-keyword">private</span> Map&lt;TypeElement, BindingSet&gt; find<span class="hljs-constructor">AndParseTargets(RoundEnvironment <span class="hljs-params">env</span>)</span> &#123;
+		
+		...
+	
+	Deque&lt;Map.Entry&lt;TypeElement, BindingSet.Builder&gt;&gt; entries =
+		        <span class="hljs-keyword">new</span> ArrayDeque&lt;&gt;(builderMap.entry<span class="hljs-constructor">Set()</span>);
+		    Map&lt;TypeElement, BindingSet&gt; bindingMap = <span class="hljs-keyword">new</span> LinkedHashMap&lt;&gt;<span class="hljs-literal">()</span>;
+		    <span class="hljs-keyword">while</span> (!entries.is<span class="hljs-constructor">Empty()</span>) &#123;
+		      Map.Entry&lt;TypeElement, BindingSet.Builder&gt; entry = entries.remove<span class="hljs-constructor">First()</span>;
+		
+		      TypeElement <span class="hljs-keyword">type</span> = entry.get<span class="hljs-constructor">Key()</span>;
+		      BindingSet.Builder builder = entry.get<span class="hljs-constructor">Value()</span>;
+		
+		      TypeElement parentType = find<span class="hljs-constructor">ParentType(<span class="hljs-params">type</span>, <span class="hljs-params">erasedTargetNames</span>)</span>;
+		      <span class="hljs-keyword">if</span> (parentType<span class="hljs-operator"> == </span>null) &#123;
+		        bindingMap.put(<span class="hljs-keyword">type</span>, builder.build<span class="hljs-literal">()</span>);
+		      &#125; <span class="hljs-keyword">else</span> &#123;
+		        BindingSet parentBinding = bindingMap.get(parentType);
+		        <span class="hljs-keyword">if</span> (parentBinding != null) &#123;
+		          builder.set<span class="hljs-constructor">Parent(<span class="hljs-params">parentBinding</span>)</span>;
+		          bindingMap.put(<span class="hljs-keyword">type</span>, builder.build<span class="hljs-literal">()</span>);
+		        &#125; <span class="hljs-keyword">else</span> &#123;
+		          <span class="hljs-comment">// Has a superclass binding but we haven&#x27;t built it yet. Re-enqueue for later.</span>
+		          entries.add<span class="hljs-constructor">Last(<span class="hljs-params">entry</span>)</span>;
+		        &#125;
+		      &#125;
+		    &#125;
+		&#125;
+	&#125;</code></pre>
+<p>好了，接下来，继续到process方法中，在拿到bindingMap 之后遍历bindingMap ，并调用BindingSet的brewJava来生成Java文件，代码如下：</p>
+<pre><code class="hljs reasonml">public boolean process(Set&lt;? extends TypeElement&gt; elements, RoundEnvironment env) &#123;
+    Map&lt;TypeElement, BindingSet&gt; bindingMap = find<span class="hljs-constructor">AndParseTargets(<span class="hljs-params">env</span>)</span>;
+
+    <span class="hljs-keyword">for</span> (Map.Entry&lt;TypeElement, BindingSet&gt; entry : bindingMap.entry<span class="hljs-constructor">Set()</span>) &#123;
+      TypeElement typeElement = entry.get<span class="hljs-constructor">Key()</span>;
+      BindingSet binding = entry.get<span class="hljs-constructor">Value()</span>;
+
+      JavaFile javaFile = binding.brew<span class="hljs-constructor">Java(<span class="hljs-params">sdk</span>, <span class="hljs-params">debuggable</span>, <span class="hljs-params">useAndroidX</span>)</span>;
+      <span class="hljs-keyword">try</span> &#123;
+        javaFile.write<span class="hljs-constructor">To(<span class="hljs-params">filer</span>)</span>;
+      &#125; catch (IOException e) &#123;
+        error(typeElement, <span class="hljs-string">&quot;Unable to write binding for type %s: %s&quot;</span>, typeElement, e.get<span class="hljs-constructor">Message()</span>);
+      &#125;
+    &#125;
+
+    return <span class="hljs-literal">false</span>;
+  &#125;</code></pre>
+
+<h2 id="3-JavaPoet生成代码"><a href="#3-JavaPoet生成代码" class="headerlink" title="3.JavaPoet生成代码"></a>3.JavaPoet生成代码</h2><p>BindingSet 的brewJava方法中同样是使用了JavaPoet来生成代码的，无非就是拼接类，构造方法、方法，这些感觉真的没什么说的了。</p>
+<pre><code class="hljs reasonml">JavaFile brew<span class="hljs-constructor">Java(<span class="hljs-params">int</span> <span class="hljs-params">sdk</span>, <span class="hljs-params">boolean</span> <span class="hljs-params">debuggable</span>, <span class="hljs-params">boolean</span> <span class="hljs-params">useAndroidX</span>)</span> &#123;
+    TypeSpec bindingConfiguration = create<span class="hljs-constructor">Type(<span class="hljs-params">sdk</span>, <span class="hljs-params">debuggable</span>, <span class="hljs-params">useAndroidX</span>)</span>;
+    return <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">JavaFile</span>.</span></span>builder(bindingClassName.package<span class="hljs-constructor">Name()</span>, bindingConfiguration)
+        .add<span class="hljs-constructor">FileComment(<span class="hljs-string">&quot;Generated code from Butter Knife. Do not modify!&quot;</span>)</span>
+        .build<span class="hljs-literal">()</span>;
+  &#125;</code></pre>
+
+<pre><code class="hljs reasonml"><span class="hljs-keyword">private</span> TypeSpec create<span class="hljs-constructor">Type(<span class="hljs-params">int</span> <span class="hljs-params">sdk</span>, <span class="hljs-params">boolean</span> <span class="hljs-params">debuggable</span>, <span class="hljs-params">boolean</span> <span class="hljs-params">useAndroidX</span>)</span> &#123;
+    TypeSpec.Builder result = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">TypeSpec</span>.</span></span><span class="hljs-keyword">class</span><span class="hljs-constructor">Builder(<span class="hljs-params">bindingClassName</span>.<span class="hljs-params">simpleName</span>()</span>)
+        .add<span class="hljs-constructor">Modifiers(PUBLIC)</span>;
+    <span class="hljs-keyword">if</span> (isFinal) &#123;
+      result.add<span class="hljs-constructor">Modifiers(FINAL)</span>;
+    &#125;
+
+    <span class="hljs-keyword">if</span> (parentBinding != null) &#123;
+      result.superclass(parentBinding.bindingClassName);
+    &#125; <span class="hljs-keyword">else</span> &#123;
+      result.add<span class="hljs-constructor">Superinterface(UNBINDER)</span>;
+    &#125;
+
+    <span class="hljs-keyword">if</span> (has<span class="hljs-constructor">TargetField()</span>) &#123;
+      result.add<span class="hljs-constructor">Field(<span class="hljs-params">targetTypeName</span>, <span class="hljs-string">&quot;target&quot;</span>, PRIVATE)</span>;
+    &#125;
+
+    <span class="hljs-keyword">if</span> (isView) &#123;
+      result.add<span class="hljs-constructor">Method(<span class="hljs-params">createBindingConstructorForView</span>(<span class="hljs-params">useAndroidX</span>)</span>);
+    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (isActivity) &#123;
+      result.add<span class="hljs-constructor">Method(<span class="hljs-params">createBindingConstructorForActivity</span>(<span class="hljs-params">useAndroidX</span>)</span>);
+    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (isDialog) &#123;
+      result.add<span class="hljs-constructor">Method(<span class="hljs-params">createBindingConstructorForDialog</span>(<span class="hljs-params">useAndroidX</span>)</span>);
+    &#125;
+    <span class="hljs-keyword">if</span> (!constructor<span class="hljs-constructor">NeedsView()</span>) &#123;
+      <span class="hljs-comment">// Add a delegating constructor with a target type + view signature for reflective use.</span>
+      result.add<span class="hljs-constructor">Method(<span class="hljs-params">createBindingViewDelegateConstructor</span>(<span class="hljs-params">useAndroidX</span>)</span>);
+    &#125;
+    result.add<span class="hljs-constructor">Method(<span class="hljs-params">createBindingConstructor</span>(<span class="hljs-params">sdk</span>, <span class="hljs-params">debuggable</span>, <span class="hljs-params">useAndroidX</span>)</span>);
+
+    <span class="hljs-keyword">if</span> (has<span class="hljs-constructor">ViewBindings()</span><span class="hljs-operator"> || </span>parentBinding<span class="hljs-operator"> == </span>null) &#123;
+      result.add<span class="hljs-constructor">Method(<span class="hljs-params">createBindingUnbindMethod</span>(<span class="hljs-params">result</span>, <span class="hljs-params">useAndroidX</span>)</span>);
+    &#125;
+
+    return result.build<span class="hljs-literal">()</span>;
+  &#125;</code></pre>
+<p>关于ButterKnife的源码就说这么多吧。总结一下，其实就是根据注解使用APT及JavaPoet在项目编译期间自动生成代码，并达到为注解元素赋值或者添加监听的目的。在阅读Butterknife时候不一定要把每一句代码都搞懂，能做到掌握其核心原理便可。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a>
+                    
+                      <a class="hover-with-bg" href="/tags/APT/">APT</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/09/01/19.%E6%89%93%E9%80%A0%E4%B8%80%E4%B8%AA%E4%B8%9D%E6%BB%91%E8%88%AC%E8%87%AA%E5%8A%A8%E8%BD%AE%E6%92%AD%E6%97%A0%E9%99%90%E5%BE%AA%E7%8E%AFAndroid%E5%BA%93(%E4%B8%80)/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">打造一个丝滑般自动轮播无限循环Android库(一)</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2018/09/10/17.Java%E7%BC%96%E8%AF%91%E6%97%B6%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8/">
+                        <span class="hidden-mobile">Java编译时注解处理器</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "手撕黄油刀--探究ButterKnife的实现原理&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

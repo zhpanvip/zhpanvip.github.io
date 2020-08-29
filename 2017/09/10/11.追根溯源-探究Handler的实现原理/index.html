@@ -1,0 +1,947 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  <title>追根溯源--探究Handler的实现原理 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>zhangpan</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2017-09-10 02:27" pubdate>
+      2017年9月10日 凌晨
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      61
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">追根溯源--探究Handler的实现原理</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <h2 id="一、初识Handler"><a href="#一、初识Handler" class="headerlink" title="一、初识Handler"></a>一、初识Handler</h2><p>要分析一个框架的源码，首先需要了解它的使用。我们就从最基础的知识开始吧！</p>
+<h3 id="场景1：将数据从子线程发送到主线程。"><a href="#场景1：将数据从子线程发送到主线程。" class="headerlink" title="场景1：将数据从子线程发送到主线程。"></a>场景1：将数据从子线程发送到主线程。</h3><p>我们知道Android系统中更新UI只能在主线程中进行。而通常网络请求实在子线程中进行的。在获取到服务器数据后我们需要切换到主线程来更新UI。通常在这种情况下我们会考虑使用Handler来进行线程切换。我们来模拟一个网络请求，并通过Handler将数据发送出去：</p>
+<pre><code class="hljs java">
+<span class="hljs-keyword">private</span> Handler mHandler = <span class="hljs-keyword">new</span> Handler()&#123;
+        <span class="hljs-meta">@Override</span>
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">dispatchMessage</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Message msg)</span> </span>&#123;
+            <span class="hljs-keyword">super</span>.dispatchMessage(msg);
+            updateUI(msg);
+        &#125;
+    &#125;;
+<span class="hljs-comment">// 或者可以通过传入Handler.Callback的参数</span>
+Handler mHandler = <span class="hljs-keyword">new</span> Handler(<span class="hljs-keyword">new</span> Handler.Callback() &#123;
+       <span class="hljs-meta">@Override</span>
+       <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">handleMessage</span><span class="hljs-params">(Message msg)</span> </span>&#123;
+		updateUI(msg);
+           <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+       &#125;
+   &#125;);
+    
+<span class="hljs-comment">// 模拟网络请求</span>
+ <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">fetchData</span><span class="hljs-params">()</span> </span>&#123;
+        <span class="hljs-keyword">new</span> Thread()&#123;
+            <span class="hljs-meta">@Override</span>
+            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;
+                <span class="hljs-keyword">super</span>.run();
+                Message message = mHandler.obtainMessage();
+                message.obj=<span class="hljs-string">&quot;data from server&quot;</span>;
+                mHandler.sendMessage(message);
+            &#125;
+        &#125;.start();
+
+    &#125;</code></pre>
+<p>我们通过子线程模拟网络请求，并将获取的数据通过Handler的sendMessage方法将数据发送了出去。而在Handler的dispatchMessage方法中便可收到刚刚发送的message。并且此时dispatchMessage处于主线程，因此可以直接在dispatchMessage方法中更新UI了。</p>
+<h3 id="场景2：延迟发送Runnable"><a href="#场景2：延迟发送Runnable" class="headerlink" title="场景2：延迟发送Runnable"></a>场景2：延迟发送Runnable</h3><p>场景1是Handler很典型的一个应用，除此之外，我们还经常会通过Handler延迟发送一个Runnable，在delayMillis时间之后会执行Runnable的run方法。代码示例如下：</p>
+<pre><code class="hljs java"><span class="hljs-comment">// 假设是运行在Activity中的代码</span>
+<span class="hljs-keyword">private</span> Handler mHandler = <span class="hljs-keyword">new</span> Handler();
+<span class="hljs-keyword">private</span> Runnable mRunnable = <span class="hljs-keyword">new</span> Runnable() &#123;
+        <span class="hljs-meta">@Override</span>
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;
+            handleMessage();
+        &#125;
+    &#125;;
+ <span class="hljs-meta">@Override</span>
+   <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;
+       <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);
+ 	<span class="hljs-keyword">new</span> Thread()&#123;
+           <span class="hljs-meta">@Override</span>
+           <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;
+               <span class="hljs-keyword">super</span>.run();
+               mHandler.postDelayed(mRunnable,<span class="hljs-number">1000</span>);
+           &#125;
+       &#125;.start();
+&#125;</code></pre>
+<h3 id="场景3：在子线程中初始化Handler"><a href="#场景3：在子线程中初始化Handler" class="headerlink" title="场景3：在子线程中初始化Handler"></a>场景3：在子线程中初始化Handler</h3><pre><code class="hljs java">Handler mHandler;
+<span class="hljs-keyword">new</span> Thread()&#123;
+           <span class="hljs-meta">@Override</span>
+           <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;
+               <span class="hljs-keyword">super</span>.run();
+               mHandler=<span class="hljs-keyword">new</span> Handler();
+           &#125;
+       &#125;.start();</code></pre>
+<p>此时，运行程序我们会发现程序Crash掉了，并且抛出了以下错误日志：</p>
+<blockquote>
+<p>java.lang.RuntimeException: Can’t create handler inside thread that has not called Looper.prepare()</p>
+</blockquote>
+<p>日志信息提示我们在子线程中创建Handler需要调用Looper.prepare()方法。</p>
+<p>(注:以上场景均未考虑内存泄露问题)</p>
+<p>那么针对以上三个应用场景，有些同学可能表示会有问题：</p>
+<p><strong>问题1：</strong> 在场景1中Handler在子线程中发送出来的消息为什么到了dispatchMessage方法就变成了主线程呢？</p>
+<p><strong>问题2：</strong> 在场景2的代码中我故意在子线程中调用了Handler的postDelayed方法，那么此时通过postDelayed方法发出来的Runnable究竟是运行在主线程还是子线程呢？</p>
+<p><strong>问题3：</strong>  为什么在主线程中直接创建Handler可以正常运行而在子线程中创建Handler需要调用Looper.prepare()方法呢？</p>
+<p>如果想要解开以上几个疑惑，就需要我们对Handler的源码有深入的了解。那么接下来我们就进入Handler的源码分析环节吧！</p>
+<h2 id="二、Handler源码溯源历程"><a href="#二、Handler源码溯源历程" class="headerlink" title="二、Handler源码溯源历程"></a>二、Handler源码溯源历程</h2><h3 id="1-从实例化一个Handler说起"><a href="#1-从实例化一个Handler说起" class="headerlink" title="1.从实例化一个Handler说起"></a>1.从实例化一个Handler说起</h3><p>在使用Handler的第一步就需要我们先实例化一个Handler。那么，我们就从new Handler()着手，看看在初始化Handler的时候做了哪些操作：</p>
+<pre><code class="hljs java">
+<span class="hljs-keyword">final</span> Looper mLooper;
+   <span class="hljs-keyword">final</span> MessageQueue mQueue;
+<span class="hljs-keyword">final</span> Callback mCallback;
+   <span class="hljs-keyword">final</span> <span class="hljs-keyword">boolean</span> mAsynchronous;
+   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Handler</span><span class="hljs-params">()</span> </span>&#123;
+       <span class="hljs-keyword">this</span>(<span class="hljs-keyword">null</span>, <span class="hljs-keyword">false</span>);
+   &#125;
+
+<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Handler</span><span class="hljs-params">(<span class="hljs-meta">@Nullable</span> Callback callback, <span class="hljs-keyword">boolean</span> async)</span> </span>&#123;
+        <span class="hljs-keyword">if</span> (FIND_POTENTIAL_LEAKS) &#123;
+            <span class="hljs-keyword">final</span> Class&lt;? extends Handler&gt; klass = getClass();
+            <span class="hljs-keyword">if</span> ((klass.isAnonymousClass() || klass.isMemberClass() || klass.isLocalClass()) &amp;&amp;
+                    (klass.getModifiers() &amp; Modifier.STATIC) == <span class="hljs-number">0</span>) &#123;
+                Log.w(TAG, <span class="hljs-string">&quot;The following Handler class should be static or leaks might occur: &quot;</span> +
+                    klass.getCanonicalName());
+            &#125;
+        &#125;
+
+        mLooper = Looper.myLooper();
+        <span class="hljs-keyword">if</span> (mLooper == <span class="hljs-keyword">null</span>) &#123;
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(
+                <span class="hljs-string">&quot;Can&#x27;t create handler inside thread &quot;</span> + Thread.currentThread()
+                        + <span class="hljs-string">&quot; that has not called Looper.prepare()&quot;</span>);
+        &#125;
+        mQueue = mLooper.mQueue;
+        mCallback = callback;
+        mAsynchronous = async;
+    &#125;
+</code></pre>
+<p>可以看到，调用Handler的无参构造方法实例化Handler最终调用了Handler(@Nullable Callback callback, boolean async)的构造方法，而在这个构造方法中的逻辑似乎也很简单，通过调用Looper.myLooper()方法得到了一个Looper对象，如果此时mLooper为null，则会抛出一个RuntimeException。仔细看看发现这个异常信息不就是我们在第一章场景三中在子线程中初始化Handler的时候抛出来的异常吗？那么，什么时候通过Looper.myPrepare()方法得到的Handler会是空呢？要解决这个问题怕是要到Looper中一探究竟了。</p>
+<p>首先来看下Looper.myPrepare()方法的源码：</p>
+<pre><code class="hljs java">
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-meta">@Nullable</span> <span class="hljs-function">Looper <span class="hljs-title">myLooper</span><span class="hljs-params">()</span> </span>&#123;
+    <span class="hljs-keyword">return</span> sThreadLocal.get();
+&#125;
+</code></pre>
+
+<p>这是Looper中的一个静态方法，这个方法简单到只有一行代码，即调用了ThreadLocal的get()方法来得到一个Looper。ThreadLocal是Java中的一个类，它是一个泛型类，有set(T)和T get()两个方法。ThreadLocal的神奇之处在于它可以在指定线程中存储数据，什么意思呢？即你在某个线程中存储的数据只能在该线程中获取的到。关于ThreadLocal我们只需要了解这些就够了，其实现原理不做深究，有兴趣的可以自从查阅源码。</p>
+<p>既然了解了ThreadLocal的作用，那么在Looper内部一定事先调用了ThreadLocal的set方法。通过全局搜索sThreadLocal，发现了prepare()方法，其源码如下：</p>
+<pre><code class="hljs java">
+<span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">(<span class="hljs-keyword">boolean</span> quitAllowed)</span> </span>&#123;
+     <span class="hljs-keyword">if</span> (sThreadLocal.get() != <span class="hljs-keyword">null</span>) &#123;
+         <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">&quot;Only one Looper may be created per thread&quot;</span>);
+     &#125;
+     sThreadLocal.set(<span class="hljs-keyword">new</span> Looper(quitAllowed));
+ &#125;
+</code></pre>
+<p>果真如我们预料的那样，在Looper的prepare方法中实例化了Looper，并将其放入到了ThreadLocal中。而如果没有调用Looper.prepare()方法，那么获取到的Looper一定是null。到这里似乎解释了第一章的场景三在子线程中实例化Handler需要事先调用Looper.prepare()方法。但是，到这里我们似乎还是没有解释清楚疑惑三，为什么在主线程中直接实例化Handler却没有抛出异常呢？其实，当程序启动的时候会同时启动主线程，我们知道Java程序的入口是main方法。而在Android程序启动的入口同样是main方法。我们在ActivityThread中找到main方法，源码如下：</p>
+<pre><code class="hljs java">
+# ActivityThread
+<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>&#123;
+        
+		...
+
+        Looper.prepareMainLooper();
+		...
+
+        Looper.loop();
+
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">&quot;Main thread loop unexpectedly exited&quot;</span>);
+    &#125;
+
+ # Looper
+ <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepareMainLooper</span><span class="hljs-params">()</span> </span>&#123;
+        prepare(<span class="hljs-keyword">false</span>);
+        <span class="hljs-keyword">synchronized</span> (Looper.class) &#123;
+            <span class="hljs-keyword">if</span> (sMainLooper != <span class="hljs-keyword">null</span>) &#123;
+                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalStateException(<span class="hljs-string">&quot;The main Looper has already been prepared.&quot;</span>);
+            &#125;
+            sMainLooper = myLooper();
+        &#125;
+    &#125;
+
+</code></pre>
+
+<p>在main方法中调用了Looper.prepareMauinLooper()方法，而Looper.prepareMauinLooper()中又调用了prepare方法。因此，我们可以在主线程中直接实例化Handler而不用担心抛出异常。</p>
+<h3 id="2-Handler的postXXX-或sendXXX"><a href="#2-Handler的postXXX-或sendXXX" class="headerlink" title="2.Handler的postXXX()或sendXXX"></a>2.Handler的postXXX()或sendXXX</h3><p>实例化Handler后，我们通常会通过Handler提供的方法来发送一个消息。在第一章节中列举了Handler的sendMessage()和postDelay()方法，其实除了这两个方法之外，Handler还提供了一系列的sendXXX()和postXXX()的方法。但追踪源码发现这些方法最终都会调用到sendMessageAtTime方法。</p>
+<p>我们就以postDelayed方法为例来分析。首先，来看postDelayed的源码：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">postDelayed</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Runnable r, <span class="hljs-keyword">long</span> delayMillis)</span> </span>&#123;
+        <span class="hljs-keyword">return</span> sendMessageDelayed(getPostMessage(r), delayMillis);
+    &#125;</code></pre>
+
+<p>在postDelayed中调用了sendMessageDelayed方法，这个方法的第一个参数接收一个Message，这里通过getPostMessage(r)方法得到了Message对象，getPostMessage(r)源码如下：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Message <span class="hljs-title">getPostMessage</span><span class="hljs-params">(Runnable r)</span> </span>&#123;
+        Message m = Message.obtain();
+        m.callback = r;
+        <span class="hljs-keyword">return</span> m;
+    &#125;
+</code></pre>
+<p>可以看到，在getPostMessage方法中将Runnable赋值给了Message.callback，此处我们先立一个Flag。</p>
+<p>接下来追溯到sendMessageDelayed方法中：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">sendMessageDelayed</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Message msg, <span class="hljs-keyword">long</span> delayMillis)</span> </span>&#123;
+        <span class="hljs-keyword">if</span> (delayMillis &lt; <span class="hljs-number">0</span>) &#123;
+            delayMillis = <span class="hljs-number">0</span>;
+        &#125;
+        <span class="hljs-keyword">return</span> sendMessageAtTime(msg, SystemClock.uptimeMillis() + delayMillis);
+    &#125;</code></pre>
+<p>在这个方法中我们终于看到了sendMessageAtTime方法，其源码如下：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">sendMessageAtTime</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Message msg, <span class="hljs-keyword">long</span> uptimeMillis)</span> </span>&#123;
+        MessageQueue queue = mQueue;
+        <span class="hljs-keyword">if</span> (queue == <span class="hljs-keyword">null</span>) &#123;
+            RuntimeException e = <span class="hljs-keyword">new</span> RuntimeException(
+                    <span class="hljs-keyword">this</span> + <span class="hljs-string">&quot; sendMessageAtTime() called with no mQueue&quot;</span>);
+            Log.w(<span class="hljs-string">&quot;Looper&quot;</span>, e.getMessage(), e);
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+        &#125;
+        <span class="hljs-keyword">return</span> enqueueMessage(queue, msg, uptimeMillis);
+    &#125;</code></pre>
+<p>这个方法中的代码逻辑很简单，仅仅调用了enqueueMessage方法，源码如下：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">enqueueMessage</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> MessageQueue queue, <span class="hljs-meta">@NonNull</span> Message msg,</span></span>
+<span class="hljs-function"><span class="hljs-params">            <span class="hljs-keyword">long</span> uptimeMillis)</span> </span>&#123;
+        msg.target = <span class="hljs-keyword">this</span>;
+        msg.workSourceUid = ThreadLocalWorkSource.getUid();
+
+        <span class="hljs-keyword">if</span> (mAsynchronous) &#123;
+            msg.setAsynchronous(<span class="hljs-keyword">true</span>);
+        &#125;
+        <span class="hljs-keyword">return</span> queue.enqueueMessage(msg, uptimeMillis);
+    &#125;</code></pre>
+<p>在这个方法中我们需要注意的一点– msg.target = this，把当前Handler的对象赋值给了Message.target。紧接着调用了MessageQueue的enqueueMessage方法。MessageQueue这个类我们在上边已经碰到过了。即在实例化Handler的时候将mLooper.mQueue赋值给了Handler的mQueue.那么现在是时候来认识一下MessageQueue了。</p>
+<h3 id="3-MessageQueue"><a href="#3-MessageQueue" class="headerlink" title="3.MessageQueue"></a>3.MessageQueue</h3><p>上一小节中我们在Handler的构造方法中看到了将mLooper.mQueue赋值给了Handler中的mQueue。而MessageQueue从名字上似乎也可以看出来它是一个存储消息的队列。并且在Handler的enqueueMessage方法中通过MessageQueue的enqueueMessage将消息添加到了MessageQueue中。接下来，我们看下enqueueMessage的源码：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">boolean</span> <span class="hljs-title">enqueueMessage</span><span class="hljs-params">(Message msg, <span class="hljs-keyword">long</span> when)</span> </span>&#123;
+        <span class="hljs-keyword">if</span> (msg.target == <span class="hljs-keyword">null</span>) &#123;
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalArgumentException(<span class="hljs-string">&quot;Message must have a target.&quot;</span>);
+        &#125;
+        <span class="hljs-keyword">if</span> (msg.isInUse()) &#123;
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalStateException(msg + <span class="hljs-string">&quot; This message is already in use.&quot;</span>);
+        &#125;
+
+        <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;
+            <span class="hljs-keyword">if</span> (mQuitting) &#123;
+                IllegalStateException e = <span class="hljs-keyword">new</span> IllegalStateException(
+                        msg.target + <span class="hljs-string">&quot; sending message to a Handler on a dead thread&quot;</span>);
+                Log.w(TAG, e.getMessage(), e);
+                msg.recycle();
+                <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+            &#125;
+
+            msg.markInUse();
+            msg.when = when;
+            Message p = mMessages;
+            <span class="hljs-keyword">boolean</span> needWake;
+            <span class="hljs-keyword">if</span> (p == <span class="hljs-keyword">null</span> || when == <span class="hljs-number">0</span> || when &lt; p.when) &#123;
+                <span class="hljs-comment">// New head, wake up the event queue if blocked.</span>
+                msg.next = p;
+                mMessages = msg;
+                needWake = mBlocked;
+            &#125; <span class="hljs-keyword">else</span> &#123;
+                <span class="hljs-comment">// Inserted within the middle of the queue.  Usually we don&#x27;t have to wake</span>
+                <span class="hljs-comment">// up the event queue unless there is a barrier at the head of the queue</span>
+                <span class="hljs-comment">// and the message is the earliest asynchronous message in the queue.</span>
+                needWake = mBlocked &amp;&amp; p.target == <span class="hljs-keyword">null</span> &amp;&amp; msg.isAsynchronous();
+                Message prev;
+                <span class="hljs-keyword">for</span> (;;) &#123;
+                    prev = p;
+                    p = p.next;
+                    <span class="hljs-keyword">if</span> (p == <span class="hljs-keyword">null</span> || when &lt; p.when) &#123;
+                        <span class="hljs-keyword">break</span>;
+                    &#125;
+                    <span class="hljs-keyword">if</span> (needWake &amp;&amp; p.isAsynchronous()) &#123;
+                        needWake = <span class="hljs-keyword">false</span>;
+                    &#125;
+                &#125;
+                msg.next = p; <span class="hljs-comment">// invariant: p == prev.next</span>
+                prev.next = msg;
+            &#125;
+
+            <span class="hljs-comment">// We can assume mPtr != 0 because mQuitting is false.</span>
+            <span class="hljs-keyword">if</span> (needWake) &#123;
+                nativeWake(mPtr);
+            &#125;
+        &#125;
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+    &#125;
+</code></pre>
+<p>emmmmmm…阅读源码发现MessageQueue是一个用单项链表实现的队列，为什么是用链表？其实细想一下也不奇怪，因为我们可能频繁的将Message进行插入和删除。而使用链表性能上很明显要优于顺序表。这一段代码就是一个将Message插入到链表的一个过程，其实也没什么可以解释的。</p>
+<p>既然有插入消息，那必然也会有取出消息。我们进入MessageQueue的源码，发现在MessageQueue中发现还有另外一个叫next的方法：</p>
+<pre><code class="hljs java"><span class="hljs-function">Message <span class="hljs-title">next</span><span class="hljs-params">()</span> </span>&#123;
+        <span class="hljs-comment">// Return here if the message loop has already quit and been disposed.</span>
+        <span class="hljs-comment">// This can happen if the application tries to restart a looper after quit</span>
+        <span class="hljs-comment">// which is not supported.</span>
+        <span class="hljs-keyword">final</span> <span class="hljs-keyword">long</span> ptr = mPtr;
+        <span class="hljs-keyword">if</span> (ptr == <span class="hljs-number">0</span>) &#123;
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+        &#125;
+
+        <span class="hljs-keyword">int</span> pendingIdleHandlerCount = -<span class="hljs-number">1</span>; <span class="hljs-comment">// -1 only during first iteration</span>
+        <span class="hljs-keyword">int</span> nextPollTimeoutMillis = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">for</span> (;;) &#123;
+            <span class="hljs-keyword">if</span> (nextPollTimeoutMillis != <span class="hljs-number">0</span>) &#123;
+                Binder.flushPendingCommands();
+            &#125;
+
+            nativePollOnce(ptr, nextPollTimeoutMillis);
+
+            <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;
+                <span class="hljs-comment">// Try to retrieve the next message.  Return if found.</span>
+                <span class="hljs-keyword">final</span> <span class="hljs-keyword">long</span> now = SystemClock.uptimeMillis();
+                Message prevMsg = <span class="hljs-keyword">null</span>;
+                Message msg = mMessages;
+                <span class="hljs-keyword">if</span> (msg != <span class="hljs-keyword">null</span> &amp;&amp; msg.target == <span class="hljs-keyword">null</span>) &#123;
+                    <span class="hljs-comment">// Stalled by a barrier.  Find the next asynchronous message in the queue.</span>
+                    <span class="hljs-keyword">do</span> &#123;
+                        prevMsg = msg;
+                        msg = msg.next;
+                    &#125; <span class="hljs-keyword">while</span> (msg != <span class="hljs-keyword">null</span> &amp;&amp; !msg.isAsynchronous());
+                &#125;
+                <span class="hljs-keyword">if</span> (msg != <span class="hljs-keyword">null</span>) &#123;
+                    <span class="hljs-keyword">if</span> (now &lt; msg.when) &#123;
+                        <span class="hljs-comment">// Next message is not ready.  Set a timeout to wake up when it is ready.</span>
+                        nextPollTimeoutMillis = (<span class="hljs-keyword">int</span>) Math.min(msg.when - now, Integer.MAX_VALUE);
+                    &#125; <span class="hljs-keyword">else</span> &#123;
+                        <span class="hljs-comment">// Got a message.</span>
+                        mBlocked = <span class="hljs-keyword">false</span>;
+                        <span class="hljs-keyword">if</span> (prevMsg != <span class="hljs-keyword">null</span>) &#123;
+                            prevMsg.next = msg.next;
+                        &#125; <span class="hljs-keyword">else</span> &#123;
+                            mMessages = msg.next;
+                        &#125;
+                        msg.next = <span class="hljs-keyword">null</span>;
+                        <span class="hljs-keyword">if</span> (DEBUG) Log.v(TAG, <span class="hljs-string">&quot;Returning message: &quot;</span> + msg);
+                        msg.markInUse();
+                        <span class="hljs-keyword">return</span> msg;
+                    &#125;
+                &#125; <span class="hljs-keyword">else</span> &#123;
+                    <span class="hljs-comment">// No more messages.</span>
+                    nextPollTimeoutMillis = -<span class="hljs-number">1</span>;
+                &#125;
+
+                <span class="hljs-comment">// Process the quit message now that all pending messages have been handled.</span>
+                <span class="hljs-keyword">if</span> (mQuitting) &#123;
+                    dispose();
+                    <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;
+                &#125;
+
+                <span class="hljs-comment">// If first time idle, then get the number of idlers to run.</span>
+                <span class="hljs-comment">// Idle handles only run if the queue is empty or if the first message</span>
+                <span class="hljs-comment">// in the queue (possibly a barrier) is due to be handled in the future.</span>
+                <span class="hljs-keyword">if</span> (pendingIdleHandlerCount &lt; <span class="hljs-number">0</span>
+                        &amp;&amp; (mMessages == <span class="hljs-keyword">null</span> || now &lt; mMessages.when)) &#123;
+                    pendingIdleHandlerCount = mIdleHandlers.size();
+                &#125;
+                <span class="hljs-keyword">if</span> (pendingIdleHandlerCount &lt;= <span class="hljs-number">0</span>) &#123;
+                    <span class="hljs-comment">// No idle handlers to run.  Loop and wait some more.</span>
+                    mBlocked = <span class="hljs-keyword">true</span>;
+                    <span class="hljs-keyword">continue</span>;
+                &#125;
+
+                <span class="hljs-keyword">if</span> (mPendingIdleHandlers == <span class="hljs-keyword">null</span>) &#123;
+                    mPendingIdleHandlers = <span class="hljs-keyword">new</span> IdleHandler[Math.max(pendingIdleHandlerCount, <span class="hljs-number">4</span>)];
+                &#125;
+                mPendingIdleHandlers = mIdleHandlers.toArray(mPendingIdleHandlers);
+            &#125;
+
+            <span class="hljs-comment">// Run the idle handlers.</span>
+            <span class="hljs-comment">// We only ever reach this code block during the first iteration.</span>
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; pendingIdleHandlerCount; i++) &#123;
+                <span class="hljs-keyword">final</span> IdleHandler idler = mPendingIdleHandlers[i];
+                mPendingIdleHandlers[i] = <span class="hljs-keyword">null</span>; <span class="hljs-comment">// release the reference to the handler</span>
+
+                <span class="hljs-keyword">boolean</span> keep = <span class="hljs-keyword">false</span>;
+                <span class="hljs-keyword">try</span> &#123;
+                    keep = idler.queueIdle();
+                &#125; <span class="hljs-keyword">catch</span> (Throwable t) &#123;
+                    Log.wtf(TAG, <span class="hljs-string">&quot;IdleHandler threw exception&quot;</span>, t);
+                &#125;
+
+                <span class="hljs-keyword">if</span> (!keep) &#123;
+                    <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;
+                        mIdleHandlers.remove(idler);
+                    &#125;
+                &#125;
+            &#125;
+
+            <span class="hljs-comment">// Reset the idle handler count to 0 so we do not run them again.</span>
+            pendingIdleHandlerCount = <span class="hljs-number">0</span>;
+
+            <span class="hljs-comment">// While calling an idle handler, a new message could have been delivered</span>
+            <span class="hljs-comment">// so go back and look again for a pending message without waiting.</span>
+            nextPollTimeoutMillis = <span class="hljs-number">0</span>;
+        &#125;
+    &#125;
+</code></pre>
+<p>这个方法的返回值是一个Message，很显然，这个方法就是从MessageQueue中取出消息的。我们注意到第12行代码，这里是一个for(;;)死循环。如果在MessageQueue中有Message的时候，next会将这个Message移除并返回。而当MessageQueue为空时，next方法将会被阻塞。</p>
+<h3 id="4-回归Looper"><a href="#4-回归Looper" class="headerlink" title="4.回归Looper"></a>4.回归Looper</h3><p>我们了解了MessageQueue的插入和删除，但直到此时还没有看到在什么地方调用了MessageQueue的next方法将消息取出的。此时，我们将目光再次回归到Looper中。如果你刚才留意了ActivityThread中的main方法的话，应该注意到了main方法中的Looper.loop()方法,没错，一切将从这里开始，只有调用loop方法后消息循环系统才会真正运作起来，我们们来看loop的源码：</p>
+<pre><code class="hljs reasonml"><span class="hljs-comment">/**</span>
+<span class="hljs-comment">    * Run the message queue in this thread. Be sure to call</span>
+<span class="hljs-comment">    * &#123;@link #quit()&#125; to end the loop.</span>
+<span class="hljs-comment">    */</span>
+   public static void loop<span class="hljs-literal">()</span> &#123;
+       final Looper me = my<span class="hljs-constructor">Looper()</span>;
+       <span class="hljs-keyword">if</span> (me<span class="hljs-operator"> == </span>null) &#123;
+           throw <span class="hljs-keyword">new</span> <span class="hljs-constructor">RuntimeException(<span class="hljs-string">&quot;No Looper; Looper.prepare() wasn&#x27;t called on this thread.&quot;</span>)</span>;
+       &#125;
+       final MessageQueue queue = me.mQueue;
+
+       <span class="hljs-comment">// Make sure the identity of this thread is that of the local process,</span>
+       <span class="hljs-comment">// and keep track of what that identity token actually is.</span>
+       <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Binder</span>.</span></span>clear<span class="hljs-constructor">CallingIdentity()</span>;
+       final long ident = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Binder</span>.</span></span>clear<span class="hljs-constructor">CallingIdentity()</span>;
+
+       <span class="hljs-keyword">for</span> (;;) &#123;
+           Message msg = queue.next<span class="hljs-literal">()</span>; <span class="hljs-comment">// might block</span>
+           <span class="hljs-keyword">if</span> (msg<span class="hljs-operator"> == </span>null) &#123;
+               <span class="hljs-comment">// No message indicates that the message queue is quitting.</span>
+               return;
+           &#125;
+
+           <span class="hljs-comment">// This must be in a local variable, in case a UI event sets the logger</span>
+           final Printer logging = me.mLogging;
+           <span class="hljs-keyword">if</span> (logging != null) &#123;
+               logging.println(<span class="hljs-string">&quot;&gt;&gt;&gt;&gt;&gt; Dispatching to &quot;</span> + msg.target + <span class="hljs-string">&quot; &quot;</span> +
+                       msg.callback + <span class="hljs-string">&quot;: &quot;</span> + msg.what);
+           &#125;
+
+           final long traceTag = me.mTraceTag;
+           <span class="hljs-keyword">if</span> (traceTag != <span class="hljs-number">0</span><span class="hljs-operator"> &amp;&amp; </span><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Trace</span>.</span></span>is<span class="hljs-constructor">TagEnabled(<span class="hljs-params">traceTag</span>)</span>) &#123;
+               <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Trace</span>.</span></span>trace<span class="hljs-constructor">Begin(<span class="hljs-params">traceTag</span>, <span class="hljs-params">msg</span>.<span class="hljs-params">target</span>.<span class="hljs-params">getTraceName</span>(<span class="hljs-params">msg</span>)</span>);
+           &#125;
+           <span class="hljs-keyword">try</span> &#123;
+               msg.target.dispatch<span class="hljs-constructor">Message(<span class="hljs-params">msg</span>)</span>;
+           &#125; finally &#123;
+               <span class="hljs-keyword">if</span> (traceTag != <span class="hljs-number">0</span>) &#123;
+                   <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Trace</span>.</span></span>trace<span class="hljs-constructor">End(<span class="hljs-params">traceTag</span>)</span>;
+               &#125;
+           &#125;
+
+           <span class="hljs-keyword">if</span> (logging != null) &#123;
+               logging.println(<span class="hljs-string">&quot;&lt;&lt;&lt;&lt;&lt; Finished to &quot;</span> + msg.target + <span class="hljs-string">&quot; &quot;</span> + msg.callback);
+           &#125;
+
+           <span class="hljs-comment">// Make sure that during the course of dispatching the</span>
+           <span class="hljs-comment">// identity of the thread wasn&#x27;t corrupted.</span>
+           final long newIdent = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Binder</span>.</span></span>clear<span class="hljs-constructor">CallingIdentity()</span>;
+           <span class="hljs-keyword">if</span> (ident != newIdent) &#123;
+               <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Log</span>.</span></span>wtf(TAG, <span class="hljs-string">&quot;Thread identity changed from 0x&quot;</span>
+                       + <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Long</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">HexString(<span class="hljs-params">ident</span>)</span> + <span class="hljs-string">&quot; to 0x&quot;</span>
+                       + <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Long</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">HexString(<span class="hljs-params">newIdent</span>)</span> + <span class="hljs-string">&quot; while dispatching to &quot;</span>
+                       + msg.target.get<span class="hljs-constructor">Class()</span>.get<span class="hljs-constructor">Name()</span> + <span class="hljs-string">&quot; &quot;</span>
+                       + msg.callback + <span class="hljs-string">&quot; what=&quot;</span> + msg.what);
+           &#125;
+
+           msg.recycle<span class="hljs-constructor">Unchecked()</span>;
+       &#125;
+   &#125;</code></pre>
+<p>这里的loop方法同样也是一个死循环。只有当MessageQueue.next()返回null时才会跳出循环。上一小节中我们分析了Message.next方法是一个阻塞操作当MessageQueue中没有消息时next方法会一直被阻塞，因此也致使loop方法被阻塞。而当MessageQueue中添加了一条消息后，loop方法则会立即通过MessageQueue.next方法将消息取出并处理。可以看到通过调用msg.target.dispatchMessage(msg)处理消息。而msg.target是什么呢？我们回过头来看本章第二小节，在Handler的enqueueMessage中将Handler赋值给了msg.target,我们从Message的源码中也可以得到印证：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Message</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Parcelable</span> </span>&#123;
+	...
+	
+  <span class="hljs-comment">/*package*/</span> Handler target;
+	
+	...
+&#125;
+</code></pre>
+<p>也就是此时的target其实就是Handler本身，此时我们找到Handler的dispatchMessage方法，源码如下：</p>
+<pre><code class="hljs java">
+<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">dispatchMessage</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Message msg)</span> </span>&#123;
+       <span class="hljs-keyword">if</span> (msg.callback != <span class="hljs-keyword">null</span>) &#123;
+           handleCallback(msg);
+       &#125; <span class="hljs-keyword">else</span> &#123;
+           <span class="hljs-keyword">if</span> (mCallback != <span class="hljs-keyword">null</span>) &#123;
+               <span class="hljs-keyword">if</span> (mCallback.handleMessage(msg)) &#123;
+                   <span class="hljs-keyword">return</span>;
+               &#125;
+           &#125;
+           handleMessage(msg);
+       &#125;
+   &#125;
+</code></pre>
+
+<p>看到这里想必大家应该就都明白了，上述代码首先检查了Message的callback是否为null，不为null就通过handleCallback来处理消息。Message的callback是一个Runnable对象，实际上就是Handler的post方法传递的Runnable参数，此时对应的是我们在第一章中的场景二。handleCallback方法代码如下：</p>
+<pre><code class="hljs arduino"><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">handleCallback</span><span class="hljs-params">(Message message)</span> </span>&#123;
+        message.callback.<span class="hljs-built_in">run</span>();
+    &#125;</code></pre>
+<p>emmmm….原来我们post出来的Runnable的run方法就是在这里被调用的呀！</p>
+<p>接着检查mCallback是否为null，不为null就调用mCallback的handleMessage方法处理消息，这里对应的是我们在实例化Handler时传入的Callback参数。如果mCallback也为null的话则调用了Handler中的handleMessage(msg)方法。这不正对应了我们第一章的场景一嘛！因此现在再来看下面的代码会不会豁然开朗呢？</p>
+<pre><code class="hljs aspectj">
+<span class="hljs-comment">//		实例化Handler对象 传入Callback参数并重写handleMessage(Message msg)</span>
+ <span class="hljs-keyword">static</span> Handler mHandler1 = <span class="hljs-keyword">new</span> Handler(<span class="hljs-keyword">new</span> Handler.Callback() &#123;
+        <span class="hljs-meta">@Override</span>
+        <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">boolean</span> <span class="hljs-title">handleMessage</span><span class="hljs-params">(Message msg)</span> </span>&#123;
+
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+        &#125;
+    &#125;);
+
+<span class="hljs-comment">//	实例化Handler对象 并重写Handler中的handleMessage(Message msg)</span>
+handleMessage(Message msg)
+ <span class="hljs-keyword">static</span> Handler mHandler = <span class="hljs-keyword">new</span> Handler()&#123;
+		  <span class="hljs-meta">@Override</span>
+        <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">boolean</span> <span class="hljs-title">handleMessage</span><span class="hljs-params">(Message msg)</span> </span>&#123;
+
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;
+        &#125;
+&#125;;
+</code></pre>
+<p>到这里我们总算把Handler的消息机制给串联了起来。</p>
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p> Handler、Looper和MessageQueue三者共支撑了Android中的消息机制。在使用的时候我们通常只需要和Handler打交道，通过Handler将消息发送出来。而在Handler内部的MessageQueue通过equeueMessage方法将Handler发送的消息以队列的形式进行存储。而Looper则作为一个消息泵，通过loop方法不断的调用MessageQueue的next方法将消息取出并进行处理，依次完成了整个的消息循环。同时，我们还应该特别强调ThreadLocal，正是有了它的存在，才使得我们能够轻松的进行切换线程。</p>
+<p>整个过程当如下图所示：</p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/Resource/master/image/1101.jfif" srcset="/img/loading.gif"></p>
+<p>看到这里，在第一章中提到的几点疑惑相信你心中应该也已经有了答案。我们不妨再来总结一下：</p>
+<p><strong>问题1：</strong> 在场景1中Handler在子线程中发送出来的消息为什么到了dispatchMessage方法就变成了主线程呢？<br>虽然post消息是在子线程，但因为Handler是在主线程中被实例化的，由于在ActivityThread的main方法中调用了Looper.prepare(),因此，通过ThreadLocal将Looper缓存到了主线程中，而MessageQueue是Looper的成员变量，所以其也应是在主线程中。同时，Looper.loop方法将Message取出并通过Message.target.handlerMessage方法最终调用了dispatchMessage方法，所以dispatchMessage方法当然也是在主线程了。</p>
+<p><strong>问题2：</strong> 在场景2的代码中我故意在子线程中调用了Handler的postDelayed方法，那么此时通过postDelayed方法发出来的Runnable究竟是运行在主线程还是子线程呢？</p>
+<p>这个问题其实和问题1本质上是同一个问题，就无需多言了！</p>
+<p><strong>问题3</strong>在文中已经给出了答案，这里也不再赘述。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/02/12/12.%E5%85%B3%E4%BA%8EHttps%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B%E5%84%BF/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">关于Https的那些事儿</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2017/07/27/10.Android%E5%A4%9C%E9%97%B4%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88/">
+                        <span class="hidden-mobile">Android夜间模式实现方案</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "追根溯源--探究Handler的实现原理&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
