@@ -144,6 +144,8 @@
           <div class="container page-header text-center fade-in-up">
             <span class="h2" id="subtitle">
               
+                Talk is cheap, show me the code.
+              
             </span>
 
             
@@ -170,39 +172,6 @@
               <div class="col-12 col-md-10 m-auto">
                 
 
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        <a href="/2016/09/25/4.RecyclerView-ListView%E5%B5%8C%E5%A5%97CheckBox%E9%80%89%E4%B8%AD%E7%8A%B6%E6%80%81%E9%94%99%E4%B9%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2016/09/25/4.RecyclerView-ListView%E5%B5%8C%E5%A5%97CheckBox%E9%80%89%E4%B8%AD%E7%8A%B6%E6%80%81%E9%94%99%E4%B9%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
-          
-          
-            
-          
-          在讨论这个问题之前应该先了解ListView的复用机制ListView复用的原理：ListView中的每一个Item显示都需要Adapter调用一次getView的方法，这个方法会传入一个convertView的参数，返回的View就是这个Item显示的View。如果当Item的数量足够大，再为每一个Item都创建一个View对象，必将占用很多内存，创建View对象（mInflater.infla
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2016-09-25 22:58" pubdate>
-              2016-09-25
-            </time>
-          </div>
-        
-        
-        
-      </div>
-    </article>
-  </div>
 
   <div class="row mx-auto index-card">
     
@@ -431,24 +400,6 @@ Subject类中定义一个抽象re
 
 
 
-
-  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
-  <script>
-    var typed = new Typed('#subtitle', {
-      strings: [
-        '  ',
-        "Talk is cheap, show me the code.&nbsp;",
-      ],
-      cursorChar: "_",
-      typeSpeed: 70,
-      loop: false,
-    });
-    typed.stop();
-    $(document).ready(function () {
-      $(".typed-cursor").addClass("h2");
-      typed.start();
-    });
-  </script>
 
 
 

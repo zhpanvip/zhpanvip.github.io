@@ -154,6 +154,8 @@
           <div class="container page-header text-center fade-in-up">
             <span class="h2" id="subtitle">
               
+                学不动也要学！探究Fragment延迟加载的前世今生
+              
             </span>
 
             
@@ -553,6 +555,38 @@ fragmentTransaction.commit()</code></pre>
             </div>
 
             
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script type="text/javascript">
+    function loadValine() {
+      addScript('https://cdn.staticfile.org/valine/1.4.14/Valine.min.js', function () {
+        new Valine({
+          el: "#vcomments",
+          app_id: "hXIROaIM5y9qnieojJRWP5hS-gzGzoHsz",
+          app_key: "y0f3w3aqd1MF7JL9ma4WECTy",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "retro",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: false,
+          recordIP: false,
+          serverURLs: "https://zhpanvip.github.io",
+        });
+      });
+    }
+    waitElementVisible('vcomments', loadValine);
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments
+      powered by Valine.</a></noscript>
+
+
+              </article>
+            
           </article>
         </div>
       </div>
@@ -675,24 +709,6 @@ fragmentTransaction.commit()</code></pre>
   </script>
 
 
-
-  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
-  <script>
-    var typed = new Typed('#subtitle', {
-      strings: [
-        '  ',
-        "学不动也要学！探究Fragment延迟加载的前世今生&nbsp;",
-      ],
-      cursorChar: "_",
-      typeSpeed: 70,
-      loop: false,
-    });
-    typed.stop();
-    $(document).ready(function () {
-      $(".typed-cursor").addClass("h2");
-      typed.start();
-    });
-  </script>
 
 
 
