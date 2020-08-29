@@ -144,8 +144,6 @@
           <div class="container page-header text-center fade-in-up">
             <span class="h2" id="subtitle">
               
-                Talk is cheap, show me the code.
-              
             </span>
 
             
@@ -400,6 +398,24 @@ Subject类中定义一个抽象re
 
 
 
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Talk is cheap, show me the code.&nbsp;",
+      ],
+      cursorChar: "|",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
 
 
 
