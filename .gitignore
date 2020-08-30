@@ -1,0 +1,9 @@
+/build.gradle
+/gradlew
+/gradlew.bat
+/local.properties
+/gradle/wrapper/gradle-wrapper.properties
+/.idea/
+/gradle/wrapper/
+/.deploy_git/
+/public
