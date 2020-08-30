@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>浅析Java设计模式（三） - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>zhangpan</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2016-07-26 10:26" pubdate>
+      2016年7月26日 上午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      15
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">浅析Java设计模式（三）</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>本篇文章继续来学习Java的设计模式，这篇文章来解析行为型模式种的几种比较常用的设计模式。</p>
+<p>一、观察者模式<br>观察者模式定义了一种一对多的依赖关系，让多个观察者对象同时监听某一个主题对象。这个主题对象在状态发生变化时，会通知所有的观察者对象，使它们能够自动更新自己。以微信推送腾讯新闻为例，用户在微信订阅了腾讯新闻后，用户会收到腾讯的新闻推送。如果用户取消了新闻订阅，那么就不会再收到推送。<br>1.创建一个被观察者Observer 接口，接口中有update方法</p>
+<pre><code class="hljs routeros">public<span class="hljs-built_in"> interface </span>Observer &#123;
+	void update(String news);
+&#125;</code></pre>
+
+<p>2.创建观察者Observable接口，接口中有订阅、取消订阅、通知三个方法。</p>
+<pre><code class="hljs routeros">public<span class="hljs-built_in"> interface </span>Observable &#123;
+	void subscribe(Observer observer);
+	void unsubscribe(Observer observer);
+	void notifyObserver();
+&#125;
+</code></pre>
+<p>3.创建TencentNewsObservable并实现Observable接口</p>
+<pre><code class="hljs haxe">
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TencentNewsObservable</span> <span class="hljs-keyword"><span class="hljs-keyword">implements</span> <span class="hljs-type">Observable</span></span> </span>&#123;
+	<span class="hljs-keyword">private</span> List&lt;Observer&gt; observers=<span class="hljs-keyword">new</span> <span class="hljs-type">ArrayList</span>&lt;Observer&gt;();
+	<span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> <span class="hljs-keyword">new</span><span class="hljs-type">s</span>;
+	@Override
+	<span class="hljs-keyword">public</span> void subscribe(Observer observer) &#123;
+		observers.add(observer);
+	&#125;
+
+	@Override
+	<span class="hljs-keyword">public</span> void unsubscribe(Observer observer) &#123;
+		observers.remove(observer);
+	&#125;
+
+	@Override
+	<span class="hljs-keyword">public</span> void notifyObserver() &#123;
+		<span class="hljs-keyword">for</span>(Observer observer:<span class="hljs-type">observers</span>) &#123;
+			observer.update(<span class="hljs-keyword">new</span><span class="hljs-type">s</span>);
+		&#125;
+	&#125;
+	
+	<span class="hljs-keyword">public</span> void sendNews(<span class="hljs-keyword">String</span> <span class="hljs-keyword">new</span><span class="hljs-type">s</span>) &#123;
+		<span class="hljs-built_in">this</span>.<span class="hljs-keyword">new</span><span class="hljs-type">s</span>=<span class="hljs-keyword">new</span><span class="hljs-type">s</span>;
+		notifyObserver();
+	&#125;
+
+&#125;</code></pre>
+<p>4.定义一个UserObserver并实现Observer接口</p>
+<pre><code class="hljs haxe"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserObserver</span> <span class="hljs-keyword"><span class="hljs-keyword">implements</span> <span class="hljs-type">Observer</span></span></span>&#123;
+	<span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> name;
+	
+	<span class="hljs-keyword">public</span> UserObserver(<span class="hljs-keyword">String</span> name) &#123;
+		<span class="hljs-built_in">this</span>.name=name;
+	&#125;
+
+	@Override
+	<span class="hljs-keyword">public</span> void update(<span class="hljs-keyword">String</span> <span class="hljs-keyword">new</span><span class="hljs-type">s</span>) &#123;
+		System.out.println(name+<span class="hljs-string">&quot;收到一条消息：&quot;</span>+<span class="hljs-keyword">new</span><span class="hljs-type">s</span>);
+	&#125;
+&#125;</code></pre>
+<p>5.编写测试类</p>
+<pre><code class="hljs haxe"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ObserverTest</span> </span>&#123;
+
+	<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> void main(<span class="hljs-keyword">String</span>[] args) &#123;
+		UserObserver mike=<span class="hljs-keyword">new</span> <span class="hljs-type">UserObserver</span>(<span class="hljs-string">&quot;Mike&quot;</span>);
+		UserObserver lucy=<span class="hljs-keyword">new</span> <span class="hljs-type">UserObserver</span>(<span class="hljs-string">&quot;Lucy&quot;</span>);
+		UserObserver kate=<span class="hljs-keyword">new</span> <span class="hljs-type">UserObserver</span>(<span class="hljs-string">&quot;Kate&quot;</span>);
+		TencentNewsObservable observerable=<span class="hljs-keyword">new</span> <span class="hljs-type">TencentNewsObservable</span>();
+		
+		observerable.subscribe(mike);
+		observerable.subscribe(lucy);
+		observerable.subscribe(kate);
+		observerable.sendNews(<span class="hljs-string">&quot;this is an ad&quot;</span>);
+	&#125;
+&#125;</code></pre>
+<p>运行结果：</p>
+<blockquote>
+<p>Mike收到一条消息：this is an advertisement<br>Lucy收到一条消息：this is an advertisement<br>Kate收到一条消息：this is an advertisement</p>
+</blockquote>
+<p>此时Mike收到推送打开后一看，竟然是一条广告，愤怒之下取消了订阅！</p>
+<pre><code class="hljs abnf">System.out.println(<span class="hljs-string">&quot;Mike unsubscribe news&quot;</span>)<span class="hljs-comment">;</span>
+observerable.unsubscribe(mike)<span class="hljs-comment">;</span>
+observerable.sendNews(<span class="hljs-string">&quot;this is a news&quot;</span>)<span class="hljs-comment">;</span></code></pre>
+<p>运行结果：</p>
+<blockquote>
+<p>Mike收到一条消息：this is an advertisement<br>Lucy收到一条消息：this is an advertisement<br>Kate收到一条消息：this is an advertisement<br>Mike unsubscribe news<br>Lucy收到一条消息：this is a news<br>Kate收到一条消息：this is a news</p>
+</blockquote>
+<p>取消订阅后Mike再也没有收到新闻推送。</p>
+<p>二、策略模式<br>策略模式定义了一系列的算法，并将每一个算法封装起来，而且使他们可以相互替换，让算法独立于使用它的客户而独立变化。策略模式设计三个角色，环境(Context)角色、抽象策略(Strategy)角色以及具体策略(ConcreteStrategy)角色。<br>来看一个现实生活的例子，假设一个商场有三种会员（Strategy），分别为普通会员（StandardMemberStraegy）、白银会员（SilverMemberStrategy）以及黄金会员（GoldenMemberStrategy）。针对三种会员分别制定了不同的优方案。普通会员打九折、白银会员打八折、黄金会员打七折。来看如何用策略模式实现上述场景。<br>1.创建抽象策略类</p>
+<pre><code class="hljs arduino"><span class="hljs-keyword">public</span> abstract <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Strategy</span> &#123;</span>
+	
+	<span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> strategy;
+	
+	
+	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">String</span> <span class="hljs-title">getStrategy</span><span class="hljs-params">()</span> </span>&#123;
+		<span class="hljs-keyword">return</span> strategy;
+	&#125;
+
+
+
+	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Strategy</span><span class="hljs-params">(<span class="hljs-keyword">String</span> strategy)</span> </span>&#123;
+		super();
+		<span class="hljs-keyword">this</span>.strategy = strategy;
+	&#125;
+	
+	<span class="hljs-function">abstract <span class="hljs-keyword">double</span> <span class="hljs-title">getPrice</span><span class="hljs-params">(<span class="hljs-keyword">double</span> normalPrice)</span></span>;
+&#125;</code></pre>
+<p>2.创建环境类（Context）并持有抽象策略类</p>
+<pre><code class="hljs reasonml">public <span class="hljs-keyword">class</span> Context &#123;
+	<span class="hljs-keyword">private</span> Strategy mStrategy;
+	
+	public void set<span class="hljs-constructor">Strategy(Strategy <span class="hljs-params">strategy</span>)</span> &#123;
+		mStrategy=strategy;
+	&#125;
+	
+	public double execute<span class="hljs-constructor">Price(<span class="hljs-params">double</span> <span class="hljs-params">normalPrice</span>)</span> &#123;
+		<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">System</span>.</span></span>out.println(mStrategy.get<span class="hljs-constructor">Strategy()</span>+<span class="hljs-string">&quot;Member，折后价：&quot;</span>+mStrategy.get<span class="hljs-constructor">Price(<span class="hljs-params">normalPrice</span>)</span>);
+		return mStrategy.get<span class="hljs-constructor">Price(<span class="hljs-params">normalPrice</span>)</span>;
+	&#125;
+&#125;</code></pre>
+<p>3.创建三种会员策略类</p>
+<pre><code class="hljs scala">public <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StandardMemberStraegy</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Strategy</span> </span>&#123;
+	
+	public <span class="hljs-type">StandardMemberStraegy</span>(<span class="hljs-type">String</span> strategy) &#123;
+		<span class="hljs-keyword">super</span>(strategy);
+	&#125;
+
+	<span class="hljs-meta">@Override</span>
+	public double getPrice(double normalPrice) &#123;
+		<span class="hljs-keyword">return</span> <span class="hljs-number">0.9</span>*normalPrice;
+	&#125;
+&#125;
+
+public <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SilverMemberStrategy</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Strategy</span></span>&#123;
+
+	public <span class="hljs-type">SilverMemberStrategy</span>(<span class="hljs-type">String</span> strategy) &#123;
+		<span class="hljs-keyword">super</span>(strategy);
+	&#125;
+
+	<span class="hljs-meta">@Override</span>
+	public double getPrice(double normalPrice) &#123;
+		<span class="hljs-keyword">return</span> <span class="hljs-number">0.8</span>*normalPrice;
+	&#125;
+
+&#125;
+
+public <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GoldenMemberStrategy</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Strategy</span> </span>&#123;
+
+
+	public <span class="hljs-type">GoldenMemberStrategy</span>(<span class="hljs-type">String</span> strategy) &#123;
+		<span class="hljs-keyword">super</span>(strategy);
+	&#125;
+
+	<span class="hljs-meta">@Override</span>
+	public double getPrice(double normalPrice) &#123;
+		<span class="hljs-keyword">return</span> <span class="hljs-number">0.7</span>*normalPrice;
+	&#125;
+	
+&#125;</code></pre>
+<p>4.创建策略模式测试类</p>
+<pre><code class="hljs reasonml">public <span class="hljs-keyword">class</span> StrategyTest &#123;
+
+	public static void main(String<span class="hljs-literal">[]</span> args) &#123;
+		StandardMemberStraegy standar=<span class="hljs-keyword">new</span> <span class="hljs-constructor">StandardMemberStraegy(<span class="hljs-string">&quot;Standar&quot;</span>)</span>;
+		SilverMemberStrategy silver=<span class="hljs-keyword">new</span> <span class="hljs-constructor">SilverMemberStrategy(<span class="hljs-string">&quot;Silver&quot;</span>)</span>;
+		GoldenMemberStrategy golden=<span class="hljs-keyword">new</span> <span class="hljs-constructor">GoldenMemberStrategy(<span class="hljs-string">&quot;Golden&quot;</span>)</span>;
+		Context context=<span class="hljs-keyword">new</span> <span class="hljs-constructor">Context()</span>;
+		
+		context.set<span class="hljs-constructor">Strategy(<span class="hljs-params">standar</span>)</span>;
+		context.execute<span class="hljs-constructor">Price(100)</span>;
+		
+		context.set<span class="hljs-constructor">Strategy(<span class="hljs-params">silver</span>)</span>;
+		context.execute<span class="hljs-constructor">Price(100)</span>;
+		
+		context.set<span class="hljs-constructor">Strategy(<span class="hljs-params">golden</span>)</span>;
+		context.execute<span class="hljs-constructor">Price(100)</span>;
+	&#125;
+
+&#125;</code></pre>
+<p>运行结果：</p>
+<blockquote>
+<p>StandarMember，折后价：90.0<br>SilverMember，折后价：80.0<br>GoldenMember，折后价：70.0</p>
+</blockquote>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <h5>开源库推荐</h5> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">1.BannerViewPager</a> <p> 一个基于ViewPager2实现的具有强大功能的无限轮播库。支持多种页面切换效果和指示器样式。 </p>
+<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">2.ViewPagerIndicator</a> <p> 一个适用于ViewPager和ViewPager2的指示器，支持多种滑块样式及滑动模式 </p></p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2016/09/25/4.RecyclerView-ListView%E5%B5%8C%E5%A5%97CheckBox%E9%80%89%E4%B8%AD%E7%8A%B6%E6%80%81%E9%94%99%E4%B9%B1%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2016/07/25/2.%E6%B5%85%E6%9E%90Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%BA%8C%EF%BC%89/">
+                        <span class="hidden-mobile">浅析Java设计模式（二）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    function loadUtterances() {
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', 'github-light');
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    }
+    waitElementVisible('comments', loadUtterances)
+  </script>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "浅析Java设计模式（三）&nbsp;",
+      ],
+      cursorChar: "|",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

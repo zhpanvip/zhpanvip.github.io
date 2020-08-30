@@ -1,0 +1,935 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>RxJava+Retrofit完美封装（一） - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>zhangpan</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2017-04-30 03:29" pubdate>
+      2017年4月30日 凌晨
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      3.5k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      49
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">RxJava+Retrofit完美封装（一）</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p><strong><em>本篇文章已授权微信公众号 guolin_blog （郭霖）独家发布</em></strong></p>
+<p>要说2016年最火的Android技术是什么，毫无疑问肯定是RxJava+Retrofit+Mvp。现如今2017年也已经过了快一半了。相信做android开发的小伙伴对RxJava和Retrofit也不再陌生。即使没有刻意的去学习过，也应该对RxJava和Retrofit有个一知半解。去年的时候学习了Rxjava和Retrofit的基本用法，但一直没有在实际项目中运用。今年开做新项目，果断在新项目中引入了RxJava和Retrofit。本篇文章将介绍笔者在项目中对Retrofit的封装。<br>先来看一下封装过后的Retrofit如何使用。</p>
+<pre><code class="hljs reasonml"><span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">RetrofitHelper</span>.</span></span>get<span class="hljs-constructor">ApiService()</span>
+                .get<span class="hljs-constructor">Article()</span>
+                .compose(RxUtil.&lt;ArticleWrapper&gt;rx<span class="hljs-constructor">SchedulerHelper(<span class="hljs-params">this</span>)</span>)
+                .subscribe(<span class="hljs-keyword">new</span> DefaultObserver&lt;ArticleWrapper&gt;<span class="hljs-literal">()</span> &#123;
+                    @Override
+                    public void on<span class="hljs-constructor">Success(ArticleWrapper <span class="hljs-params">response</span>)</span> &#123;
+                        show<span class="hljs-constructor">Toast(<span class="hljs-string">&quot;Request Success，size is：&quot;</span> + <span class="hljs-params">response</span>.<span class="hljs-params">getDatas</span>()</span>.size<span class="hljs-literal">()</span>);
+                    &#125;
+                &#125;);</code></pre>
+<p>没错，就是这么简洁的一个链式调用，可以显示加载动画，还加入了Retrofit生命周期的管理。<br>开始之前需要先在module项目里的Gradle文件中添加用到的依赖库</p>
+<pre><code class="hljs gradle"><span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;io.reactivex.rxjava2:rxjava:$rootProject.ext.rxjava2Version&quot;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;com.squareup.retrofit2:retrofit:$rootProject.ext.retrofit2Version&quot;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;com.squareup.retrofit2:converter-scalars:$rootProject.ext.retrofit2Version&quot;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;com.squareup.retrofit2:converter-gson:$rootProject.ext.retrofit2Version&quot;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;com.squareup.retrofit2:adapter-rxjava2:$rootProject.ext.retrofit2Version&quot;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&#x27;com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0&#x27;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&#x27;io.reactivex.rxjava2:rxandroid:2.0.1&#x27;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&#x27;com.squareup.okhttp3:logging-interceptor:3.4.1&#x27;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;com.trello.rxlifecycle2:rxlifecycle:$rootProject.ext.rxlifecycle&quot;</span>
+   <span class="hljs-comment">//compile &quot;com.trello.rxlifecycle2:rxlifecycle-android:$rootProject.ext.rxlifecycle&quot;</span>
+   <span class="hljs-keyword">compile</span> <span class="hljs-string">&quot;com.trello.rxlifecycle2:rxlifecycle-components:$rootProject.ext.rxlifecycle&quot;</span></code></pre>
+<p>为了方便依赖库版本的修改我们采用”io.reactivex.rxjava2:rxjava:$rootProject.ext.rxjava2Version”这中方式添加依赖，因此需要在project的build.gradle文件的加上以下内容：</p>
+<pre><code class="hljs lsl">ext &#123;
+    supportLibVersion = &#x27;<span class="hljs-number">25.1</span><span class="hljs-number">.0</span>&#x27;
+    butterknifeVersion = &#x27;<span class="hljs-number">8.5</span><span class="hljs-number">.1</span>&#x27;
+    rxjava2Version = &#x27;<span class="hljs-number">2.0</span><span class="hljs-number">.8</span>&#x27;
+    retrofit2Version = &#x27;<span class="hljs-number">2.2</span><span class="hljs-number">.0</span>&#x27;
+    rxlifecycle=&#x27;<span class="hljs-number">2.1</span><span class="hljs-number">.0</span>&#x27;
+    gsonVersion = &#x27;<span class="hljs-number">2.8</span><span class="hljs-number">.0</span>&#x27;
+&#125;</code></pre>
+<p>下面将通过几个小节对本次封装作详细的解析：</p>
+<ul>
+<li>服务器响应数据的基类BasicResponse</li>
+<li>构建初始化Retrofit的工具类IdeaApi</li>
+<li>通过GsonConverterFactory获取真实响应数据</li>
+<li>封装DefaultObserver处理服务器响应</li>
+<li>处理加载Loading</li>
+<li>管理Retrofit生命周期</li>
+<li>如何使用封装</li>
+<li>小结</li>
+</ul>
+<h2 id="一-服务器响应数据的基类BasicResponse。"><a href="#一-服务器响应数据的基类BasicResponse。" class="headerlink" title="一.服务器响应数据的基类BasicResponse。"></a>一.服务器响应数据的基类BasicResponse。</h2><p>假定服务器返回的Json数据格式如下：</p>
+<pre><code class="hljs clojure">&#123;
+ <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+ <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;成功&quot;</span>,
+ <span class="hljs-string">&quot;content&quot;</span>: &#123;
+	...
+	&#125;
+&#125;</code></pre>
+<p>根据Json数据格式构建我们的BasicResponse（BasicResponse中的字段内容需要根据自己服务器返回的数据确定）。代码如下：</p>
+<pre><code class="hljs arduino"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BasicResponse</span>&lt;T&gt; &#123;</span>
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span> code;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> message;
+    <span class="hljs-keyword">private</span> T content;
+	...此处省去<span class="hljs-built_in">get</span>、<span class="hljs-built_in">set</span>方法。</code></pre>
+
+<h2 id="二-构建初始化Retrofit的工具类IdeaApi。"><a href="#二-构建初始化Retrofit的工具类IdeaApi。" class="headerlink" title="二.构建初始化Retrofit的工具类IdeaApi。"></a>二.构建初始化Retrofit的工具类IdeaApi。</h2><p>该类通过RetrofitUtils来获取ApiService的实例。代码如下：</p>
+<pre><code class="hljs arduino"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IdeaApi</span> &#123;</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> &lt;T&gt; <span class="hljs-function">T <span class="hljs-title">getApiService</span><span class="hljs-params">(Class&lt;T&gt; cls,<span class="hljs-keyword">String</span> baseUrl)</span> </span>&#123;
+        Retrofit retrofit = RetrofitUtils .getRetrofitBuilder(baseUrl).build();
+        <span class="hljs-keyword">return</span> retrofit.create(cls);
+    &#125;
+&#125;</code></pre>
+<p>RetrofitUtils用来构建Retrofit.Builder，并对OkHttp做以下几个方面的配置：</p>
+<ol>
+<li>设置日志拦截器，拦截服务器返回的json数据。Retrofit将请求到json数据直接转换成了实体类，但有时候我们需要查看json数据，Retrofit并没有提供直接获取json数据的功能。因此我们需要自定义一个日志拦截器拦截json数据，并输入到控制台。</li>
+<li>设置Http请求头。给OkHttp 添加请求头拦截器，配置请求头信息。还可以为接口统一添加请求头数据。例如，把用户名、密码（或者token）统一添加到请求头。后续每个接口的请求头中都会携带用户名、密码（或者token）数据，避免了为每个接口单独添加。</li>
+<li>为OkHttp配置缓存。同样可以同过拦截器实现缓存处理。包括控制缓存的最大生命值，控制缓存的过期时间。</li>
+<li>如果采用https，我们还可以在此处理证书校验以及服务器校验。</li>
+<li>为Retrofit添加GsonConverterFactory。此处是一个比较重要的环节，将在后边详细讲解。<br>RetrofitUtils 代码如下：<pre><code class="hljs reasonml">public <span class="hljs-keyword">class</span> RetrofitUtils &#123;
+    public static OkHttpClient.Builder get<span class="hljs-constructor">OkHttpClientBuilder()</span> &#123;
+
+        HttpLoggingInterceptor loggingInterceptor = <span class="hljs-keyword">new</span> <span class="hljs-constructor">HttpLoggingInterceptor(<span class="hljs-params">new</span> HttpLoggingInterceptor.Logger()</span> &#123;
+            @Override
+            public void log(String message) &#123;
+                <span class="hljs-keyword">try</span> &#123;
+                    <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">LogUtils</span>.</span></span>e(<span class="hljs-string">&quot;OKHttp-----&quot;</span>, <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">URLDecoder</span>.</span></span>decode(message, <span class="hljs-string">&quot;utf-8&quot;</span>));
+                &#125; catch (UnsupportedEncodingException e) &#123;
+                    e.print<span class="hljs-constructor">StackTrace()</span>;
+                    <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">LogUtils</span>.</span></span>e(<span class="hljs-string">&quot;OKHttp-----&quot;</span>, message);
+                &#125;
+            &#125;
+        &#125;);
+        loggingInterceptor.set<span class="hljs-constructor">Level(HttpLoggingInterceptor.Level.BODY)</span>;
+
+        File cacheFile = <span class="hljs-keyword">new</span> <span class="hljs-constructor">File(Utils.<span class="hljs-params">getContext</span>()</span>.get<span class="hljs-constructor">CacheDir()</span>, <span class="hljs-string">&quot;cache&quot;</span>);
+        Cache cache = <span class="hljs-keyword">new</span> <span class="hljs-constructor">Cache(<span class="hljs-params">cacheFile</span>, 1024 <span class="hljs-operator">*</span> 1024 <span class="hljs-operator">*</span> 100)</span>; <span class="hljs-comment">//100Mb</span>
+
+        return <span class="hljs-keyword">new</span> OkHttpClient.<span class="hljs-constructor">Builder()</span>
+                .read<span class="hljs-constructor">Timeout(Constants.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)</span>
+                .connect<span class="hljs-constructor">Timeout(Constants.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)</span>
+                .add<span class="hljs-constructor">Interceptor(<span class="hljs-params">loggingInterceptor</span>)</span>
+                .add<span class="hljs-constructor">Interceptor(<span class="hljs-params">new</span> HttpHeaderInterceptor()</span>)
+                .add<span class="hljs-constructor">NetworkInterceptor(<span class="hljs-params">new</span> HttpCacheInterceptor()</span>)
+               <span class="hljs-comment">// .sslSocketFactory(SslContextFactory.getSSLSocketFactoryForTwoWay())  // https认证 如果要使用https且为自定义证书 可以去掉这两行注释，并自行配制证书。</span>
+               <span class="hljs-comment">// .hostnameVerifier(new SafeHostnameVerifier())</span>
+                .cache(cache);
+    &#125;
+
+    public static Retrofit.Builder get<span class="hljs-constructor">RetrofitBuilder(String <span class="hljs-params">baseUrl</span>)</span> &#123;
+        Gson gson = <span class="hljs-keyword">new</span> <span class="hljs-constructor">GsonBuilder()</span>.set<span class="hljs-constructor">DateFormat(<span class="hljs-string">&quot;yyyy-MM-dd HH:mm:ss&quot;</span>)</span>.serialize<span class="hljs-constructor">Nulls()</span>.create<span class="hljs-literal">()</span>;
+        OkHttpClient okHttpClient = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">RetrofitUtils</span>.</span></span>get<span class="hljs-constructor">OkHttpClientBuilder()</span>.build<span class="hljs-literal">()</span>;
+        return <span class="hljs-keyword">new</span> Retrofit.<span class="hljs-constructor">Builder()</span>
+                .client(okHttpClient)
+                .add<span class="hljs-constructor">ConverterFactory(GsonConverterFactory.<span class="hljs-params">create</span>(<span class="hljs-params">gson</span>)</span>)
+                .add<span class="hljs-constructor">CallAdapterFactory(RxJava2CallAdapterFactory.<span class="hljs-params">create</span>()</span>)
+                .base<span class="hljs-constructor">Url(<span class="hljs-params">baseUrl</span>)</span>;
+    &#125;
+&#125;</code></pre>
+
+</li>
+</ol>
+<h2 id="三-通过GsonConverterFactory获取真实响应数据"><a href="#三-通过GsonConverterFactory获取真实响应数据" class="headerlink" title="三.通过GsonConverterFactory获取真实响应数据"></a>三.通过GsonConverterFactory获取真实响应数据</h2><p>在第一节中我们构建了服务器响应数据BasicResponse，BasicResponse由code、message、和content三个字段。其中code为服务器返回的错误码。我们会事先和服务器约定成功时的code值，比如200表示请求成功。但通常在请求服务器数据过程中免不了会出现各种错误。例如用户登录时密码错误、请求参数错误的情况。此时服务器会根据错误情况返回对应的错误码。一般来说，我们只关心成功时即code为200时的content数据。而对于code不为200时我们只需要给出对应的Toast提示即可。事实上我们对我们有用的仅仅时code为200时的content数据。因此我们可以考虑过滤掉code和message，在请求成功的回调中只返回content的内容。<br>在此种情况下就需要我们通过自定义GsonConverterFactory来实现了。我们可以直接从Retrofit的源码中copy出GsonConverterFactory的三个相关类来做修改。<br>其中最终要的一部分是修改GsonResponseBodyConverter中的convert方法。在该方法中拿到服务器响应数据并判断code是否为200。如果是，则获取到content并返回，如果不是，则在此处可以抛出对应的自定义的异常。然后再Observer中统一处理异常情况。GsonResponseBodyConverter代码如下：</p>
+<pre><code class="hljs angelscript"><span class="hljs-keyword">final</span> <span class="hljs-keyword">class</span> <span class="hljs-symbol">GsonResponseBodyConverter</span>&lt;<span class="hljs-symbol">T</span>&gt; <span class="hljs-symbol">implements</span> <span class="hljs-symbol">Converter</span>&lt;<span class="hljs-symbol">ResponseBody, <span class="hljs-symbol">Object</span></span>&gt; &#123;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> TypeAdapter&lt;T&gt; adapter;
+
+    GsonResponseBodyConverter(TypeAdapter&lt;T&gt; adapter) &#123;
+        <span class="hljs-keyword">this</span>.adapter = adapter;
+    &#125;
+
+    @Override
+    <span class="hljs-keyword">public</span> Object convert(ResponseBody value) throws IOException &#123;
+        <span class="hljs-keyword">try</span> &#123;
+            BasicResponse response = (BasicResponse) adapter.fromJson(value.charStream());
+            <span class="hljs-keyword">if</span> (response.getCode()==<span class="hljs-number">200</span>) &#123;
+            <span class="hljs-keyword">return</span> response.getResults();
+            &#125; <span class="hljs-keyword">else</span> &#123;
+                <span class="hljs-comment">// 特定 API 的错误，在相应的 DefaultObserver 的 onError 的方法中进行处理</span>
+                throw new ServerResponseException(response.getCode(), response.getMessage());
+            &#125;
+        &#125; finally &#123;
+            value.close();
+        &#125;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
+    &#125;
+&#125;</code></pre>
+
+<h2 id="四-构建DefaultObserver处理服务器响应。"><a href="#四-构建DefaultObserver处理服务器响应。" class="headerlink" title="四.构建DefaultObserver处理服务器响应。"></a>四.构建DefaultObserver处理服务器响应。</h2><p>上一节中我们讲到了在请求服务器时可能出现的一些例如密码错误、参数错误的情况，服务器给我们返回了对应的错误码，我们根据错误码抛出了对应自定义异常。除此之外在我们发起网络请求时还可能发生一些异常情况。例如没有网络、请求超时或者服务器返回了数据但在解析时出现了数据解析异常等。对于这样的情况我们也要进行统一处理的。那么我们就需要自定义一个DefaultObserver类继承Observer，并重写相应的方法。<br>该类中最重要的两个方法时onNext和onError。<br><strong>1.在服务器返回数据成功的情况下会回调到onNext方法。</strong>因此我们可以在DefaultObserver中定义一个抽象方法onSuccess(T response)，在调用网络时重写onSuccess方法即可。<br><strong>2.如果在请求服务器过程中出现任何异常，都会回调到onError方法中。</strong>包括上节中我们自己抛出的异常都会回调到onError。因此我们的重头戏就是处理onError。在onError中我们根据异常信息给出对应的Toast提示即可。<br>DefaultObserver类的代码如下：</p>
+<pre><code class="hljs reasonml">public abstract <span class="hljs-keyword">class</span> DefaultObserver&lt;T&gt; implements Observer&lt;T&gt; &#123;
+    @Override
+    public void on<span class="hljs-constructor">Subscribe(Disposable <span class="hljs-params">d</span>)</span> &#123;
+
+    &#125;
+
+    @Override
+    public void on<span class="hljs-constructor">Next(T <span class="hljs-params">response</span>)</span> &#123;
+        on<span class="hljs-constructor">Success(<span class="hljs-params">response</span>)</span>;
+        on<span class="hljs-constructor">Finish()</span>;
+    &#125;
+
+    @Override
+    public void on<span class="hljs-constructor">Error(Throwable <span class="hljs-params">e</span>)</span> &#123;
+        <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">LogUtils</span>.</span></span>e(<span class="hljs-string">&quot;Retrofit&quot;</span>, e.get<span class="hljs-constructor">Message()</span>);
+        <span class="hljs-keyword">if</span> (e instanceof HttpException) &#123;     <span class="hljs-comment">//   HTTP错误</span>
+            on<span class="hljs-constructor">Exception(ExceptionReason.BAD_NETWORK)</span>;
+        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (e instanceof ConnectException
+<span class="hljs-operator">                || </span>e instanceof UnknownHostException) &#123;   <span class="hljs-comment">//   连接错误</span>
+            on<span class="hljs-constructor">Exception(ExceptionReason.CONNECT_ERROR)</span>;
+        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (e instanceof InterruptedIOException) &#123;   <span class="hljs-comment">//  连接超时</span>
+            on<span class="hljs-constructor">Exception(ExceptionReason.CONNECT_TIMEOUT)</span>;
+        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (e instanceof JsonParseException
+<span class="hljs-operator">                || </span>e instanceof JSONException
+<span class="hljs-operator">                || </span>e instanceof ParseException) &#123;   <span class="hljs-comment">//  解析错误</span>
+            on<span class="hljs-constructor">Exception(ExceptionReason.PARSE_ERROR)</span>;
+        &#125;<span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span>(e instanceof ServerResponseException)&#123;
+            on<span class="hljs-constructor">Fail(<span class="hljs-params">e</span>.<span class="hljs-params">getMessage</span>()</span>);
+        &#125; <span class="hljs-keyword">else</span> &#123;
+            on<span class="hljs-constructor">Exception(ExceptionReason.UNKNOWN_ERROR)</span>;
+        &#125;
+        on<span class="hljs-constructor">Finish()</span>;
+    &#125;
+
+    @Override
+    public void on<span class="hljs-constructor">Complete()</span> &#123;
+    &#125;
+
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 请求成功</span>
+<span class="hljs-comment">     *</span>
+<span class="hljs-comment">     * @param response 服务器返回的数据</span>
+<span class="hljs-comment">     */</span>
+    abstract public void on<span class="hljs-constructor">Success(T <span class="hljs-params">response</span>)</span>;
+
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 服务器返回数据，但响应码不为200</span>
+<span class="hljs-comment">     *</span>
+<span class="hljs-comment">     */</span>
+    public void on<span class="hljs-constructor">Fail(String <span class="hljs-params">message</span>)</span> &#123;
+        <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToastUtils</span>.</span></span>show(message);
+    &#125;
+    
+    public void on<span class="hljs-constructor">Finish()</span>&#123;&#125;
+
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 请求异常</span>
+<span class="hljs-comment">     *</span>
+<span class="hljs-comment">     * @param reason</span>
+<span class="hljs-comment">     */</span>
+    public void on<span class="hljs-constructor">Exception(ExceptionReason <span class="hljs-params">reason</span>)</span> &#123;
+        switch (reason) &#123;
+            case CONNECT_ERROR:
+                <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToastUtils</span>.</span></span>show(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span><span class="hljs-built_in">string</span>.connect_error, Toast.LENGTH_SHORT);
+                break;
+
+            case CONNECT_TIMEOUT:
+                <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToastUtils</span>.</span></span>show(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span><span class="hljs-built_in">string</span>.connect_timeout, Toast.LENGTH_SHORT);
+                break;
+
+            case BAD_NETWORK:
+                <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToastUtils</span>.</span></span>show(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span><span class="hljs-built_in">string</span>.bad_network, Toast.LENGTH_SHORT);
+                break;
+
+            case PARSE_ERROR:
+                <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToastUtils</span>.</span></span>show(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span><span class="hljs-built_in">string</span>.parse_error, Toast.LENGTH_SHORT);
+                break;
+
+            case UNKNOWN_ERROR:
+            default:
+                <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">ToastUtils</span>.</span></span>show(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span><span class="hljs-built_in">string</span>.unknown_error, Toast.LENGTH_SHORT);
+                break;
+        &#125;
+    &#125;
+
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 请求网络失败原因</span>
+<span class="hljs-comment">     */</span>
+    public enum ExceptionReason &#123;
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * 解析数据失败</span>
+<span class="hljs-comment">         */</span>
+        PARSE_ERROR,
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * 网络问题</span>
+<span class="hljs-comment">         */</span>
+        BAD_NETWORK,
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * 连接错误</span>
+<span class="hljs-comment">         */</span>
+        CONNECT_ERROR,
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * 连接超时</span>
+<span class="hljs-comment">         */</span>
+        CONNECT_TIMEOUT,
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * 未知错误</span>
+<span class="hljs-comment">         */</span>
+        UNKNOWN_ERROR,
+    &#125;
+&#125;</code></pre>
+
+<h2 id="五-处理加载Loading"><a href="#五-处理加载Loading" class="headerlink" title="五.处理加载Loading"></a>五.处理加载Loading</h2><p>关于Loading我们可以通过RxJava的compose操作符来做一个非常优雅的处理。首先定义一个ProgressUtils工具类，然后通过RxJava的ObservableTransformer做一个变换来处理Loading。想要显示Loading，只需要加上.compose(ProgressUtils.&lt; T &gt;applyProgressBar(this))即可。<br>ProgressUtils代码如下：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ProgressUtils</span> </span>&#123;
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> &lt;T&gt; <span class="hljs-function">ObservableTransformer&lt;T, T&gt; <span class="hljs-title">applyProgressBar</span><span class="hljs-params">(</span></span>
+<span class="hljs-function"><span class="hljs-params">            <span class="hljs-meta">@NonNull</span> <span class="hljs-keyword">final</span> Activity activity, String msg)</span> </span>&#123;
+        <span class="hljs-keyword">final</span> WeakReference&lt;Activity&gt; activityWeakReference = <span class="hljs-keyword">new</span> WeakReference&lt;&gt;(activity);
+        <span class="hljs-keyword">final</span> DialogUtils dialogUtils = <span class="hljs-keyword">new</span> DialogUtils();
+        dialogUtils.showProgress(activityWeakReference.get());
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> ObservableTransformer&lt;T, T&gt;() &#123;
+            <span class="hljs-meta">@Override</span>
+            <span class="hljs-function"><span class="hljs-keyword">public</span> ObservableSource&lt;T&gt; <span class="hljs-title">apply</span><span class="hljs-params">(Observable&lt;T&gt; upstream)</span> </span>&#123;
+                <span class="hljs-keyword">return</span> upstream.doOnSubscribe(<span class="hljs-keyword">new</span> Consumer&lt;Disposable&gt;() &#123;
+                    <span class="hljs-meta">@Override</span>
+                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Disposable disposable)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;
+
+                    &#125;
+                &#125;).doOnTerminate(<span class="hljs-keyword">new</span> Action() &#123;
+                    <span class="hljs-meta">@Override</span>
+                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;
+                        Activity context;
+                        <span class="hljs-keyword">if</span> ((context = activityWeakReference.get()) != <span class="hljs-keyword">null</span>
+                                &amp;&amp; !context.isFinishing()) &#123;
+                            dialogUtils.dismissProgress();
+                        &#125;
+                    &#125;
+                &#125;).doOnSubscribe(<span class="hljs-keyword">new</span> Consumer&lt;Disposable&gt;() &#123;
+                    <span class="hljs-meta">@Override</span>
+                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Disposable disposable)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;
+                        <span class="hljs-comment">/*Activity context;</span>
+<span class="hljs-comment">                        if ((context = activityWeakReference.get()) != null</span>
+<span class="hljs-comment">                                &amp;&amp; !context.isFinishing()) &#123;</span>
+<span class="hljs-comment">                            dialogUtils.dismissProgress();</span>
+<span class="hljs-comment">                        &#125;*/</span>
+                    &#125;
+                &#125;);
+            &#125;
+        &#125;;
+    &#125;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> &lt;T&gt; <span class="hljs-function">ObservableTransformer&lt;T, T&gt; <span class="hljs-title">applyProgressBar</span><span class="hljs-params">(</span></span>
+<span class="hljs-function"><span class="hljs-params">            <span class="hljs-meta">@NonNull</span> <span class="hljs-keyword">final</span> Activity activity)</span> </span>&#123;
+        <span class="hljs-keyword">return</span> applyProgressBar(activity, <span class="hljs-string">&quot;&quot;</span>);
+    &#125;
+&#125;</code></pre>
+<p>至此关于RxJava和Retrofit的二次封装已经基本完成。但是我们不能忽略了很重要的一点，就是网络请求的生命周期。我们将在下一节中详细讲解。</p>
+<h2 id="六、管理Retrofit生命周期"><a href="#六、管理Retrofit生命周期" class="headerlink" title="六、管理Retrofit生命周期"></a>六、管理Retrofit生命周期</h2><p>当activity被销毁时，网络请求也应该随之终止的。要不然就可能造成内存泄漏。会严重影到响App的性能！因此Retrofit生命周期的管理也是比较重要的一点内容。在这里我们使用 **<a target="_blank" rel="noopener" href="https://github.com/trello/RxLifecycle">RxLifecycle</a>**来对Retrofit进行生命周期管理。其使用流程如下：</p>
+<p><strong>1.在gradel中添加依赖如下：</strong></p>
+<pre><code class="hljs apache"><span class="hljs-attribute">compile</span> &#x27;com.trello.rxlifecycle<span class="hljs-number">2</span>:rxlifecycle:<span class="hljs-number">2</span>.<span class="hljs-number">1</span>.<span class="hljs-number">0</span>&#x27;
+<span class="hljs-attribute">compile</span> &#x27;com.trello.rxlifecycle<span class="hljs-number">2</span>:rxlifecycle-components:<span class="hljs-number">2</span>.<span class="hljs-number">1</span>.<span class="hljs-number">0</span>&#x27;
+</code></pre>
+<p><strong>2.让我们的BaseActivity继承RxAppCompatActivity。</strong><br>具体代码如下：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">RxAppCompatActivity</span> </span>&#123;
+
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;
+        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);
+        setContentView(getLayoutId());
+        init(savedInstanceState);
+    &#125;
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">showToast</span><span class="hljs-params">(String msg)</span> </span>&#123;
+        ToastUtils.show(msg);
+    &#125;
+
+    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">abstract</span> <span class="hljs-meta">@LayoutRes</span> <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">getLayoutId</span><span class="hljs-params">()</span></span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">void</span> <span class="hljs-title">init</span><span class="hljs-params">(Bundle savedInstanceState)</span></span>;
+&#125;</code></pre>
+<p>同样我们项目的BaseFragment继承RxFragment（注意使用继承V4包下的RxFragment），如下：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseFragment</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">RxFragment</span> </span>&#123;
+
+    <span class="hljs-keyword">public</span> View rootView;
+    <span class="hljs-keyword">public</span> LayoutInflater inflater;
+
+
+    <span class="hljs-meta">@Nullable</span>
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> View <span class="hljs-title">onCreateView</span><span class="hljs-params">(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)</span> </span>&#123;
+        <span class="hljs-keyword">super</span>.onCreateView(inflater, container, savedInstanceState);
+        <span class="hljs-keyword">this</span>.inflater = inflater;
+        <span class="hljs-keyword">if</span> (rootView == <span class="hljs-keyword">null</span>) &#123;
+            rootView = inflater.inflate(<span class="hljs-keyword">this</span>.getLayoutId(), container, <span class="hljs-keyword">false</span>);
+            init(savedInstanceState);
+        &#125;
+        ViewGroup parent = (ViewGroup) rootView.getParent();
+        <span class="hljs-keyword">if</span> (parent != <span class="hljs-keyword">null</span>) &#123;
+            parent.removeView(rootView);
+        &#125;
+        <span class="hljs-keyword">return</span> rootView;
+    &#125;
+
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getLayoutId</span><span class="hljs-params">()</span></span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">void</span> <span class="hljs-title">init</span><span class="hljs-params">(Bundle savedInstanceState)</span></span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">showToast</span><span class="hljs-params">(String msg)</span> </span>&#123;
+        ToastUtils.show(msg);
+    &#125;
+
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResume</span><span class="hljs-params">()</span> </span>&#123;
+        <span class="hljs-keyword">super</span>.onResume();
+    &#125;
+
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onPause</span><span class="hljs-params">()</span> </span>&#123;
+        <span class="hljs-keyword">super</span>.onPause();
+    &#125;
+
+
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDestroyView</span><span class="hljs-params">()</span> </span>&#123;
+        <span class="hljs-keyword">super</span>.onDestroyView();
+    &#125;
+&#125;</code></pre>
+<p>3.使用compose操作符管理Retrofit生命周期了:</p>
+<pre><code class="hljs css"><span class="hljs-selector-tag">myObservable</span>
+            <span class="hljs-selector-class">.compose</span>(<span class="hljs-selector-tag">bindToLifecycle</span>())
+            <span class="hljs-selector-class">.subscribe</span>();
+
+或者
+
+<span class="hljs-selector-tag">myObservable</span>
+    <span class="hljs-selector-class">.compose</span>(<span class="hljs-selector-tag">RxLifecycle</span><span class="hljs-selector-class">.bindUntilEvent</span>(<span class="hljs-selector-tag">lifecycle</span>, <span class="hljs-selector-tag">ActivityEvent</span><span class="hljs-selector-class">.DESTROY</span>))
+    <span class="hljs-selector-class">.subscribe</span>();
+</code></pre>
+<p>关于RxLifecycle的详细使用方法可以参考 <strong><a target="_blank" rel="noopener" href="https://github.com/trello/RxLifecycle">RxLifecycle官网</a></strong></p>
+<h2 id="七-如何使用封装"><a href="#七-如何使用封装" class="headerlink" title="七.如何使用封装"></a>七.如何使用封装</h2><p>前面几节内容讲解了如何RxJava进行二次封装，封装部分的代码可以放在我们项目的Library模块中。那么封装好之后我们应该如何在app模块中使用呢？<br><strong>1.定义一个接口来存放我们项目的API</strong></p>
+<pre><code class="hljs less"><span class="hljs-selector-tag">public</span> <span class="hljs-selector-tag">interface</span> <span class="hljs-selector-tag">IdeaApiService</span> &#123;
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 此接口服务器响应数据BasicResponse的泛型T应该是List&lt;MeiZi&gt;</span>
+<span class="hljs-comment">     * 即BasicResponse&lt;List&lt;MeiZi&gt;&gt;</span>
+<span class="hljs-comment">     * @return BasicResponse&lt;List&lt;MeiZi&gt;&gt;</span>
+<span class="hljs-comment">     */</span>
+    <span class="hljs-variable">@Headers</span>(<span class="hljs-string">&quot;Cache-Control: public, max-age=10&quot;</span>)<span class="hljs-comment">//设置缓存 缓存时间为100s</span>
+    <span class="hljs-variable">@GET</span>(<span class="hljs-string">&quot;福利/10/1&quot;</span>)
+    Observable&lt;List&lt;MeiZi&gt;&gt; getMezi();
+
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 登录 接口为假接口 并不能返回数据</span>
+<span class="hljs-comment">     * @return</span>
+<span class="hljs-comment">     */</span>
+    <span class="hljs-variable">@POST</span>(<span class="hljs-string">&quot;login.do&quot;</span>)
+    Observable&lt;LoginResponse&gt; login(<span class="hljs-variable">@Body</span> LoginRequest request);
+
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 刷新token 接口为假接口 并不能返回数据</span>
+<span class="hljs-comment">     * @return</span>
+<span class="hljs-comment">     */</span>
+    <span class="hljs-variable">@POST</span>(<span class="hljs-string">&quot;refresh_token.do&quot;</span>)
+    Observable&lt;RefreshTokenResponseBean&gt; refreshToken(<span class="hljs-variable">@Body</span> RefreshTokenRequest request);
+
+    <span class="hljs-variable">@Multipart</span>
+    <span class="hljs-variable">@POST</span>(<span class="hljs-string">&quot;upload/uploadFile.do&quot;</span>)
+    Observable&lt;BasicResponse&gt; uploadFiles(<span class="hljs-variable">@Part</span> List&lt;MultipartBody.Part&gt; partList);
+&#125;</code></pre>
+
+<p><strong>2.定义一个RetrofitHelper 类，通过IdeaApi来获取IdeaApiService的实例。</strong></p>
+<pre><code class="hljs cpp"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RetrofitHelper</span> &#123;</span>
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> IdeaApiService mIdeaApiService;
+
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> IdeaApiService <span class="hljs-title">getApiService</span><span class="hljs-params">()</span></span>&#123;
+        <span class="hljs-keyword">return</span> mIdeaApiService;
+    &#125;
+    <span class="hljs-keyword">static</span> &#123;
+       mIdeaApiService= IdeaApi.getApiService(IdeaApiService.class, Constants.API_SERVER_URL);
+    &#125;
+&#125;</code></pre>
+<p><strong>3.在Activity或者Fragment中发起网络请求</strong></p>
+<pre><code class="hljs reasonml"><span class="hljs-comment">/**</span>
+<span class="hljs-comment"> * Get请求</span>
+<span class="hljs-comment"> * @param view</span>
+<span class="hljs-comment"> */</span>
+public void get<span class="hljs-constructor">Data(View <span class="hljs-params">view</span>)</span> &#123;
+    <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">RetrofitHelper</span>.</span></span>get<span class="hljs-constructor">ApiService()</span>
+            .get<span class="hljs-constructor">Mezi()</span>
+            .compose(this.&lt;List&lt;MeiZi&gt;&gt;bind<span class="hljs-constructor">ToLifecycle()</span>)
+            .compose(ProgressUtils.&lt;List&lt;MeiZi&gt;&gt;apply<span class="hljs-constructor">ProgressBar(<span class="hljs-params">this</span>)</span>)
+            .subscribe<span class="hljs-constructor">On(Schedulers.<span class="hljs-params">io</span>()</span>)
+            .observe<span class="hljs-constructor">On(AndroidSchedulers.<span class="hljs-params">mainThread</span>()</span>)
+            .subscribe(<span class="hljs-keyword">new</span> DefaultObserver&lt;List&lt;MeiZi&gt;&gt;<span class="hljs-literal">()</span> &#123;
+                @Override
+                public void on<span class="hljs-constructor">Success(List&lt;MeiZi&gt; <span class="hljs-params">response</span>)</span> &#123;
+                    show<span class="hljs-constructor">Toast(<span class="hljs-string">&quot;请求成功，妹子个数为&quot;</span> + <span class="hljs-params">response</span>.<span class="hljs-params">size</span>()</span>);
+                &#125;
+            &#125;);
+&#125;</code></pre>
+
+<h2 id="八-小结"><a href="#八-小结" class="headerlink" title="八.小结"></a>八.小结</h2><p>本篇文章主要讲解了Rxjava和Retrofit的二次封装。以上内容也是笔者参考多方面的资料经过长时间的改动优化而来。但鉴于本人能力有限，其中也避免不了出现不当之处。还请大家多多包涵。另外，在投稿郭神公众号时文章可能还存在很多处理不优雅的地方，比如对响应数据的处理以及对Loading的处理。在投稿被推送后收到了很多小伙伴的建议，因此笔者也参考了大家的意见并做了优化，在此感谢大家。最后如果有疑问欢迎在文章留言评论。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573/article/details/76100558">（二）Rxjava2+Retrofit之Token自动刷新</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573/article/details/78356747">（三）Rxjava2+Retrofit实现文件上传与下载</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/Retrofit2"> 源码传送门</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/RxJava/">RxJava</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <h5>开源库推荐</h5> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">1.BannerViewPager</a> <p> 一个基于ViewPager2实现的具有强大功能的无限轮播库。支持多种页面切换效果和指示器样式。 </p>
+<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">2.ViewPagerIndicator</a> <p> 一个适用于ViewPager和ViewPager2的指示器，支持多种滑块样式及滑动模式 </p></p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/07/27/9.RxJava-Retrofit%E4%B9%8Btoken%E8%87%AA%E5%8A%A8%E5%88%B7%E6%96%B0%EF%BC%88%E4%BA%8C%EF%BC%89/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">RxJava+Retrofit之token自动刷新（二）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2017/04/28/7.BaseActivity%E4%B8%AD%E5%B0%81%E8%A3%85%E9%80%9A%E7%94%A8%E7%9A%84Toolbar/">
+                        <span class="hidden-mobile">BaseActivity中封装通用的Toolbar</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    function loadUtterances() {
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', 'github-light');
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    }
+    waitElementVisible('comments', loadUtterances)
+  </script>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "RxJava+Retrofit完美封装（一）&nbsp;",
+      ],
+      cursorChar: "|",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

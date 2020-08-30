@@ -1,0 +1,785 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>学不动也要学！探究Fragment延迟加载的前世今生 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_6peoq002giu.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>zhangpan</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container page-header text-center fade-in-up">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-01-02 17:31" pubdate>
+      2020年1月2日 下午
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      55
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto" id="post">
+            <!-- SEO header -->
+            <h1 style="display: none">学不动也要学！探究Fragment延迟加载的前世今生</h1>
+            
+            <div class="markdown-body" id="post-body">
+              <p>上周在<a target="_blank" rel="noopener" href="https://juejin.im/post/5df4aabe6fb9a0161104c8eb">《学不动也要学！深入了解ViewPager2》</a>一篇文章的留言中，大家普遍对于Fragment懒加载的问题比较关心。其实，对于Fragment懒加载问题的处理由来已久，网上不乏相关的优秀文章。但是，由于Fragment生命周期的原因使得懒加载问题的处理并不是那么的优雅。显然，Google也意识到了问题所在。因此，在Androidx的库中对于Fragment的生命周期状态的控制进行了深度优化，使得我们更容易的去管控Fragment的生命周期，也使得我们更容易的去处理懒加载问题。但是，前提条件是我们要了解Google对于Fragment做了哪些优化。那么就让我们借此机会一起来探究一下吧！（ <strong><em>懒加载称作延迟加载我觉得更贴切一些，所以下文就统称为延迟加载了。</em></strong> ）</p>
+<h2 id="一、Fragment延迟加载的前世"><a href="#一、Fragment延迟加载的前世" class="headerlink" title="一、Fragment延迟加载的前世"></a>一、Fragment延迟加载的前世</h2><p>虽然本篇文章是对于Fragment新特性的探究，但是我觉得写文章总要有个因果。也为了照顾一下还不太了解什么是延迟加载的同学。我们还是先来了解一下延迟加载，顺便回顾一下Fragment延迟加载的旧方案。</p>
+<h3 id="1-为什么要对Fragment做延迟加载"><a href="#1-为什么要对Fragment做延迟加载" class="headerlink" title="1.为什么要对Fragment做延迟加载?"></a>1.为什么要对Fragment做延迟加载?</h3><p>首先，我们要搞清楚一个问题。“Fragment延迟加载“中的“延迟”并不指的是延迟加载Fragment，而是延迟加载Fragment中的数据。对于Fragment的使用通常我们会结合ViewPager。在<a target="_blank" rel="noopener" href="https://juejin.im/post/5df4aabe6fb9a0161104c8eb">《学不动也要学！深入了解ViewPager2》</a>一文中我们也提到ViewPager的预加载问题。ViewPager会默认在当前页面的左右两边至少预加载一个页面以保证ViewPager的流畅性。我们假设在ViewPager的所有Fragment中都存在网络请求。当我们打开这个页面的时候由于ViewPager的预加载原因，即使在其它Fragment不可见的情况下也会去进行网络请求加载数据。而如果此时用户根本就没有去滑动ViewPager就退出了应用或者切换到了其他页面。那么对于这个不可见的Fragment中的网络请求岂不是既浪费了流量也浪费了手机和服务器的性能？</p>
+<p>那么此时有的同学就有问题了。你就不能在Fragment显示的时候去加载数据吗?问的好！在解答之前我们先来看下Fragment的生命周期<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTUwMGM3ZDFk?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>想必这张图大家应该都非常熟悉了。当Fragment被预加载的时候，此Fragment的生命周期会从onAttach执行到onResume。显然我们无法通过Fragment的生命周期来控制Fragment的延迟加载。那么该怎么办呢？我们且往下看。</p>
+<h3 id="2-如何处理Fragment的延迟加载？"><a href="#2-如何处理Fragment的延迟加载？" class="headerlink" title="2.如何处理Fragment的延迟加载？"></a>2.如何处理Fragment的延迟加载？</h3><p>通过上一小节的分析我们知道想要在Fragment的生命周期中处理延迟加载的问题显然是走不通的。所以想要处理Fragment的延迟加载就需要另想它法了。还好，在Fragment中为我们提供了一个setUserVisibleHint(isVisibleToUser: Boolean)的方法，这个方法中有一个isVisibleToUser的boolean类型的参数，其意义表示当前的Fragment是否对用户可见。因此，对于Fragment的延迟加载我们便可以通过这个方法来展开。<br>既然要使用setUserVisibleHint(isVisibleToUser: Boolean)那么就应该知道这个方法的调用时机。我们写一个ViewPager嵌套Fragment的例子来打印下日志：</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MWE0N2UzMDg1Mzdk?x-oss-process=image/format,png" srcset="/img/loading.gif"><br><em>注：上图打印的日志中”position:0“表示当前Fragment，“position:1”表示预加载的Fragment，下同。</em></p>
+<p>可见该方法是在Fragment的onAttach之前就已经被调用了。因此，对于延迟加载我们可以在setUserVisibleHint(isVisibleToUser: Boolean)方法及onViewCreated(view: View, savedInstanceState: Bundle?)添加标志位来控制是否加载数据。我们来看下代码：</p>
+<pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseLazyFragment</span> : <span class="hljs-type">Fragment</span></span>() &#123;
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 当前Fragment状态是否可见</span>
+<span class="hljs-comment">     */</span>
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> isVisibleToUser: <span class="hljs-built_in">Boolean</span> = <span class="hljs-literal">false</span>
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 是否已创建View</span>
+<span class="hljs-comment">     */</span>
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> isViewCreated: <span class="hljs-built_in">Boolean</span> = <span class="hljs-literal">false</span>
+    <span class="hljs-comment">/**</span>
+<span class="hljs-comment">     * 是否第一次加载数据</span>
+<span class="hljs-comment">     */</span>
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> isFirstLoad = <span class="hljs-literal">true</span>
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">setUserVisibleHint</span><span class="hljs-params">(isVisibleToUser: <span class="hljs-type">Boolean</span>)</span></span> &#123;
+        <span class="hljs-keyword">super</span>.setUserVisibleHint(isVisibleToUser)
+        <span class="hljs-keyword">this</span>.isVisibleToUser = isVisibleToUser
+        onLazyLoad()
+    &#125;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onLazyLoad</span><span class="hljs-params">()</span></span> &#123;
+        <span class="hljs-keyword">if</span> (isVisibleToUser &amp;&amp; isViewCreated &amp;&amp; isFirstLoad) &#123;
+            isFirstLoad = <span class="hljs-literal">false</span>
+            lazyLoad()
+        &#125;
+    &#125;
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onViewCreated</span><span class="hljs-params">(view: <span class="hljs-type">View</span>, savedInstanceState: <span class="hljs-type">Bundle</span>?)</span></span> &#123;
+        <span class="hljs-keyword">super</span>.onViewCreated(view, savedInstanceState)
+        isViewCreated = <span class="hljs-literal">true</span>
+        onLazyLoad()
+    &#125;
+
+    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">abstract</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">lazyLoad</span><span class="hljs-params">()</span></span>
+
+&#125;</code></pre>
+<p>我们通过在Fragment中添加了三个标志位实现了延迟加载的功能。我们到TestFragment尝试一下：</p>
+<pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestFragment</span> : <span class="hljs-type">BaseLazyFragment</span></span>() &#123;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> position: <span class="hljs-built_in">Int</span> = <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">setUserVisibleHint</span><span class="hljs-params">(isVisibleToUser: <span class="hljs-type">Boolean</span>)</span></span> &#123;
+        <span class="hljs-keyword">super</span>.setUserVisibleHint(isVisibleToUser)
+        <span class="hljs-keyword">val</span> bundle = arguments
+        position = bundle!!.getInt(KEY_POSITION)
+    &#125;
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onCreateView</span><span class="hljs-params">(inflater: <span class="hljs-type">LayoutInflater</span>, container: <span class="hljs-type">ViewGroup</span>?, savedInstanceState: <span class="hljs-type">Bundle</span>?)</span></span>: View? &#123;
+        <span class="hljs-keyword">val</span> cardView = CardView(inflater, container)
+        cardView.bind(Card.fromBundle(arguments!!),position)
+        <span class="hljs-keyword">return</span> cardView.view
+    &#125;
+
+    <span class="hljs-keyword">companion</span> <span class="hljs-keyword">object</span> &#123;
+
+        <span class="hljs-keyword">private</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">val</span> KEY_POSITION = <span class="hljs-string">&quot;position&quot;</span>
+
+        <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getInstance</span><span class="hljs-params">(card: <span class="hljs-type">Card</span>, position: <span class="hljs-type">Int</span>)</span></span>: TestFragment &#123;
+            <span class="hljs-keyword">val</span> fragment = TestFragment()
+            <span class="hljs-keyword">val</span> bundle = card.toBundle()
+            bundle.putInt(KEY_POSITION, position)
+            fragment.arguments = bundle
+            <span class="hljs-keyword">return</span> fragment
+        &#125;
+    &#125;
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">lazyLoad</span><span class="hljs-params">()</span></span> &#123;
+        showToast(<span class="hljs-string">&quot;Fragment<span class="hljs-variable">$position</span> is loading data&quot;</span>)
+    &#125;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">showToast</span><span class="hljs-params">(content: <span class="hljs-type">String</span>)</span></span> &#123;
+        Toast.makeText(context, content, Toast.LENGTH_SHORT).show()
+    &#125;
+
+&#125;
+</code></pre>
+
+<p>我们来看下效果：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTUwMjk5Njk2?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>嗯！立竿见影，只有当Fragment完全显示出来的时候loading data的操作才被执行。这种延迟加载的方案在Androidx 1.1.0版本以前被广泛应用。而在Androidx 1.1.0版本中，Google对于Fragment进行了优化处理，使得延迟加载也有了新的解决方案。</p>
+<h2 id="二、Fragment的setMaxLifecycle探究"><a href="#二、Fragment的setMaxLifecycle探究" class="headerlink" title="二、Fragment的setMaxLifecycle探究"></a>二、Fragment的setMaxLifecycle探究</h2><p>上一节中我们讲到因为ViewPager的预加载机制以及Fragment的生命周期无法得以控制，我们不得不通过setUserVisibleHint(isVisibleToUser: Boolean)和onViewCreated(view: View, savedInstanceState: Bundle?)方法以及添加三个标志位来处理延迟加载，显然这样的代码并不优雅。</p>
+<p>当我们将Android项目迁移到Androidx并将androidx版本升级到1.1.0之后发现，我们第一节中用到的setUserVisibleHint(isVisibleToUser: Boolean)方法已被标记为废弃了！<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTUwNWY2NjU0?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
+<pre><code class="hljs java"> <span class="hljs-comment">/**</span>
+<span class="hljs-comment"> * ... 省略其它注释</span>
+<span class="hljs-comment"> * <span class="hljs-doctag">@deprecated</span> Use &#123;<span class="hljs-doctag">@link</span> FragmentTransaction#setMaxLifecycle(Fragment, Lifecycle.State)&#125;</span>
+<span class="hljs-comment"> * instead.</span>
+<span class="hljs-comment"> */</span>
+<span class="hljs-meta">@Deprecated</span>
+<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setUserVisibleHint</span><span class="hljs-params">(<span class="hljs-keyword">boolean</span> isVisibleToUser)</span> </span>&#123;
+    <span class="hljs-keyword">if</span> (!mUserVisibleHint &amp;&amp; isVisibleToUser &amp;&amp; mState &lt; STARTED
+            &amp;&amp; mFragmentManager != <span class="hljs-keyword">null</span> &amp;&amp; isAdded() &amp;&amp; mIsCreated) &#123;
+        mFragmentManager.performPendingDeferredStart(<span class="hljs-keyword">this</span>);
+    &#125;
+    mUserVisibleHint = isVisibleToUser;
+    mDeferStart = mState &lt; STARTED &amp;&amp; !isVisibleToUser;
+    <span class="hljs-keyword">if</span> (mSavedFragmentState != <span class="hljs-keyword">null</span>) &#123;
+        <span class="hljs-comment">// Ensure that if the user visible hint is set before the Fragment has</span>
+        <span class="hljs-comment">// restored its state that we don&#x27;t lose the new value</span>
+        mSavedUserVisibleHint = isVisibleToUser;
+    &#125;
+&#125;</code></pre>
+<p>并且从注释中可以看到使用 FragmentTransaction#setMaxLifecycle(Fragment, Lifecycle.State)方法来替换setUserVisibleHint方法。setMaxLifecycle实在Androidx 1.1.0中新增加的一个方法。setMaxLifecycle从名字上来看意思是设置一个最大的生命周期，因为这个方法是在FragmentTransaction中，因此我们可以知道应该是为Fragment来设置一个最大的生命周期。我们来看下setMaxLifecycle的源码：</p>
+<pre><code class="hljs java"><span class="hljs-comment">/**</span>
+<span class="hljs-comment">    * Set a ceiling for the state of an active fragment in this FragmentManager. If fragment is</span>
+<span class="hljs-comment">    * already above the received state, it will be forced down to the correct state.</span>
+<span class="hljs-comment">    *</span>
+<span class="hljs-comment">    * &lt;p&gt;The fragment provided must currently be added to the FragmentManager to have it&#x27;s</span>
+<span class="hljs-comment">    * Lifecycle state capped, or previously added as part of this transaction. The</span>
+<span class="hljs-comment">    * &#123;<span class="hljs-doctag">@link</span> Lifecycle.State&#125; passed in must at least be &#123;<span class="hljs-doctag">@link</span> Lifecycle.State#CREATED&#125;, otherwise</span>
+<span class="hljs-comment">    * an &#123;<span class="hljs-doctag">@link</span> IllegalArgumentException&#125; will be thrown.&lt;/p&gt;</span>
+<span class="hljs-comment">    *</span>
+<span class="hljs-comment">    * <span class="hljs-doctag">@param</span> fragment the fragment to have it&#x27;s state capped.</span>
+<span class="hljs-comment">    * <span class="hljs-doctag">@param</span> state the ceiling state for the fragment.</span>
+<span class="hljs-comment">    * <span class="hljs-doctag">@return</span> the same FragmentTransaction instance</span>
+<span class="hljs-comment">    */</span>
+   <span class="hljs-meta">@NonNull</span>
+   <span class="hljs-function"><span class="hljs-keyword">public</span> FragmentTransaction <span class="hljs-title">setMaxLifecycle</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Fragment fragment,</span></span>
+<span class="hljs-function"><span class="hljs-params">           <span class="hljs-meta">@NonNull</span> Lifecycle.State state)</span> </span>&#123;
+       addOp(<span class="hljs-keyword">new</span> Op(OP_SET_MAX_LIFECYCLE, fragment, state));
+       <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+   &#125;</code></pre>
+<p>这个方法接收一个Fragment参数和一个Lifecycle的状态参数。Lifecycle是jetpack中很重要的一个库，它具有对Activity和Fragment生命周期感知能力，相信很多同学都应该对Lifecycle都略知一二。在Lifecycle的State中定义了五种生命周期状态，如下：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">enum</span> State &#123;
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * Destroyed state for a LifecycleOwner. After this event, this Lifecycle will not dispatch</span>
+<span class="hljs-comment">         * any more events. For instance, for an &#123;<span class="hljs-doctag">@link</span> android.app.Activity&#125;, this state is reached</span>
+<span class="hljs-comment">         * &lt;b&gt;right before&lt;/b&gt; Activity&#x27;s &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onDestroy() onDestroy&#125; call.</span>
+<span class="hljs-comment">         */</span>
+        DESTROYED,
+
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * Initialized state for a LifecycleOwner. For an &#123;<span class="hljs-doctag">@link</span> android.app.Activity&#125;, this is</span>
+<span class="hljs-comment">         * the state when it is constructed but has not received</span>
+<span class="hljs-comment">         * &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onCreate(android.os.Bundle) onCreate&#125; yet.</span>
+<span class="hljs-comment">         */</span>
+        INITIALIZED,
+
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * Created state for a LifecycleOwner. For an &#123;<span class="hljs-doctag">@link</span> android.app.Activity&#125;, this state</span>
+<span class="hljs-comment">         * is reached in two cases:</span>
+<span class="hljs-comment">         * &lt;ul&gt;</span>
+<span class="hljs-comment">         *     &lt;li&gt;after &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onCreate(android.os.Bundle) onCreate&#125; call;</span>
+<span class="hljs-comment">         *     &lt;li&gt;&lt;b&gt;right before&lt;/b&gt; &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onStop() onStop&#125; call.</span>
+<span class="hljs-comment">         * &lt;/ul&gt;</span>
+<span class="hljs-comment">         */</span>
+        CREATED,
+
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * Started state for a LifecycleOwner. For an &#123;<span class="hljs-doctag">@link</span> android.app.Activity&#125;, this state</span>
+<span class="hljs-comment">         * is reached in two cases:</span>
+<span class="hljs-comment">         * &lt;ul&gt;</span>
+<span class="hljs-comment">         *     &lt;li&gt;after &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onStart() onStart&#125; call;</span>
+<span class="hljs-comment">         *     &lt;li&gt;&lt;b&gt;right before&lt;/b&gt; &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onPause() onPause&#125; call.</span>
+<span class="hljs-comment">         * &lt;/ul&gt;</span>
+<span class="hljs-comment">         */</span>
+        STARTED,
+
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * Resumed state for a LifecycleOwner. For an &#123;<span class="hljs-doctag">@link</span> android.app.Activity&#125;, this state</span>
+<span class="hljs-comment">         * is reached after &#123;<span class="hljs-doctag">@link</span> android.app.Activity#onResume() onResume&#125; is called.</span>
+<span class="hljs-comment">         */</span>
+        RESUMED;
+
+        <span class="hljs-comment">/**</span>
+<span class="hljs-comment">         * Compares if this State is greater or equal to the given &#123;<span class="hljs-doctag">@code</span> state&#125;.</span>
+<span class="hljs-comment">         *</span>
+<span class="hljs-comment">         * <span class="hljs-doctag">@param</span> state State to compare with</span>
+<span class="hljs-comment">         * <span class="hljs-doctag">@return</span> true if this State is greater or equal to the given &#123;<span class="hljs-doctag">@code</span> state&#125;</span>
+<span class="hljs-comment">         */</span>
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">isAtLeast</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> State state)</span> </span>&#123;
+            <span class="hljs-keyword">return</span> compareTo(state) &gt;= <span class="hljs-number">0</span>;
+        &#125;
+    &#125;</code></pre>
+<p>而在setMaxLifecycle中接收的生命周期状态要求不能低于CREATED，否则会抛出一个IllegalArgumentException的异常。当传入参数为DESTROYED或者INITIALIZED时则会抛出如下图的异常：</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MWE1NjA5MjMzYjFi?x-oss-process=image/format,png" srcset="/img/loading.gif"><br>因此除去这两个生命周期外，仅剩下CREATED、STARTED、RESUMED三个生命周期状态的参数可用，那么接下来我们就逐个来研究这三个参数的效果。</p>
+<h3 id="1-不设置setMaxLifecycle"><a href="#1-不设置setMaxLifecycle" class="headerlink" title="1.不设置setMaxLifecycle"></a>1.不设置setMaxLifecycle</h3><p>我们先来看下在不设置setMaxLifecycle的时候添加一个Fragment的状态，以便和后边的情况进行对比。首先我们在Activity中添加一个Fragment，代码如下：</p>
+<pre><code class="hljs kotlin">fragment = TestLifecycleFragment.getInstance(Card.DECK[<span class="hljs-number">0</span>], <span class="hljs-number">0</span>)
+       <span class="hljs-keyword">val</span> fragmentTransaction = supportFragmentManager.beginTransaction()
+       fragmentTransaction.add(R.id.ll_fragment, fragment)
+       fragmentTransaction.commit()</code></pre>
+<p>启动Activity，我们将该Fragment生命周期的日志打印出来如下：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTVhODk1NDBi?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>可以看到这个Fragment生命周期从onAttach一直执行到了onResume。并且在Activity中成功显示出了Fragment</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MWE1YzJhYjRkY2Y2?x-oss-process=image/format,png" srcset="/img/loading.gif"></p>
+<h3 id="2-setMaxLifecycle与CREATED"><a href="#2-setMaxLifecycle与CREATED" class="headerlink" title="2.setMaxLifecycle与CREATED"></a>2.setMaxLifecycle与CREATED</h3><p>接下来，我们将maxLifecycle设置为CREATED：</p>
+<pre><code class="hljs kotlin">fragment = TestLifecycleFragment.getInstance(Card.DECK[<span class="hljs-number">0</span>], <span class="hljs-number">0</span>)
+<span class="hljs-keyword">val</span> fragmentTransaction = supportFragmentManager.beginTransaction()
+fragmentTransaction.add(R.id.ll_fragment, fragment)
+fragmentTransaction.setMaxLifecycle(fragment, Lifecycle.State.CREATED)
+fragmentTransaction.commit()</code></pre>
+<p>再来看日志输出：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTgzYmMxMTI5?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>可以看到该Fragment的生命周期仅仅执行到了onCreate就没再往下执行了。并且Activity中没有加载出来当前Fragment。</p>
+<p>那么现在问题来了，假设Fragment已经执行到了onResume,此时再为Fragment设置一个CREATED的最大生命周期会出现什么样的情况呢？我们通过日志来验证一下：</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MWE3MWQ4MGY3NGFl?x-oss-process=image/format,png" srcset="/img/loading.gif"><br>从日志中可以看到已经执行了onResume的Fragment，将其最大生命周期设置为CREATED后会执行onPause-&gt;onStop-&gt;onDestoryView。也就是回退到了onCreate的状态。</p>
+<h3 id="3-setMaxLifecycle与STARTED"><a href="#3-setMaxLifecycle与STARTED" class="headerlink" title="3.setMaxLifecycle与STARTED"></a>3.setMaxLifecycle与STARTED</h3><p>接下来，我们将maxLifecycle设置为STARTED：</p>
+<pre><code class="hljs kotlin">fragment = TestLifecycleFragment.getInstance(Card.DECK[<span class="hljs-number">0</span>], <span class="hljs-number">0</span>)
+<span class="hljs-keyword">val</span> fragmentTransaction = supportFragmentManager.beginTransaction()
+fragmentTransaction.add(R.id.ll_fragment, fragment)
+fragmentTransaction.setMaxLifecycle(fragment, Lifecycle.State.STARTED)
+fragmentTransaction.commit()</code></pre>
+<p>日志输出如下：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTk1Mjk3NDJl?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>可以看到Fragment的生命周期执行到了onStart,并且Activity中成功显示出了当前fragment。</p>
+<p>同样，假设Fragment已经执行到了onResume方法再为其设置最大生命周期为STARTED会怎样呢？来看日志：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTljODdiOGIy?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>可以看到，设置最大生命周期STARTED后Fragment执行了onPause方法，也就是生命周期退回到了onStart。</p>
+<h3 id="4-setMaxLifecycle与RESUMED"><a href="#4-setMaxLifecycle与RESUMED" class="headerlink" title="4.setMaxLifecycle与RESUMED"></a>4.setMaxLifecycle与RESUMED</h3><p>最后，我们将maxLifecycle设置为RESUMED：</p>
+<pre><code class="hljs kotlin">fragment = TestLifecycleFragment.getInstance(Card.DECK[<span class="hljs-number">0</span>], <span class="hljs-number">0</span>)
+<span class="hljs-keyword">val</span> fragmentTransaction = supportFragmentManager.beginTransaction()
+fragmentTransaction.add(R.id.ll_fragment, fragment)
+fragmentTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+fragmentTransaction.commit()</code></pre>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAxOS8xMi8yOS8xNmY1MGFlMTljOTViZjM1?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>可以看到此时和第一种情况一样的效果,Fragment的生命周期执行到了onResume。</p>
+<p>而对于已经执行了onResume后的Fragment，再去设置最大生命周期为RESUMED会怎么样呢？因为当前Fragment已经是RESUMED状态了,所以不会再去执行任何代码。</p>
+<p>到这里我们可以得出一个结论：</p>
+<blockquote>
+<p><strong>通过setMaxLifecycle方法可以精确控制Fragment生命周期的状态，如果Fragment的生命周期状态小于被设置的最大生命周期，则当前Fragment的生命周期会执行到被设置的最大生命周期，反之，如果Fragment的生命周期状态大于被设置的最大生命周期，那么则会回退到被设置的最大生命周期。</strong></p>
+</blockquote>
+<p>有了这一结论，在ViewPager中便可以对Fragment的生命周期进行控制，以此来更方便的实现延迟加载功能了。</p>
+<h2 id="三、Fragment延迟加载的今生"><a href="#三、Fragment延迟加载的今生" class="headerlink" title="三、Fragment延迟加载的今生"></a>三、Fragment延迟加载的今生</h2><h3 id="1、延迟加载新方案之于ViewPager"><a href="#1、延迟加载新方案之于ViewPager" class="headerlink" title="1、延迟加载新方案之于ViewPager"></a>1、延迟加载新方案之于ViewPager</h3><p>通过上一小节的分析我们知道了可以通过setMaxLifecycle来设置Fragment的最大生命周期，从而可以实现ViewPager中Fragment的延迟加载。当然，关于生命周期状态处理的操作无需我们自己实现，在Androidx 1.1.0版本中的FragmentStatePagerAdapter已经帮我们实现了，只需要在使用时候传进去相应的参数即可。</p>
+<p>FragmentStatePagerAdapter的构造方法接收两个参数，如下：</p>
+<pre><code class="hljs java"><span class="hljs-comment">/**</span>
+<span class="hljs-comment">  * Constructor for &#123;<span class="hljs-doctag">@link</span> FragmentStatePagerAdapter&#125;.</span>
+<span class="hljs-comment">  *</span>
+<span class="hljs-comment">  * If &#123;<span class="hljs-doctag">@link</span> #BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT&#125; is passed in, then only the current</span>
+<span class="hljs-comment">  * Fragment is in the &#123;<span class="hljs-doctag">@link</span> Lifecycle.State#RESUMED&#125; state, while all other fragments are</span>
+<span class="hljs-comment">  * capped at &#123;<span class="hljs-doctag">@link</span> Lifecycle.State#STARTED&#125;. If &#123;<span class="hljs-doctag">@link</span> #BEHAVIOR_SET_USER_VISIBLE_HINT&#125; is</span>
+<span class="hljs-comment">  * passed, all fragments are in the &#123;<span class="hljs-doctag">@link</span> Lifecycle.State#RESUMED&#125; state and there will be</span>
+<span class="hljs-comment">  * callbacks to &#123;<span class="hljs-doctag">@link</span> Fragment#setUserVisibleHint(boolean)&#125;.</span>
+<span class="hljs-comment">  *</span>
+<span class="hljs-comment">  * <span class="hljs-doctag">@param</span> fm fragment manager that will interact with this adapter</span>
+<span class="hljs-comment">  * <span class="hljs-doctag">@param</span> behavior determines if only current fragments are in a resumed state</span>
+<span class="hljs-comment">  */</span>
+ <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">FragmentStatePagerAdapter</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> FragmentManager fm,</span></span>
+<span class="hljs-function"><span class="hljs-params">         <span class="hljs-meta">@Behavior</span> <span class="hljs-keyword">int</span> behavior)</span> </span>&#123;
+     mFragmentManager = fm;
+     mBehavior = behavior;
+ &#125;</code></pre>
+<p>第一个FragmentManager 参数不必多说，第二个参数时一个枚举类型的Behavior参数，其可选值如下：</p>
+<pre><code class="hljs kotlin"><span class="hljs-meta">@Retention(RetentionPolicy.SOURCE)</span>
+<span class="hljs-meta">@IntDef(&#123;BEHAVIOR_SET_USER_VISIBLE_HINT, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT&#125;)</span>
+<span class="hljs-keyword">private</span> <span class="hljs-meta">@interface</span> Behavior &#123; &#125;</code></pre>
+<p>当behavior为BEHAVIOR_SET_USER_VISIBLE_HINT时，Fragment改变的时候，setUserVisibleHint方法会被调用，也就是这个参数其实是为了兼容以前的老代码。并且BEHAVIOR_SET_USER_VISIBLE_HINT参数已经被置为废弃。所以我们的可选参数只剩下了BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT。</p>
+<p>当behavior为BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT时意味着只有当前显示的Fragment会被执行到onResume，而其它Fragment的生命周期都只会执行到onStart.</p>
+<p>这一功能时如何实现的呢？我们追随BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT的脚步找到了setPrimaryItem方法，这个方法的作用是设置ViewPager当前显示的Item，其源码如下：</p>
+<pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setPrimaryItem</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> ViewGroup container, <span class="hljs-keyword">int</span> position, <span class="hljs-meta">@NonNull</span> Object object)</span> </span>&#123;
+        Fragment fragment = (Fragment)object;
+        <span class="hljs-keyword">if</span> (fragment != mCurrentPrimaryItem) &#123;
+            <span class="hljs-keyword">if</span> (mCurrentPrimaryItem != <span class="hljs-keyword">null</span>) &#123;
+                mCurrentPrimaryItem.setMenuVisibility(<span class="hljs-keyword">false</span>);
+                <span class="hljs-keyword">if</span> (mBehavior == BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) &#123;
+                    <span class="hljs-keyword">if</span> (mCurTransaction == <span class="hljs-keyword">null</span>) &#123;
+                        mCurTransaction = mFragmentManager.beginTransaction();
+                    &#125;
+                    mCurTransaction.setMaxLifecycle(mCurrentPrimaryItem, Lifecycle.State.STARTED);
+                &#125; <span class="hljs-keyword">else</span> &#123;
+                    mCurrentPrimaryItem.setUserVisibleHint(<span class="hljs-keyword">false</span>);
+                &#125;
+            &#125;
+            fragment.setMenuVisibility(<span class="hljs-keyword">true</span>);
+            <span class="hljs-keyword">if</span> (mBehavior == BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) &#123;
+                <span class="hljs-keyword">if</span> (mCurTransaction == <span class="hljs-keyword">null</span>) &#123;
+                    mCurTransaction = mFragmentManager.beginTransaction();
+                &#125;
+                mCurTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED);
+            &#125; <span class="hljs-keyword">else</span> &#123;
+                fragment.setUserVisibleHint(<span class="hljs-keyword">true</span>);
+            &#125;
+
+            mCurrentPrimaryItem = fragment;
+        &#125;
+    &#125;</code></pre>
+<p>这段代码非常简单易懂，mCurrentPrimaryItem是当前正在显示的item，fragment是接下来要显示的item。可以看到当mBehavior 为BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT时，mCurrentPrimaryItem的最大生命周期被设置为了STARTED，而fragment的最大生命周期则被设置为了RESUMED。而当mBehavior为BEHAVIOR_SET_USER_VISIBLE_HINT时仍然会调用setUserVisibleHint方法，这种情况就不再讨论，因为BEHAVIOR_SET_USER_VISIBLE_HINT也已经被废弃掉了。<br>那么我们着重来分析一下BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT时的情况：</p>
+<p><strong>mCurrentPrimaryItem是当前显示的Fragment，所以该Fragment必然已经执行到了onResume方法，而此时为其设置了最大生命周期STARTED，那么mCurrentPrimaryItem必然会执行onPause退回到STARTED状态。<br>而fragment当前生命周期状态为onStart，当为其设置了RESUME的最大生命周期状态后,fragment必然会执行onResume方法进入RESUMED状态。</strong></p>
+<p>知道了这一结论后，我们再去进行懒加载的控制是不是就异常简单了？此时我们只需要一个flag去标志是否是第一次加载数据就可以了。因此，懒加载的实现可以如下：</p>
+<pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestLifecycleFragment</span> : <span class="hljs-type">Fragment</span></span>() &#123;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> isFirstLoad = <span class="hljs-literal">true</span>
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onResume</span><span class="hljs-params">()</span></span> &#123;
+        <span class="hljs-keyword">super</span>.onResume()
+        <span class="hljs-keyword">if</span> (isFirstLoad) &#123;
+        	isFirstLoad = <span class="hljs-literal">false</span>
+            loadData()
+        &#125;
+    &#125;
+
+    <span class="hljs-keyword">abstract</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">loadData</span><span class="hljs-params">()</span></span>
+&#125;</code></pre>
+
+<h3 id="2、延迟加载之于ViewPager2"><a href="#2、延迟加载之于ViewPager2" class="headerlink" title="2、延迟加载之于ViewPager2"></a>2、延迟加载之于ViewPager2</h3><p>上篇文章<a target="_blank" rel="noopener" href="https://juejin.im/post/5df4aabe6fb9a0161104c8eb">《学不动也要学！深入了解ViewPager2》</a>中我们对ViewPager2有了比较深入的了解,其中在讲解ViewPager2的offScreenPageLimit时候得出过这样一个结论:</p>
+<blockquote>
+<p>ViewPager2的offScreenPageLimit默认值为OFFSCREEN_PAGE_LIMIT_DEFAULT,当setOffscreenPageLimit为OFFSCREEN_PAGE_LIMIT_DEFAULT时候会使用RecyclerView的缓存机制。默认只会加载当前显示的Fragment,而不会像ViewPager一样至少预加载一个item.当切换到下一个item的时候，当前Fragment会执行onPause方法，而下一个Fragment则会从onCreate一直执行到onResume。当再次滑动回第一个页面的时候当前页面同样会执行onPuase，而第一个页面会执行onResume。</p>
+</blockquote>
+<p>也就是说在ViewPager2中，默认关闭了预加载机制。没有了预加载机制再谈延迟加载其实也没有任何意义了。所以关于ViewPager2的延迟加载也就不用多说了吧？只需要将网络请求放到onStart中即可。相信随着ViewPager2的普及延迟加载的概念也会慢慢淡出开发者的视线。</p>
+<p><strong>2020/1/4补充：</strong></p>
+<p>如果为ViewPager2设置了offScreenPageLimit(1)那结果会是怎样的呢？我们来看日志：</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly91c2VyLWdvbGQtY2RuLnhpdHUuaW8vMjAyMC8xLzQvMTZmNzA3MTBjOTY1M2Y1Nw?x-oss-process=image/format,png" srcset="/img/loading.gif"><br>从日志中可以看到ViewPager2预加载了一个Fragment，并且预加载的Fragment的生命周期仅仅执行到了onStart。所以此处我们可以猜测在FragmentStateAdapter中一定设置了setMaxLifecycle(fragment, STARTED)，具体源码不再贴出，大家可以自行查看。因此，此时处理懒加载问题其实和ViewPager的懒加载新方案如出一辙了，仅仅需要添加一个boolean值即可。</p>
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>本篇文章对于Fragment的延迟加载进行了深入的探究，并且了解了在Androidx 1.1.0版本中对Fragment最大生命周期状态的控制，从而探究出了Fragment延迟加载的新方案。对于ViewPager2，因其默认不会进行预加载因此也就意味着我们无需处理ViewPager2的延迟加载问题。好了，这一篇花费了我两个周末（其实是上周末写了一半偷了个懒）的文章到此就结束了，如果你从中学有所收获那么请你不要吝啬留下你的赞。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/ViewPagerSample">本文涉及源码</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Fragment/">Fragment</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%87%92%E5%8A%A0%E8%BD%BD/">懒加载</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <h5>开源库推荐</h5> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">1.BannerViewPager</a> <p> 一个基于ViewPager2实现的具有强大功能的无限轮播库。支持多种页面切换效果和指示器样式。 </p>
+<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">2.ViewPagerIndicator</a> <p> 一个适用于ViewPager和ViewPager2的指示器，支持多种滑块样式及滑动模式 </p></p>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2019/12/14/23.%E5%AD%A6%E4%B8%8D%E5%8A%A8%E4%B9%9F%E8%A6%81%E5%AD%A6%EF%BC%81%E6%B7%B1%E5%85%A5%E4%BA%86%E8%A7%A3ViewPager2/">
+                        <span class="hidden-mobile">学不动也要学！深入了解ViewPager2</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    function loadUtterances() {
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', 'github-light');
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    }
+    waitElementVisible('comments', loadUtterances)
+  </script>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '#post-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "学不动也要学！探究Fragment延迟加载的前世今生&nbsp;",
+      ],
+      cursorChar: "|",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
