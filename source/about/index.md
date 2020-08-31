@@ -1,6 +1,7 @@
 ---
-title: about
+title: 关于
 date: 2020-08-28 14:34:13
+banner_img: https://gitee.com/zhpanvip/images/raw/master//images/blog/about.jpg
 ---
 
 #  关于我
