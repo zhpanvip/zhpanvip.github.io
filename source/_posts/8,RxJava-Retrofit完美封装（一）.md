@@ -1,7 +1,11 @@
 ---
 title: RxJava+Retrofit完美封装（一）
 date: 2017-04-30 03:29:43
-tags: RxJava
+categories:
+- Android
+tags:
+- RxJava
+- Retrofit
 ---
 
 ***本篇文章已授权微信公众号 guolin_blog （郭霖）独家发布***
