@@ -7,3 +7,4 @@
 /gradle/wrapper/
 /.deploy_git/
 /public
+/db.json
