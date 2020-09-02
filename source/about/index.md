@@ -45,4 +45,4 @@ hexo d == hexo deploy
 ```
 ## 3.Fluid主题
 
-博客采用Material-Designd的一款<a color="red" href="https://github.com/fluid-dev/hexo-theme-fluid">Fluid</a>主题
+博客采用<a color="red" href="https://github.com/fluid-dev/hexo-theme-fluid">Fluid</a>主题搭建。<a color="red" href="https://github.com/fluid-dev/hexo-theme-fluid">Fluid</a>是基于Hexo的一款Material Design风格的主题，由 Fluid-dev负责开发与维护。
