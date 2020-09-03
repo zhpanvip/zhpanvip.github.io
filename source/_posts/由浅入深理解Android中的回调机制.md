@@ -1,0 +1,265 @@
+---
+title: 由浅入深理解Android中的回调机制
+date: 2016-07-28 14:08:42
+categories:
+- Java
+tags:
+- callback
+---
+
+什么是接口回调？来先看看接口回调的定义吧：可以把使用某一接口的类创建的对象的引用赋给该接口声明的接口变量，那么该接口变量就可以调用被类实现的接口的方法。什么意思？反正我是没看懂，哈哈（#黑线），这么官方的话还是不要看的好，不如看一个具体的例子。
+话说有一天，奥巴马下达命令，让美国空军派轰炸机前去轰炸恐怖分子基地，并要求空军完成任务后通报轰炸详情。下达完命令后呢，奥巴马不会坐那干等空军电报吧，再说奥黑忙着呢，整天想着怎么阴俄罗斯和中国呢..于是下达完命令奥巴马就去干其他事情了。两个小时后空军发来电报：恐怖分子基地已摧毁。
+嗯，就酱紫！上边的例子就是一个典型的接口回调！（奥巴马命令空军去空炸基地，空军轰炸完后向奥巴马报告即接口回调）接下来用java代码来实现上边的描述。
+首先定义一个回调接口，该接口中有一个report()的回调方法，空军完成任务后会通过调用此方法发送电报。
+
+```
+/**
+ * Created by zhpan on 2016/7/27.
+ */
+public interface ReportCallback {	//回调接口
+	public void report(String result); //回调方法
+}
+```
+定义一个奥巴马类，让他实现ReportCallback接口，并重写report()方法,注意，Obama类中持有空军Plane的引用,在此类中可通过调用plane.boom(this)命令空军去执行任务，boom()方法的参数为this，相当于new Obama()作为参数，即将自身传了进去。
+```
+/**
+ * Created by zhpan on 2016/7/27.
+ */
+public class Obama implements ReportCallback {
+
+	private Plane plane=new Plane();
+
+	public Obama() {
+		super();
+	}
+
+	public Obama(Plane plane) {
+		super();
+		this.plane = plane;
+	}
+	//命令轰炸机轰炸恐怖分子基地的方法
+	public void command(){
+		plane.boom(this);
+	}
+
+	public void report(String result) {
+		System.out.println("任务详情："+result);
+	}
+}
+```
+下边是空军类，Obama类中调用此处的boom()方法（空军接到任务）。此类中持有了一个ReportCallback的引用cb,cb其实是由Obama向上转型而来，因为在Obama类中调用boom()方法时参数为this，用cb调用report()实际上是通过接口调用到了接口ReportCallback的子类Obama类中的report()方法。
+```
+/**
+ * Created by zhpan on 2016/7/27.
+ */
+public class Plane {
+	public void boom(ReportCallback cb){
+		//空军执行了五次轰炸任务
+		for(int i=0;i<5;i++){
+			//一个耗时操作
+			try {
+				System.out.println("执行轰炸任务");
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		//轰炸结束后通过report()方法发送了电报给奥黑
+		cb.report("基地已摧毁");
+	}
+}
+```
+
+测试类，Obama调用command方法。
+
+```
+public class Test {
+	public static void main(String[] args) {
+
+		Obama obama=new Obama();
+		//	奥巴马下达命令
+		obama.command();
+	}
+}
+```
+测试结果如下：
+![这里写图片描述](https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwNzI3MTUzMzU1ODM5)
+经过上边的例子，我们应该对接口回调有了一个初步的认识。那么在Android中都哪些地方用到了回调机制呢？其实，接口回调在Android中用的相当广泛，Android中的一些事件处理方法，比如：onKeyDown、onKeyLongPress、onTouchEvent等还有View的监听事件都是通过回调实现的。
+下面我们以Button为例来分析Android中的回调机制。当用户点击Button时，会触发Button的onClick()方法，onClick()就是一个回调方法。结合View的源码来看：
+
+在View中定义了一个OnClickListener 的接口，接口中有一个onClick的抽象方法，可类比上边例子中的ReportCallback 接口。
+```
+ /**
+     * Interface definition for a callback to be invoked when a view is clicked.
+     */
+    public interface OnClickListener {
+        /**
+         * Called when a view has been clicked.
+         *
+         * @param v The view that was clicked.
+         */
+        void onClick(View v);
+    }
+```
+
+同时View中还持有一个OnClickListener 接口的引用mOnClickListener，mOnClickListener对应了上边例子Plane 类中boom（ReportCallback cb）方法的参数cb,另外View中还定义了setOnClickListener()方法，该方法的参数是OnClickListener接口，方法体中将该参数赋值给了mOnClickListener。
+```
+       /**
+         * Listener used to dispatch click events.
+         * This field should be made private,
+         *  so it is hidden from the SDK.
+         * {@hide}
+         */
+        public OnClickListener mOnClickListener;
+
+   /**
+     * Register a callback to be invoked when this view is
+     * clicked. If this view is not
+     * clickable, it becomes clickable.
+     *
+     * @param l The callback that will run
+     *
+     * @see #setClickable(boolean)
+     */
+    public void setOnClickListener(@Nullable OnClickListener l) {
+        if (!isClickable()) {
+            setClickable(true);
+        }
+        getListenerInfo().mOnClickListener = l;
+    }
+```
+最后在performClick()方法中通过li.mOnClickListener.onClick(this);调用了onClick()方法，可类比Plane 类中cb调用report()方法。
+```
+
+    /**
+     * Call this view's OnClickListener, if it is defined.
+     * Performs all normalactions associated with
+     * clicking: reporting accessibility event, playing
+     * a sound, etc.
+     *
+     * @return True there was an assigned OnClickListener
+     * that was called, false
+     *         otherwise is returned.
+     */
+    public boolean performClick() {
+        final boolean result;
+        final ListenerInfo li = mListenerInfo;
+        if (li != null && li.mOnClickListener != null) {
+            playSoundEffect(SoundEffectConstants.CLICK);
+            li.mOnClickListener.onClick(this);
+            result = true;
+        } else {
+            result = false;
+        }
+        sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED);
+        return result;
+    }
+```
+
+这是Android中回调机制的一个典型应用场景，通过上边对Android源码的分析相信大家对回调机制又有了更深一步的了解。在此基础上接下来我们不妨自己动手写一个回调。Come on!
+
+我们以一个简易的购物车添加商品为例来实现一个自己的接口回调！先来看效果图吧
+![这里写图片描述](https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwNzI4MTQwNzE1MTkx)
+上图中商品列表其实是一个ListView，由于只是演示接口回调的应用，所以只在ListView中填充了一条数据。而最下边的结算一栏是在ListView的外部，那么当商品数量改变时结算总价必然会跟随变化，也就是下边的结算会随着点击加号或者减号而变化。
+做过item的子控件的点击事件的小伙伴应该清楚，item中子控件的点击事件是在Adapter中完成的，那么在ListView中点击子控件控件如何将得到的结果显示到ListView外部呢？即商品数量改变了，如何将总价格更新到ListView外部的结算出？其实就可以用接口回调来完成。接下来看实现思路。
+1.首先我们可以定义一个接口OnNumChangeListener，接口里边包含两个抽象方法，分别负责增加和减少商品数量。代码如下：
+```
+public interface OnNumChangeListener {
+    //  增加商品数量的回调方法
+    void onAddNumListener(int price,ViewHolder holder);
+    //减少商品数量的回调方法
+    void onSubNumListener(int price,ViewHolder holder);
+}
+```
+2.在MyAdapter中添加setOnNumChangeListener方法，并在“+”、“-”按钮点击的时候分别调用OnNumChangeListener接口中的两个方法。代码如下：
+
+```
+/**
+ * Created by zhpan on 2016/7/28.
+ * item中的数据并没有在getView()方法中添加，而是是在item布局文件中添加的。
+ */
+public class MyAdapter extends BaseAdapter {
+    Context mContext;
+    OnNumChangeListener mOnNumChangeListener ;
+
+	public void setOnNumChangeListener(OnNumChangeListener onNumChangeListener ){
+		this.mOnNumChangeListener = onNumChangeListener
+	}
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        convertView=View.inflate(mContext,R.layout.item,null);
+        final ViewHolder holder=new ViewHolder();
+        holder.add = (TextView) convertView.findViewById(R.id.tv_item_add);
+        holder.sub = (TextView) convertView.findViewById(R.id.tv_item_sub);
+        holder.num = (TextView) convertView.findViewById(R.id.tv_item_num);
+        //  “+”的监听事件
+        holder.add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  回调方法
+                mOnNumChangeListener .onAddNumListener(10, holder);
+            }
+        });
+        //  “-”的监听事件
+        holder.sub.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  回调方法
+                mOnNumChangeListener .onSubNumListener(10,holder);
+            }
+        });
+        return convertView;
+    }
+
+	... //  省略MyAdapter中无关代码
+
+}
+```
+
+
+3.接下来在MainActivity中为Adapter设置OnNumChangeListener接口 并重写接口中的两个方法。代码如下：
+
+```
+adapter.setOnNumChangeListener(new MyAdapter.OnNumChangeListener(){
+			/**
+		     * 在此实现增加商品数量，并更新总价格
+		     */
+		    @Override
+		    public void onAddNumListener(int price,ViewHolder holder) {
+		        String numStr = holder.num.getText().toString();
+		        int num=Integer.parseInt(numStr);
+		        num++;
+		        holder.num.setText(num+"");
+		        int totalPrice=price*num;
+		        mTextView.setText("结算：￥"+totalPrice);
+
+		    }
+		    /**
+		     * 在此实现减少商品数量，并更新总价格
+		     */
+		    @Override
+		    public void onSubNumListener(int price,ViewHolder holder) {
+		        String numStr = holder.num.getText().toString();
+		        int num=Integer.parseInt(numStr);
+		        if(num>1){
+		            num--;
+		            holder.num.setText(num+"");
+		            int totalPrice=price*num;
+		            mTextView.setText("结算：￥"+totalPrice);
+		        }else{
+		            Toast.makeText(MainActivity.this, "不能再减少了", Toast.LENGTH_SHORT).show();
+		        }
+		    }
+
+		});
+```
+这样一个简单的接口回调就完成了，相信经过这本篇文章的学习，大家一定能够掌握接口回调的使用，如果没有明白也没关系，可以参考下面源码。
+
+[源码下载](http://download.csdn.net/detail/qq_20521573/9588810)
+
+### 好库推荐
+
+给大家推荐一下[BannerViewPager](https://github.com/zhpanvip/BannerViewPager)。这是一个基于ViewPager实现的具有强大功能的无限轮播库。通过[BannerViewPager](https://github.com/zhpanvip/BannerViewPager)可以实现腾讯视频、QQ音乐、酷狗音乐、支付宝、天猫、淘宝、优酷视频、喜马拉雅、网易云音乐、哔哩哔哩等APP的Banner样式以及指示器样式。
+
+欢迎大家到github关注[BannerViewPager](https://github.com/zhpanvip/BannerViewPager)！
