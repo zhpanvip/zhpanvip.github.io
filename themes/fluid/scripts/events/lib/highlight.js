@@ -10,7 +10,9 @@ module.exports = (hexo) => {
 
   if (config.code.highlight.lib === 'highlightjs') {
     // Force set hexo config
-    hexo.config.prismjs.enable = false;
+    hexo.config.prismjs = objUtil.merge({}, hexo.config.prismjs, {
+      enable: false
+    });
     hexo.config.highlight = objUtil.merge({}, hexo.config.highlight, {
       enable     : true,
       hljs       : true,
@@ -31,7 +33,9 @@ module.exports = (hexo) => {
     }
   } else if (config.code.highlight.lib === 'prismjs') {
     // Force set hexo config
-    hexo.config.highlight.enable = false;
+    hexo.config.highlight = objUtil.merge({}, hexo.config.highlight, {
+      enable: false
+    });
     hexo.config.prismjs = objUtil.merge({}, hexo.config.prismjs, {
       enable     : true,
       preprocess : config.code.highlight.prismjs.preprocess || false,
