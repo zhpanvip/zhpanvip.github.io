@@ -4,16 +4,14 @@ date: 2020-08-28 14:34:13
 banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/about.jpg
 banner_img_height: 91
 ---
-<html>
-<head>
-    <style type="text/css">
-        #avatar{
-            width:120px;
-            height:120px;
-            margin-top:-110px;
-        }
-    </style>
-</head>
+
+<style type="text/css">
+    #avatar{
+        width:120px;
+        height:120px;
+        margin-top:-110px;
+    }
+</style>
 
 <body>
 
@@ -42,7 +40,5 @@ banner_img_height: 91
 </div>
 
 </body>
-
-</html>
 
 
