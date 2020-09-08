@@ -8,3 +8,5 @@
 /.deploy_git/
 /public
 /db.json
+.DS_Store
+/source/.DS_Store
