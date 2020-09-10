@@ -39,6 +39,16 @@ banner_img_height: 91
   </div>
 </div>
 
+<p align="center" style="margin-top:30px">
+<a href="https://github.com/zhpanvip">
+    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=zhpanvip&layout=compact" />
+  </a>
+
+  <a href="https://github.com/zhpanvip">
+    <img src="https://github-readme-stats.wasabeef.vercel.app/api?username=zhpanvip&show_icons=true&line_height=21&show_icons=true&theme=buefy&include_all_commits=true" />
+  </a>
+</p>
+
 </body>
 
 
