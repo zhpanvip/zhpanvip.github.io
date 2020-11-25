@@ -83,7 +83,7 @@ fun_features:
 
     # 游标字符
     # Cursor character
-    cursorChar: "_"
+    cursorChar: "|"
 
     # 是否循环播放效果
     # If true, loop animation
@@ -192,7 +192,7 @@ custom_js:
 
 # 指定自定义 .css 文件路径，用法和 custom_js 相同
 # The usage is the same as custom_js
-custom_css:
+custom_css: //at.alicdn.com/t/font_2048617_el7rbx5279a.css
 
 # 自定义底部 HTML 内容（位于 footer 上方），注意不要和 `post: custom` 配置冲突
 # Customize the HTML content at the bottom (located above the footer), be careful not to conflict with `post: custom`
@@ -276,7 +276,7 @@ navbar:
 
     # 模糊像素，只能为数字，数字越大模糊度越高
     # Number of blurred pixel. the larger the number, the higher the blur
-    px: 3
+    px: 7
 
     # 不透明度，数字越大透明度越低，注意透明过度可能看不清菜单字体
     # Ratio of opacity, 1.0 is completely opaque
@@ -346,9 +346,9 @@ footer:
   # 页脚第一行文字的 HTML，建议保留 Fluid 的链接，用于向更多人推广本主题
   # HTML of the first line of the footer, it is recommended to keep the Fluid link to promote this theme to more people
   content: '
-    <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+    <a href="https://gitee.com/zhpanvip/zhpanvip" rel="nofollow noopener"><span>© 2020</span></a>
     <i class="iconfont icon-love"></i>
-    <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    <a href="https://gitee.com/zhpanvip/zhpanvip" target="_blank" rel="nofollow noopener"><span>zhangpan</span></a>
   '
 
   # 展示网站的 PV、UV 统计数
@@ -507,7 +507,7 @@ post:
       format: "{} 分钟"
       # 每分钟阅读多少字，如果是技术文章，建议降低
       # Words read per minute
-      words: 100
+      words: 80
 
     # 浏览量计数
     # Number of visits
@@ -584,11 +584,11 @@ post:
   math:
     # 开启后文章默认可用，自定义页面如需使用，需在 Front-matter 中指定 `math: true`
     # If you want to use math on the custom page, you need to set `math: true` in Front-matter
-    enable: false
+    enable: true
 
     # 开启后，只有在文章 Front-matter 里指定 `math: true` 才会在文章页启动公式转换，以便在页面不包含公式时提高加载速度
     # If true, only set `math: true` in Front-matter will enable math, to load faster when the page does not contain math
-    specific: false
+    specific: true
 
     # Options: mathjax | katex
     engine: mathjax
