@@ -791,7 +791,7 @@ about:
 page404:
   enable: true
   banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/default.jpg
-  banner_img_height: 85
+  banner_img_height: 100
   banner_mask_alpha: 0.3
   subtitle: "Page not found"
 
