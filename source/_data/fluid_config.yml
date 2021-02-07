@@ -332,9 +332,10 @@ scroll_down_arrow:
 scroll_top_arrow:
   enable: true
 
-# 头图滚动视差
-# Banner image scrolling parallax
-banner_parallax: true
+banner:
+  # 视差滚动，图片与板块会随着屏幕滚动产生视差效果
+  # Scrolling parallax
+  parallax: true
 
 
 
