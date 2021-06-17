@@ -9,14 +9,13 @@ tags: [多线程,synchronized]
 
 ---
 
-
 多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁...等等一系列让人眼花缭乱的并发知识。
 
 [这一次，彻底搞懂Java内存模型与volatile关键字](https://juejin.cn/post/6967739352784830494)
 
 本文是Java并发系列的第二篇文章，将详细的讲解synchronized关键字以及其底层实现原理。
 
-一、synchronized基本使用
+## 一、synchronized基本使用
 
 上篇文章详细讲解了volatile关键字，我们知道volatile关键字可以保证共享变量的可见性和有序性，但并不能保证原子性。如果既想保证共享变量的可见性和有序性，又想保证原子性，那么synchronized关键字是一个不错的选择。
 
@@ -45,12 +44,12 @@ public static synchronized void add(){
 
 此时，synchronized加锁的对象为当前静态方法所在类的Class对象。
 
-### 3.修饰静态代码块
+### 3.修饰代码块
 
 synchronized修饰代码块需要传入一个对象。
 
 ```java
-public void add() {
+public void add() {f
     synchronized (this) {
         i++;
     }
@@ -92,7 +91,7 @@ public void add() {
 
 Monitor对象被称为管程或者监视器锁。在Java中，每一个对象实例都会关联一个Monitor对象。这个Monitor对象既可以与对象一起创建销毁，也可以在线程试图获取对象锁时自动生成。当这个Monitor对象被线程持有后，它便处于锁定状态。
 
-在HotSpot虚拟机中，Monitor是由[ObjectMonitor](https://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/782f3b88b5ba/src/share/vm/runtime/objectMonitor.hpp)实现的,它是一个使用C++实现的类，的主要数据结构如下：
+在HotSpot虚拟机中，Monitor是由[ObjectMonitor](https://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/782f3b88b5ba/src/share/vm/runtime/objectMonitor.hpp)实现的,它是一个使用C++实现的类，主要数据结构如下：
 
 
 
@@ -291,6 +290,8 @@ synchronized关键字的使用可以说非常简单，但是想要完全搞懂sy
 [深入理解Java中synchronized关键字的实现原理](https://blog.csdn.net/u012723673/article/details/102681942)
 
 [synchronized底层monitor原理](https://zicair.github.io/2020/07/13/synchronized%E5%BA%95%E5%B1%82monitor%E5%8E%9F%E7%90%86/)
+
+[盘一盘 synchronized （一）—— 从打印Java对象头说起](https://www.cnblogs.com/LemonFive/p/11246086.html)
 
 
 
