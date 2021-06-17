@@ -212,4 +212,5 @@ theme: fluid
 deploy:
   type: git
   repository: https://gitee.com/zhpanvip/zhpanvip.git
+#  repository: https://github.com/zhpanvip/zhpanvip.github.io.git
   branch: master
