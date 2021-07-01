@@ -5,7 +5,7 @@ title: 这一次，彻底搞懂Java中的synchronized关键字
 date: 2021-06-14 17:12:26
 categories:
 - Java进阶
-tags: [多线程,synchronized]
+tags: [多线程]
 
 ---
 

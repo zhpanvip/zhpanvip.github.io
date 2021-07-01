@@ -5,7 +5,7 @@ title: 这一次，彻底搞懂Java内存模型与volatile关键字
 date: 2021-05-30 00:07:05
 categories:
 - Java进阶
-tags: [多线程,JMM,volatile]
+tags: [多线程,JMM]
 
 ---
 
