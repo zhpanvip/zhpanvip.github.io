@@ -13,11 +13,11 @@ tags: [多线程]
 
 本文是Java并发系列的第三篇文章，将详细的讲解ReentranLock与AQS的底层实现原理。
 
-[这一次，彻底搞懂Java内存模型与volatile关键字](https://juejin.cn/post/6967739352784830494)
+[这一次，彻底搞懂Java内存模型与volatile关键字](https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/)
 
-[这一次，彻底搞懂Java中的synchronized关键字](https://juejin.cn/post/6973571891915128846#comment)
+[这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentranLock实现原理]()
+[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
 ## 一、初识ReentranLock
 
@@ -62,9 +62,9 @@ public class ReentranLockDemo {
 上一小节我们在代码中实例化了一个非公平的ReentranLock锁，什么是公平锁与非公平锁呢？
 
 
-> **公平锁**是指多个线程按照申请锁的顺序来获取锁，线程直接进入等待队列中排队，队列中最先到的线程先获得锁。**非公平锁**是多个线程加锁时每个线程都会先去尝试获取锁，如果刚好获取到锁，那么线程无需等待，直接执行，如果获取不到锁才会被加入等待队列的队尾等待执行。
+> **公平锁**是指多个线程按照申请锁的顺序来获取锁，线程直接进入同步队列中排队，队列中最先到的线程先获得锁。**非公平锁**是多个线程加锁时每个线程都会先去尝试获取锁，如果刚好获取到锁，那么线程无需等待，直接执行，如果获取不到锁才会被加入同步队列的队尾等待执行。
 
-当然，公平锁和非公平锁各有优缺点，适用于不同的场景。公平锁的优点在于各个线程公平平等，每个线程等待一段时间后，都有执行的机会，而它的缺点相较于于非公平锁整体执行速度更慢，吞吐量更低。等待队列中除第一个线程以外的所有线程都会阻塞，CPU唤醒阻塞线程的开销比非公平锁大。
+当然，公平锁和非公平锁各有优缺点，适用于不同的场景。公平锁的优点在于各个线程公平平等，每个线程等待一段时间后，都有执行的机会，而它的缺点相较于于非公平锁整体执行速度更慢，吞吐量更低。同步队列中除第一个线程以外的所有线程都会阻塞，CPU唤醒阻塞线程的开销比非公平锁大。
 
 而非公平锁非公平锁的优点是可以减少唤起线程的开销，整体的吞吐效率高，因为线程有几率不阻塞直接获得锁，CPU不必唤醒所有线程。它的缺点呢也比较明显，即队列中等待的线程可能一直或者长时间获取不到锁。
 
@@ -353,7 +353,7 @@ public abstract class AbstractOwnableSynchronizer
         throw new UnsupportedOperationException();
     }
 ```
-tryAcquire的实现在上一章的NonfairSync和FairSync类中已经分析过了，这个方法会通过CAS去尝试拿锁，返回值表示是否成功获取锁。最理想的情况是通过tryAcquire方法直接拿到了锁。但是如果没有拿到锁该怎么办呢？可以看到在tryAcquire返回false的时候接着又调用了addWaiter方法将其加入到了等待队列。这意味着线程进入到了阻塞状态，排队并且等待阻塞唤醒机制，这一机制主要是依赖一个变形的CLH队列来实现的，同时唤醒线程就是在acquireQueued方法中，后边详细分析
+tryAcquire的实现在上一章的NonfairSync和FairSync类中已经分析过了，这个方法会通过CAS去尝试拿锁，返回值表示是否成功获取锁。最理想的情况是通过tryAcquire方法直接拿到了锁。但是如果没有拿到锁该怎么办呢？可以看到在tryAcquire返回false的时候接着又调用了addWaiter方法将其加入到了同步队列。这意味着线程进入到了阻塞状态，排队并且等待阻塞唤醒机制，这一机制主要是依赖一个变形的CLH队列来实现的，同时唤醒线程就是在acquireQueued方法中，后边详细分析
 
 
 ### 2.AQS与双向CLH队列
@@ -403,7 +403,16 @@ static final class Node {
 }
 ```
 
-可以看到，在Node中封装了等待的线程和线程当前的状态，并且维护了一个前驱节点和一个后继节点。接下来我们来看一下addWaiter方法是怎么将线程封装成Node并插入到等待队列的队尾的。
+可以看到，在Node中封装了等待的线程和线程当前的状态，其中线程的状态有四种，分别为CANCELLED、SIGNAL、CONDITION和PROPAGATE，它们分别表示的含义如下：
+- **CANCELLED** 表示线程被取消的状态。同步队列中的线程等待超时或者被中断后会将waitStatus改为CANCELLED。
+
+- **SIGNAL** 表示节点处于被唤醒状态，当其前驱结点释放了同步锁或者被取消后就会通知处于SIGNAL状态的后继节点的线程执行。
+
+- **CONDITION** 处于等待队列中的节点会被标记为此种状态，当调用了Condition的singal方法后，CONDITION状态的节点会总等待队列转移到同步队列中，等待获取锁。
+
+- **PROPAGATE** 这种状态与共享模式有关，在共享模式下，表示节点处于可运行状态。
+
+除此之外，Node中还维护了一个前驱节点和一个后继节点。接下来我们来看一下addWaiter方法是怎么将线程封装成Node并插入到同步队列的队尾的。
 
 
 ```Java
@@ -424,7 +433,7 @@ private Node addWaiter(Node mode) {
                 return node;
             }
         } else {
-            // 等待队列为空，初始化tail和head，初始化成功后会继续执行死循环，此时oldTail就不为null了
+            // 同步队列为空，初始化tail和head，初始化成功后会继续执行死循环，此时oldTail就不为null了
             initializeSyncQueue();
         }
     }
@@ -440,7 +449,7 @@ private final void initializeSyncQueue() {
 ```
 注意，在aquire方法中调用addWaiter方法时传入的参数是Node.EXCLUSIVE，表示独占模式。通过new Node(mode)可以实例化Node时会设置当前线程。
 
-接下来开启一个死循环进行node插入队尾的操作。如果队列不为空的话，那么通过CAS将node节点插入队尾，如果队列为空，则会去初始化队列，在初始化队列中又实例化了一个空的Node节点作为head，并将tail也指向这个头结点，初始化完成后会继续执行死循环进行node插入操作。从这里也可以看出等待队列的头结点是一个不存储任何数据的节点。
+接下来开启一个死循环进行node插入队尾的操作。如果队列不为空的话，那么通过CAS将node节点插入队尾，如果队列为空，则会去初始化队列，在初始化队列中又实例化了一个空的Node节点作为head，并将tail也指向这个头结点，初始化完成后会继续执行死循环进行node插入操作。从这里也可以看出同步队列的头结点是一个不存储任何数据的节点。
 
 在将节点加入到同步队列后，节点就会开启自旋操作，并观察前驱节点的状态，等待满足执行的条件。这一操作是在acquire方法中的acquireQueued()方法中进行的。
 
@@ -573,7 +582,7 @@ private final boolean parkAndCheckInterrupt() {
 ```
 可以看到这个方法与acquireQueued方法逻辑几乎一样，而差别在于检测到线程中断后直接抛出异常。
 
-### 锁的释放
+### 4.锁的释放
 ReenTranLock释放锁是通过它自身的unlock方法，而在unlock方法中同样调用了AQS的release方法:
 
 ```java
@@ -658,6 +667,9 @@ private void unparkSuccessor(Node node) {
 
 ## 参考&推荐阅读
 
+
 [【基本功】不可不说的Java“锁”事](https://mp.weixin.qq.com/s?__biz=MjM5NjQ5MTI5OA==&mid=2651749434&idx=3&sn=5ffa63ad47fe166f2f1a9f604ed10091&chksm=bd12a5778a652c61509d9e718ab086ff27ad8768586ea9b38c3dcf9e017a8e49bcae3df9bcc8&scene=38#wechat_redirect)
 
 [深入剖析基于并发AQS的(独占锁)重入锁(ReetrantLock)及其Condition实现原理](https://blog.csdn.net/javazejian/article/details/75043422)
+
+[从ReentrantLock的实现看AQS的原理及应用](https://tech.meituan.com/2019/12/05/aqs-theory-and-apply.html)

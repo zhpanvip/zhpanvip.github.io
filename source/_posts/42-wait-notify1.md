@@ -21,7 +21,7 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/19/41-Atomic/)
 
-[深入理解Java线程的等待与唤醒机制（一）]()
+[深入理解Java线程的等待与唤醒机制（一）](https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/)
 
 关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentranLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentranLock两个方面来深入分下线程的等待与唤醒。
 
@@ -33,7 +33,7 @@ tags: [多线程]
 
 ### 1.“生产者-消费者”模型
 
-“生产者-消费者”模型是一个典型的线程协作通信的例子。在这一模型中有两类角色，即若干个生产者线程和若干个消费者线程。生产者线程负责提交用户请求，消费者线程负责处理生产者提交的请求。很多情况下，生产者与消费者不能够达到一定的平衡，即有时候生产者生产的速度过快，消费之来不及消费；而有时候可能是消费者过于旺盛，生产者来不及生产。在此情况下就需要一个生产者与消费者共享的内存缓存区来平衡二者的协作。生产者与消费者之间通过共享内存缓存区进行通信，从而将生产者和消费者解耦。如下图所示：
+“生产者-消费者”模型是一个典型的线程协作通信的例子。在这一模型中有两类角色，即若干个生产者线程和若干个消费者线程。生产者线程负责提交用户请求，消费者线程负责处理生产者提交的请求。很多情况下，生产者与消费者不能够达到一定的平衡，即有时候生产者生产的速度过快，消费之来不及消费；而有时候可能是消费者过于旺盛，生产者来不及生产。在此情况下就需要一个生产者与消费者共享的内存缓存区来平衡二者的协作。生产者与消费者之间通过共享内存缓存区进行通信，从而平衡生产者与消费者线程，并将生产者和消费者解耦。如下图所示：
 
 ![1C2478F7-48B7-4ACA-A575-ABF8B71F40B9.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b129a2e7034c474791c35ceb89e3af18~tplv-k3u1fbpfcp-watermark.image)
 
@@ -156,7 +156,7 @@ public class Consumer implements Runnable {
 ```
 此时运行main方法，生成者与消费者线程就可以很好的协同工作了。
 
-注意，在main方法中我们实例化了一个BreadContainer对象，上边Flag处说的synchronized锁的对象即为这个container，调用的wait和notifyAll方法也是container实例的方法。到这里不知道你是否会有疑问，究竟container的wait和notify方法对象成做了什么能让线程阻塞和唤醒呢？为什么要调用container对象中的wait和notifyAll方法？如果换成调用其他对象的wait和notifyAll是否可行呢？
+注意，在main方法中我们实例化了一个BreadContainer对象，上边Flag处说的synchronized锁的对象即为这个container，调用的wait和notifyAll方法也是container实例的方法。到这里不知道你是否会有疑问，究竟container的wait和notify方法对象成做了什么能让线程阻塞和唤醒呢？被阻塞的线程放到哪里去了？为什么要调用container对象中的wait和notifyAll方法？如果换成调用其他对象的wait和notifyAll是否可行呢？
 
 
 ## 二、wait()与notify底层实现原理
@@ -186,7 +186,7 @@ public class Object {
 
 ### 1.虚拟机对wait的实现
 
-我们承接上一节中”生产者-消费者“模型的代码来分析，当生产者线程往容器里边放面包的时候发现容器已经满了，则调用wait方法，那么此时这个线程就会释放锁并进入到阻塞状态。
+承接上一节中”生产者-消费者“模型的代码来分析，当生产者线程往容器里边放面包的时候发现容器已经满了，则调用wait方法，那么此时这个线程就会释放锁并进入到阻塞状态。
 
 Object中wait方法的真实实现是在[objectMonitor.cpp](https://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/782f3b88b5ba/src/share/vm/runtime/objectMonitor.cpp)中的ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS)函数中,ObjectMonitor::wait中的核心相关代码如下：
 
@@ -214,7 +214,7 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     exit (true, Self) ;
 }
 ```
-接着看addWait函数的代码：
+可以看到，调用wait函数后，线程被封装成了一个ObjectWaiter对象，然后调用了addWait函数将线程加入到等待队列中。接着看addWait函数的代码：
 
 
 ```C++
@@ -395,12 +395,12 @@ void ObjectMonitor::ExitEpilog (Thread * Self, ObjectWaiter * Wakee) {
 
 exist函数的代码比较繁杂，这里做了简化，由于QMode默认值是0，因此只讨论这种情况。
 
-1）.首先，如果_EntryList不为NULL，那么直接调用ExitEpilog函数从_EntryList中取出头结点并唤醒线程；
+1）首先，如果_EntryList不为NULL，那么直接调用ExitEpilog函数从_EntryList中取出头结点并唤醒线程；
 
-2）.如果_EntryList为NULL,但是_cxq队列不为NULL，那么取出_cxq队列中的所有元素并构建成一个双向环链表赋
+2）如果_EntryList为NULL,但是_cxq队列不为NULL，那么取出_cxq队列中的所有元素并构建成一个双向环链表赋
 值为_EntryList,然后将_cxq置为NULL；
 
-3）.最后，调用ExitEpilog函数释放锁并唤醒_EntryList的头结点。
+3）最后，调用ExitEpilog函数释放锁并唤醒_EntryList的头结点。
 
 
 ## 三、小结
