@@ -8,12 +8,9 @@ categories:
 tags: [多线程]
 ---
 
-
-
-
 多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁...等等一系列让人眼花缭乱的并发知识。
 
-本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。
+多线程并发系列文章：
 
 [这一次，彻底搞懂Java内存模型与volatile关键字](https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/)
 
@@ -21,11 +18,16 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
-[这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/19/41-Atomic/)
+[这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
 [深入理解Java线程的等待与唤醒机制（一）](https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/)
 
-[深入理解Java线程的等待与唤醒机制（二）](https://zhpanvip.gitee.io/2021/07/02/43-wait-notify2/)
+[深入理解Java线程的等待与唤醒机制（二）](https://zhpanvip.gitee.io/2021/07/03/43-wait-notify2/)
+
+[Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
+
+
+本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。
 
 上篇文章我们从“生产者-消费者”模型出发，深入的分析了wait和notify/notifyAll的底层实现。并且了解到生产者线程与消费者线程在调用wait时都会被加入到synchronized锁对象monitor的WaitSet队列中。那么在唤醒线程的时候就无法准确的唤醒某一类线程。而在[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这一篇文章中我们认识了更为灵活地显式锁ReentranLock。ReentranLock与synchronized类似，也有一套类似wait与notify/notifyAll的等待唤醒机制--Condition。本篇文章我们就来深入的认识ReentranLock的Condition与线程的等待与唤醒机制。
 
