@@ -403,7 +403,7 @@ footer:
 index:
   # 首页 Banner 头图，可以是相对路径或绝对路径，以下相同
   # Path of Banner image, can be a relative path or an absolute path, the same on other pages
-  banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/default.jpg
+  banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/tag.jpg
 
   # 头图高度，屏幕百分比
   # Height ratio of banner image
@@ -477,7 +477,7 @@ index:
 # Custom Page through `hexo new page`
 page:
   banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/default.jpg
-  banner_img_height: 70
+  banner_img_height: 75
   banner_mask_alpha: 0.3
 
 #---------------------------
@@ -732,7 +732,7 @@ twikoo:
 #---------------------------
 archive:
   banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/categories.jpg
-  banner_img_height: 70
+  banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:
 
@@ -743,7 +743,7 @@ archive:
 category:
   enable: true
   banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/label.jpg
-  banner_img_height: 70
+  banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:
 
@@ -767,7 +767,7 @@ category:
 tag:
   enable: true
   banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/tag.jpg
-  banner_img_height: 70
+  banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:
   tagcloud:
@@ -785,7 +785,7 @@ tag:
 about:
   enable: true
   banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/about.jpg
-  banner_img_height: 70
+  banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:  # 打字机内容
   avatar: /img/avatar.png
