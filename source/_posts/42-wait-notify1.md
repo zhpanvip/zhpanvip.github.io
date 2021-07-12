@@ -18,7 +18,7 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
+[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
 [这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
@@ -30,7 +30,7 @@ tags: [多线程]
 
 本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。
 
-关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentranLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentranLock两个方面来深入分下线程的等待与唤醒。
+关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentrantLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentrantLock两个方面来深入分下线程的等待与唤醒。
 
 ## 一、从synchronized锁看线程等待与唤醒
 
@@ -414,7 +414,7 @@ exist函数的代码比较繁杂，这里做了简化，由于QMode默认值是0
 
 本篇文章从一个简单的“生产者-消费者”模型着手，认识了Object中wait和notify/notifyAll方法，并且深入的分析了虚拟机底层对这两个方法的实现。Java代码中的synchronized关键字通过编译器编译成字节码的monitorenter/monitorexist指令，当虚拟机执行到相关指令后则会调用虚拟机底层相关的函数，进行拿锁和释放锁的操作。而由于锁对象Object关联了monitor对象，故可以在这个对象实例中调用wait和notify/notifyAll方法来阻塞和唤醒线程。而这两个方法亦是调用了虚拟机底层的相关函数，wait函数会将线程封装成WaitObject并放入等待队列中，而notify/notifyAll则会将线程对象取出放入EntryList队列，等待释放锁后被唤醒。
 
-synchronized锁的这种等待与唤醒机制很显然有一个弊端。仍然以”生产者-消费者“模型为例，由于生产者线程和消费者线程都会被加入到同一个WaitSet队列中，通过notifyAll方法并不能精确的控制唤醒哪一类线程。而在[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这篇文章中我们认识了ReentranLock，ReentranLock与synchronized相仿也有类似的等待与唤醒机制，并且能够精确的控制唤醒指定的线程。那么，ReentranLock是怎么实现的呢？我们下篇再议。
+synchronized锁的这种等待与唤醒机制很显然有一个弊端。仍然以”生产者-消费者“模型为例，由于生产者线程和消费者线程都会被加入到同一个WaitSet队列中，通过notifyAll方法并不能精确的控制唤醒哪一类线程。而在[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这篇文章中我们认识了ReentrantLock，ReentrantLock与synchronized相仿也有类似的等待与唤醒机制，并且能够精确的控制唤醒指定的线程。那么，ReentrantLock是怎么实现的呢？我们下篇再议。
 
 
 

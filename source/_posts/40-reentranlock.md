@@ -1,6 +1,6 @@
 ---
 layout: article
-title: 这一次，彻底搞懂Java中的ReentranLock实现原理
+title: 这一次，彻底搞懂Java中的ReentrantLock实现原理
 index_img: https://gitee.com/zhpanvip/images/raw/master/blog/img/reentranlock.png
 date: 2021-06-19 18:20:16
 categories:
@@ -16,7 +16,7 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
+[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
 [这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
@@ -26,18 +26,18 @@ tags: [多线程]
 
 [Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
 
-本文是Java并发系列的第三篇文章，将详细的讲解ReentranLock与AQS的底层实现原理。
+本文是Java并发系列的第三篇文章，将详细的讲解ReentrantLock与AQS的底层实现原理。
 
-## 一、初识ReentranLock
+## 一、初识ReentrantLock
 
-上篇文章我们深入分析了synchronized关键字的实现原理。那么本篇文章我们来认识一下Java中另外一个同步机制--ReentranLock。ReentranLock是在JDK1.5的java.util.concurrent包中引入的。相比synchronized，ReentranLock拥有更强大的并发功能。在深入分析ReentranLock之前，我们先来了解一下ReentranLock的使用。
+上篇文章我们深入分析了synchronized关键字的实现原理。那么本篇文章我们来认识一下Java中另外一个同步机制--ReentrantLock。ReentrantLock是在JDK1.5的java.util.concurrent包中引入的。相比synchronized，ReentrantLock拥有更强大的并发功能。在深入分析ReentrantLock之前，我们先来了解一下ReentrantLock的使用。
 
-### 1.ReentranLock使用
-上篇文章介绍的synchronized关键字是一种隐式锁，即它的加锁与释放是自动的，无需我们关心。而ReentranLock是一种显式锁，需要我们手动编写加锁和释放锁的代码。下面我们来看下ReentranLock的使用方法。
+### 1.ReentrantLock使用
+上篇文章介绍的synchronized关键字是一种隐式锁，即它的加锁与释放是自动的，无需我们关心。而ReentrantLock是一种显式锁，需要我们手动编写加锁和释放锁的代码。下面我们来看下ReentrantLock的使用方法。
 
 
 ```java
-public class ReentranLockDemo {
+public class ReentrantLockDemo {
     // 实例化一个非公平锁，构造方法的参数为true表示公平锁，false为非公平锁。
     private final ReentrantLock lock = new ReentrantLock(false);
     private int i;
@@ -64,11 +64,11 @@ public class ReentranLockDemo {
     }
 }
 ```
-上述代码中lock.lock()会进行拿锁操作，如果拿不到锁则会一直等待。如果拿到锁之后则会执行try代码块中的代码。接下来在try代码块中又通过tryLock(100, TimeUnit.MILLISECONDS)方法尝试再次拿锁，此时，拿锁最多会等待100毫秒，如果在100毫秒内能获得锁，则tryLock方法返回true，拿锁成功，执行i++操作，如果返回false，获取锁失败，i++不会被执行。（因为第一次线程已经拿到锁了，由于ReentranLock是可重入，因此，第二次必定能拿到锁。此处仅仅为了演示ReetranLock的使用，不必纠结）。
+上述代码中lock.lock()会进行拿锁操作，如果拿不到锁则会一直等待。如果拿到锁之后则会执行try代码块中的代码。接下来在try代码块中又通过tryLock(100, TimeUnit.MILLISECONDS)方法尝试再次拿锁，此时，拿锁最多会等待100毫秒，如果在100毫秒内能获得锁，则tryLock方法返回true，拿锁成功，执行i++操作，如果返回false，获取锁失败，i++不会被执行。（因为第一次线程已经拿到锁了，由于ReentrantLock是可重入，因此，第二次必定能拿到锁。此处仅仅为了演示ReetranLock的使用，不必纠结）。
 
-另外，要注意被ReentranLock加锁区域必须用try代码块包裹，且释放锁需要在finally中来避免死锁。执行几次加锁，就需要几次释放锁。
+另外，要注意被ReentrantLock加锁区域必须用try代码块包裹，且释放锁需要在finally中来避免死锁。执行几次加锁，就需要几次释放锁。
 ### 2.公平锁与非公平锁
-上一小节我们在代码中实例化了一个非公平的ReentranLock锁，什么是公平锁与非公平锁呢？
+上一小节我们在代码中实例化了一个非公平的ReentrantLock锁，什么是公平锁与非公平锁呢？
 
 
 > **公平锁**是指多个线程按照申请锁的顺序来获取锁，线程直接进入同步队列中排队，队列中最先到的线程先获得锁。**非公平锁**是多个线程加锁时每个线程都会先去尝试获取锁，如果刚好获取到锁，那么线程无需等待，直接执行，如果获取不到锁才会被加入同步队列的队尾等待执行。
@@ -82,7 +82,7 @@ public class ReentranLockDemo {
 
 > **可重入锁**又名递归锁，是指同一个线程在获取外层同步方法锁的时候，再进入该线程的内层同步方法会自动获取锁（前提锁对象得是同一个对象或者class），不会因为之前已经获取过还没释放而阻塞。**非可重入锁**与可重入锁是对立的关系，即一个线程在获取到外层同步方法锁后，再进入该方法的内层同步方法无法获取到锁，即使锁是同一个对象。
 
-上篇文章讲到的synchronized与本篇讲的ReentranLock都属于可重入锁。可重入锁可以有效避免死锁的产生。
+上篇文章讲到的synchronized与本篇讲的ReentrantLock都属于可重入锁。可重入锁可以有效避免死锁的产生。
 
 ### 4.排他锁与共享锁
 由于后文中还会涉及到排它锁与共享锁的概念，因此在这里一并解释了。
@@ -90,15 +90,15 @@ public class ReentranLockDemo {
 > **排他锁**也叫独占锁，是指该锁一次只能被一个线程所持有。如果线程T对数据A加上排它锁后，则其他线程不能再对A加任何类型的锁。获得排它锁的线程即能读数据又能修改数据。**共享锁**是指该锁可被多个线程所持有。如果线程T对数据A加上共享锁后，则其他线程只能对A再加共享锁，不能加排它锁。获得共享锁的线程只能读数据，不能修改数据。
 
 
-## 二、ReentranLock源码简析
-接下来我们来看一下ReentranLock类的代码结构：
+## 二、ReentrantLock源码简析
+接下来我们来看一下ReentrantLock类的代码结构：
 
 
 ```Java
 public class ReentrantLock implements Lock, java.io.Serializable {
 
     private final Sync sync;
-
+    
     public ReentrantLock() {
         sync = new NonfairSync();
     }
@@ -106,7 +106,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public ReentrantLock(boolean fair) {
         sync = fair ? new FairSync() : new NonfairSync();
     }
-
+    
     // ...省略其它代码
 }
 ```
@@ -138,28 +138,28 @@ public interface Lock {
 public class ReentrantLock implements Lock, java.io.Serializable {
 
     private final Sync sync;
-
+    
     public void lock() {
         sync.acquire(1);
     }
-
+    
     public void lockInterruptibly() throws InterruptedException {
         sync.acquireInterruptibly(1);
-    }
-
+    }    
+    
     public boolean tryLock() {
         return sync.nonfairTryAcquire(1);
     }
-
+    
     public boolean tryLock(long timeout, TimeUnit unit)
             throws InterruptedException {
         return sync.tryAcquireNanos(1, unit.toNanos(timeout));
     }
-
+    
     public void unlock() {
         sync.release(1);
     }
-
+    
     // ...省略其它代码
 }
 ```
@@ -176,7 +176,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             // 未上锁状态
             if (c == 0) {
                 // 通过CAS尝试拿锁
-                if (compareAndSetState(0, acquires)) {
+                if (compareAndSetState(0, acquires)) {                    
                     // 设置持有排他锁的线程
                     setExclusiveOwnerThread(current);
                     return true;
@@ -284,15 +284,15 @@ AbstractQueuedSynchronizer可以翻译为队列同步器，通常简称为AQS。
 public abstract class AbstractQueuedSynchronizer
     extends AbstractOwnableSynchronizer
     implements java.io.Serializable {
-
-    protected AbstractQueuedSynchronizer() { }
+    
+    protected AbstractQueuedSynchronizer() { } 
     // 同步队列的头结点
     private transient volatile Node head;
     // 同步队列的尾结点
     private transient volatile Node tail;
     // 同步状态
     private volatile int state;
-
+    
 }
 ```
 AbstractQueuedSynchronizer类继承了AbstractOwnableSynchronizer，AbstractOwnableSynchronizer中的代码如下：
@@ -325,17 +325,17 @@ public abstract class AbstractOwnableSynchronizer
 
 是不是惊奇的发现AQS与synchronized的monitor竟然有异曲同工之妙。但是AQS的功能却远不止如此。
 
-## 四、从AQS看ReentranLock
+## 四、从AQS看ReentrantLock
 
-了解了AQS后，我们再回到ReentranLock中来。
+了解了AQS后，我们再回到ReentrantLock中来。
 
-### 1.ReentranLock的lock方法
+### 1.ReentrantLock的lock方法
 
-以ReentranLock的lock方法为例继续分析。我们知道lock方法调用了Sync的acquire：
+以ReentrantLock的lock方法为例继续分析。我们知道lock方法调用了Sync的acquire：
 
 
 ```Java
-    // ReentranLock
+    // ReentrantLock
     public void lock() {
         sync.acquire(1);
     }
@@ -345,7 +345,7 @@ public abstract class AbstractOwnableSynchronizer
 
 ```Java
     // AbstractQueuedSynchronizer
-
+    
     public final void acquire(int arg) {
         if (!tryAcquire(arg) &&
             acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
@@ -394,7 +394,7 @@ static final class Node {
     volatile Thread thread;
 
     Node nextWaiter;
-
+    
     Node() {}
 
     Node(Node nextWaiter) {
@@ -408,7 +408,7 @@ static final class Node {
     }
 
    // ...省略其他代码
-
+ 
 }
 ```
 
@@ -489,7 +489,7 @@ private final void initializeSyncQueue() {
             throw t;
         }
     }
-
+ 
 ```
 在acquireQueued方法中开启自旋操作，并查看node的前驱节点是不是头结点
 
@@ -502,7 +502,7 @@ private final void initializeSyncQueue() {
         node.thread = null;
         // 置空前驱节点
         node.prev = null;
-    }
+    }  
 ```
 如果node的前驱节点不是头结点，那么则调用shouldParkAfterFailedAcquire方法判断是否要将线程挂起。如果是则调用parkAndCheckInterrupt将线程挂起。
 
@@ -533,17 +533,17 @@ private final boolean parkAndCheckInterrupt() {
     LockSupport.park(this);
     // 返回线程的状态
     return Thread.interrupted();
-}
+}  
 ```
 通过lock拿锁的流程到此结束。
 
 ### 3.可中断锁lockInterruptibly
 
-在ReentranLock中还支持可中断锁的获取，是通过lockInterruptibly()和tryLock()方法来实现的。我们以lockInterruptibly方法为例来看它与lock方法的区别。
+在ReentrantLock中还支持可中断锁的获取，是通过lockInterruptibly()和tryLock()方法来实现的。我们以lockInterruptibly方法为例来看它与lock方法的区别。
 
 
 ```Java
-    // ReentranLock
+    // ReentrantLock
     public void lockInterruptibly() throws InterruptedException {
         sync.acquireInterruptibly(1);
     }
@@ -557,7 +557,7 @@ private final boolean parkAndCheckInterrupt() {
         // 如果线程中断，则直接抛出异常
         if (Thread.interrupted())
             throw new InterruptedException();
-        // 尝试拿锁
+        // 尝试拿锁    
         if (!tryAcquire(arg))
             // 拿锁失败
             doAcquireInterruptibly(arg);
@@ -592,7 +592,7 @@ private final boolean parkAndCheckInterrupt() {
 可以看到这个方法与acquireQueued方法逻辑几乎一样，而差别在于检测到线程中断后直接抛出异常。
 
 ### 4.锁的释放
-ReenTranLock释放锁是通过它自身的unlock方法，而在unlock方法中同样调用了AQS的release方法:
+ReentrantLock释放锁是通过它自身的unlock方法，而在unlock方法中同样调用了AQS的release方法:
 
 ```java
     public void unlock() {
@@ -603,7 +603,7 @@ AQS中的release方法的代码如下：
 
 ```java
     // AbstractQueuedSynchronizer
-
+    
     public final boolean release(int arg) {
         // 尝试释放锁
         if (tryRelease(arg)) {
@@ -615,10 +615,10 @@ AQS中的release方法的代码如下：
         }
         return false;
     }
-
+    
     protected boolean tryRelease(int arg) {
         throw new UnsupportedOperationException();
-    }
+    }    
 ```
 tryRelease是在AbstractQueuedSynchronizer的子类Sync中实现的，上文中我们已经有提及，即操控state，对state减去releases，如果state为0那么久释放锁，并且将排他线程设置为null,最后更新state。代码如下:
 
@@ -665,9 +665,9 @@ private void unparkSuccessor(Node node) {
 
 ## 五、总结
 
-关于ReentranLock与AQS的实现相对来说比较难以理解。本篇文章虽然写了很长的篇幅，但是也没有面面俱到，讲完ReentranLock与AQS的全部知识点。本篇文章的分析仅仅涉及到了排它锁（独占锁），没有分析ReentranLock共享锁的实现，关于Condition本篇文章并未涉及到。如果后边有时间，可以再写篇文章来分析Condition。
+关于ReentrantLock与AQS的实现相对来说比较难以理解。本篇文章虽然写了很长的篇幅，但是也没有面面俱到，讲完ReentrantLock与AQS的全部知识点。本篇文章的分析仅仅涉及到了排它锁（独占锁），没有分析ReentrantLock共享锁的实现，关于Condition本篇文章并未涉及到。如果后边有时间，可以再写篇文章来分析Condition。
 
-最后，不妨概括一下ReentranLock独占锁拿锁和排队的流程：ReentranLock内部通过FairSync和NonfairSync来实现公平锁和非公平锁。它们都是继承与AQS实现，在AQS内部通过state来标记同步状态，如果state为0，线程可以直接获取锁，如果state大于0，则线程会被封装成Node节点进入CLH队列中等待执行。AQS的CLH队列是一个双向的链表结构，头结点是一个空的Node节点。新来的node节点会被插入队尾并开启自旋去判断它的前驱节点是不是头结点。如果是头结点则尝试获取锁，如果不是头结点，则根据条件进行挂起操作。
+最后，不妨概括一下ReentrantLock独占锁拿锁和排队的流程：ReentrantLock内部通过FairSync和NonfairSync来实现公平锁和非公平锁。它们都是继承与AQS实现，在AQS内部通过state来标记同步状态，如果state为0，线程可以直接获取锁，如果state大于0，则线程会被封装成Node节点进入CLH队列中等待执行。AQS的CLH队列是一个双向的链表结构，头结点是一个空的Node节点。新来的node节点会被插入队尾并开启自旋去判断它的前驱节点是不是头结点。如果是头结点则尝试获取锁，如果不是头结点，则根据条件进行挂起操作。
 
 画一个流程图大家可做参考：
 

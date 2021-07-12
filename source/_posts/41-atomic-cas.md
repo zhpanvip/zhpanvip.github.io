@@ -16,7 +16,7 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
+[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
 [这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
@@ -28,7 +28,7 @@ tags: [多线程]
 
 本文是Java并发系列的第三篇文章，将详细的讲解Java中的Atomic并发类与CAS。
 
-前两篇文章我们深入的讲解了synchronized关键字以及ReentranLock，它们都是在并发过程中通过同步状态来确保只有一个线程操作共享变量的。而本篇文章我们将来认识一个无锁状态也能保证线程安全的方法，它就是JDK1.5中引入的并发包Atomic原子操作类。
+前两篇文章我们深入的讲解了synchronized关键字以及ReentrantLock，它们都是在并发过程中通过同步状态来确保只有一个线程操作共享变量的。而本篇文章我们将来认识一个无锁状态也能保证线程安全的方法，它就是JDK1.5中引入的并发包Atomic原子操作类。
 
 ## 一、初始Atomic并发包
 

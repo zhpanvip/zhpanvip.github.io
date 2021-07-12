@@ -16,7 +16,7 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
+[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
 [这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
@@ -29,12 +29,12 @@ tags: [多线程]
 
 本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。
 
-上篇文章我们从“生产者-消费者”模型出发，深入的分析了wait和notify/notifyAll的底层实现。并且了解到生产者线程与消费者线程在调用wait时都会被加入到synchronized锁对象monitor的WaitSet队列中。那么在唤醒线程的时候就无法准确的唤醒某一类线程。而在[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这一篇文章中我们认识了更为灵活地显式锁ReentranLock。ReentranLock与synchronized类似，也有一套类似wait与notify/notifyAll的等待唤醒机制--Condition。本篇文章我们就来深入的认识ReentranLock的Condition与线程的等待与唤醒机制。
+上篇文章我们从“生产者-消费者”模型出发，深入的分析了wait和notify/notifyAll的底层实现。并且了解到生产者线程与消费者线程在调用wait时都会被加入到synchronized锁对象monitor的WaitSet队列中。那么在唤醒线程的时候就无法准确的唤醒某一类线程。而在[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这一篇文章中我们认识了更为灵活地显式锁ReentrantLock。ReentrantLock与synchronized类似，也有一套类似wait与notify/notifyAll的等待唤醒机制--Condition。本篇文章我们就来深入的认识ReentrantLock的Condition与线程的等待与唤醒机制。
 
 
 ## 一、认识Lock的Condition
 
-在[这一次，彻底搞懂Java中的ReentranLock实现原理]中关于Condition其实也有所提及，在使用Lock来保证线程同步时，我们可以使用Condition来协调线程间的协作。相比synchronize的监视器锁，Condition提供了更加灵活和精确的线程控制。它的最大特点是可以为不同的线程建立多个Condition，从而达到精确控制某一些线程的休眠与唤醒。
+在[这一次，彻底搞懂Java中的ReentrantLock实现原理]中关于Condition其实也有所提及，在使用Lock来保证线程同步时，我们可以使用Condition来协调线程间的协作。相比synchronize的监视器锁，Condition提供了更加灵活和精确的线程控制。它的最大特点是可以为不同的线程建立多个Condition，从而达到精确控制某一些线程的休眠与唤醒。
 
 Condition是一个接口，内部主要提供了一些线程休眠与唤醒相关的方法，代码如下：
 
@@ -51,7 +51,7 @@ public interface Condition {
     boolean await(long time, TimeUnit unit) throws InterruptedException;
     // 使线程进入等待状态，直到被被唤醒或者中断，或者到截止的时间
     boolean awaitUntil(Date deadline) throws InterruptedException;
-    // 唤醒一个等待在Condition上的线程，与notify功能类似
+    // 唤醒一个等待在Condition上的线程，与notify功能类似 
     void signal();
     // 唤醒所有等待在Condition上的线程，与notifyAll类似
     void signalAll();
@@ -123,7 +123,7 @@ public class BreadContainer {
     }
 }
 ```
-可以看到，在上述代码中我们声明了两个Condition，一个生产者Condition，一个消费者Condition。在put方法中使用ReentranLock来实现同步，同时，当容器满时调用生产者Condition的await方法使生产者线程进入等待状态。如果生成成功，则调用消费者Condition的signalAll方法来唤醒消费者线程。take方法与put类似，不再赘述。这里要注意的是在使用Condition前必须先获得锁。
+可以看到，在上述代码中我们声明了两个Condition，一个生产者Condition，一个消费者Condition。在put方法中使用ReentrantLock来实现同步，同时，当容器满时调用生产者Condition的await方法使生产者线程进入等待状态。如果生成成功，则调用消费者Condition的signalAll方法来唤醒消费者线程。take方法与put类似，不再赘述。这里要注意的是在使用Condition前必须先获得锁。
 
 生产者消费者类与synchronize的实现一致，代码如下：
 
@@ -188,11 +188,11 @@ public class Test {
 
 ## 二、Condition实现原理
 
-上一章中我们已经知道Condition仅仅是一个接口，它的具体实现是在AQS的内部类ConditionObject中。调用ReentranLock的newCondition实际上就是实例化了一个ConditionObject，代码如下：
+上一章中我们已经知道Condition仅仅是一个接口，它的具体实现是在AQS的内部类ConditionObject中。调用ReentrantLock的newCondition实际上就是实例化了一个ConditionObject，代码如下：
 
 
 ```java
-// ReentranLock#Sync
+// ReentrantLock#Sync
 final ConditionObject newCondition() {
     return new ConditionObject();
 }
@@ -212,10 +212,10 @@ public class ConditionObject implements Condition, java.io.Serializable {
     public ConditionObject() { }
 }
 ```
-ConditionObject的结构比较简单，它内部维护了一个Node类型**等待队列**（这里注意与AQS中的同步队列区分）。其中firstWaiter指向队列的头结点，而lastWaiter指向队列的尾结点。关于Node节点，在ReentranLock那篇文章中已经详细介绍过了，它封装的是一个线程的节点，这里也不再赘述。在线程中调用了Condition的await方法后，线程就会被封装成一个Node节点，并将Node的waitStatus设置成CONDITION状态，然后插入到这个Condition的等待队列中。等到收到singal或者被中断、超时就会被从等待队列中移除。其结构示意图如下：
+ConditionObject的结构比较简单，它内部维护了一个Node类型**等待队列**（这里注意与AQS中的同步队列区分）。其中firstWaiter指向队列的头结点，而lastWaiter指向队列的尾结点。关于Node节点，在ReentrantLock那篇文章中已经详细介绍过了，它封装的是一个线程的节点，这里也不再赘述。在线程中调用了Condition的await方法后，线程就会被封装成一个Node节点，并将Node的waitStatus设置成CONDITION状态，然后插入到这个Condition的等待队列中。等到收到singal或者被中断、超时就会被从等待队列中移除。其结构示意图如下：
 
 
-![condition_waitset.png](https://img-blog.csdnimg.cn/img_convert/04a43dbeeb92d434e43460bf51a5c0ec.png)
+![condition_waitset.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cfbe952c5f604c38bb6051b37b345c06~tplv-k3u1fbpfcp-watermark.image)
 
 接下来我们从源码的角度来分析Condition的实现。
 
@@ -227,7 +227,7 @@ public final void await() throws InterruptedException {
     // 如果线程被标记位中断状态，则抛出中断异常
     if (Thread.interrupted())
         throw new InterruptedException();
-    // 将当前线程封装成一个Node节点，并添加到等待队列
+    // 将当前线程封装成一个Node节点，并添加到等待队列    
     Node node = addConditionWaiter();
     // 释放锁
     int savedState = fullyRelease(node);
@@ -292,7 +292,7 @@ final int fullyRelease(Node node) {
     }
 }
 ```
-这个方法主要是调用了release方法来释放锁，如果释放失败，则将节点置为CANCELLED状态。关于release这个方法在ReentranLock中已经分析过，这里不再赘述。
+这个方法主要是调用了release方法来释放锁，如果释放失败，则将节点置为CANCELLED状态。关于release这个方法在ReentrantLock中已经分析过，这里不再赘述。
 
 释放锁之后，开启while来调用isOnSyncQueue方法，这个方法是用来判断当前节点是否在同步队列中。如果不在同步队列，则会进入自旋，并阻塞线程，等待节点进入同步队列。isOnSyncQueue的代码如下：
 
@@ -301,8 +301,8 @@ final boolean isOnSyncQueue(Node node) {
     // 如果waitStatus是CONDITION状态或者node的前驱节点是null，说明该节点在等待队列中，而非同步队列。
     if (node.waitStatus == Node.CONDITION || node.prev == null)
         return false;
-    // 如果node.next不为null，则一定在同步队列
-    if (node.next != null)
+    // 如果node.next不为null，则一定在同步队列    
+    if (node.next != null) 
         return true;
     // 如果前面没有确定node是否在同步队列，则遍历同步队列查看是否存在node节点
     return findNodeFromTail(node);
@@ -319,7 +319,7 @@ private boolean findNodeFromTail(Node node) {
     }
 }
 ```
-如果isOnSyncQueue返回了true，那么说明该node节点已经进入同步队列中了，则会结束自旋并调用acquireQueued，关于acquireQueued在ReentranLock文章中已经详细分析过了，即一个获取锁的操作。
+如果isOnSyncQueue返回了true，那么说明该node节点已经进入同步队列中了，则会结束自旋并调用acquireQueued，关于acquireQueued在ReentrantLock文章中已经详细分析过了，即一个获取锁的操作。
 
 总的来说，调用await方法会让线程进入等待队列，并释放锁。当等待队列中的节点被唤醒时，会将节点移入到同步队列，然后await结束自旋，并调用acquireQueued来获取锁。
 
@@ -409,7 +409,6 @@ transferForSignal实际上就是做了一个队列的转移，将node从等待�
 通过对Condition的await与signal方法的分析，可以看得出来这两个方法并非独立存在，而是一个相互配合的关系。await方法会将执行的线程封装成Node加入到等待队列，然后开启一个循环检测这个node看是否被加入到了同步队列，如果被加入到同步队列，那么调用acquireQueued继续竞争锁，如果没有被加入同步队列，则会一直等待。而signal方法则是将等待队列中的队首元素移动到同步队列，这样就出发了await方法的循环终结，继而能够执行acquireQueued方法。其流程如下图所示：
 
 
-![await_singal.png](https://img-blog.csdnimg.cn/img_convert/064e4b2517ac600732ea21dd5ba9c82d.png)
+![await_singal.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23db71e929f24c74b85c5ce0a070954d~tplv-k3u1fbpfcp-watermark.image)
 
-关于Java线程的等待与唤醒机制，到这里就全部结束了，通过本篇文章的学习，更加深入的了解了线程等待与唤醒的原理，其实可以看得出来无论synchronized监视器锁的等待与唤醒还是Lock锁的等待与唤醒都有着类似的原理，只不过synchronized是虚拟机底层实现，而ReentranLock是基于Java层的实现。
-
+关于Java线程的等待与唤醒机制，到这里就全部结束了，通过本篇文章的学习，更加深入的了解了线程等待与唤醒的原理，其实可以看得出来无论synchronized监视器锁的等待与唤醒还是Lock锁的等待与唤醒都有着类似的原理，只不过synchronized是虚拟机底层实现，而ReentrantLock是基于Java层的实现。

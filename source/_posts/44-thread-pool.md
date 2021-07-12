@@ -16,7 +16,7 @@ tags: [多线程]
 
 [这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
+[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
 [这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
@@ -27,7 +27,7 @@ tags: [多线程]
 [Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
 
 
-本篇文章是多线程并发系列的最后一篇，将深入分析Java中线程池的工作原理。个人认为线程池是Java并发中比较难已理解的一块知识，因为线程池内部实现使用到了大量的像ReentranLock、AQS、AtomicInteger、CAS以及“生产者-消费者”模型等并发相关的知识，基本上涵盖了并发系列前几篇文章的大部分知识点。这也是为什么把线程池放到最后来写的原因。本篇文章权当是一个并发系列的综合练习，刚好巩固实践一下前面知识点的运用。
+本篇文章是多线程并发系列的最后一篇，将深入分析Java中线程池的工作原理。个人认为线程池是Java并发中比较难已理解的一块知识，因为线程池内部实现使用到了大量的像ReentrantLock、AQS、AtomicInteger、CAS以及“生产者-消费者”模型等并发相关的知识，基本上涵盖了并发系列前几篇文章的大部分知识点。这也是为什么把线程池放到最后来写的原因。本篇文章权当是一个并发系列的综合练习，刚好巩固实践一下前面知识点的运用。
 
 
 
@@ -48,7 +48,7 @@ tags: [多线程]
 // 实例化一个线程池
 ThreadPoolExecutor executor = new ThreadPoolExecutor(3, 10, 60,
         TimeUnit.SECONDS, new ArrayBlockingQueue<>(20));
-// 使用线程池执行一个任务
+// 使用线程池执行一个任务        
 executor.execute(() -> {
     // Do something
 });
@@ -59,7 +59,7 @@ executor.showdownNow();
 ```
 创建好线程池后直接调用execute方法并传入一个Runnable参数即可将任务交给线程池执行，通过shutdown/shutdownNow方法可以关闭线程池。
 
-ThreadPoolExecutor的构造方法中参数众多，对于初学者而言在没有了解各个参数的作用的情况下很难去配置合适的线程池。因此Java还未我们提供了一个线程池工具类Executors来快捷的创建线程池。Executors提供了很多简便的创建线程池的方法，举两个例子，代码如下：
+ThreadPoolExecutor的构造方法中参数众多，对于初学者而言在没有了解各个参数的作用的情况下很难去配置合适的线程池。因此Java还为我们提供了一个线程池工具类Executors来快捷的创建线程池。Executors提供了很多简便的创建线程池的方法，举两个例子，代码如下：
 
 
 ```java
@@ -88,7 +88,7 @@ ExecutorService executorService2 = Executors.newCachedThreadPool();
 
 - **TERMINATED** 线程终止状态。处于TIDYING状态的线程执行terminated()后进入TERMINATED状态。
 
-根据上述线程池生命周期状态的描述，可以画出如下所示的线程池生命周期状态切换示意图。
+根据上述线程池生命周期状态的描述，可以画出如下所示的线程池生命周期状态流程示意图。
 
 
 ![threadpoollifecycle.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5d8c1f1d6d344862a9ba46eeb3fd101a~tplv-k3u1fbpfcp-watermark.image)
@@ -111,7 +111,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                               ThreadFactory threadFactory,
                               RejectedExecutionHandler handler) {
         // ...省略校验相关代码
-
+        
         this.corePoolSize = corePoolSize;
         this.maximumPoolSize = maximumPoolSize;
         this.workQueue = workQueue;
@@ -119,8 +119,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         this.threadFactory = threadFactory;
         this.handler = handler;
     }
-
-    // ...
+    
+    // ...    
 
 }
 
@@ -193,39 +193,40 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
 ### 1.线程池中的位运算（了解内容）
 
-在向线程池提交任务时有两个比较中要的参数会决定任务的去向，这两个参数分别是线程池的状态和线程池中的线程数。在ThreadPoolExecutor内部使用了一个int值来表示这两个参数，代码如下：
+在向线程池提交任务时有两个比较中要的参数会决定任务的去向，这两个参数分别是线程池的状态和线程池中的线程数。在ThreadPoolExecutor内部使用了一个AtomicInteger类型的整数ctl来表示这两个参数，代码如下：
 
 
 ```java
 public class ThreadPoolExecutor extends AbstractExecutorService {
     // Integer.SIZE = 32.所以 COUNT_BITS= 29
     private static final int COUNT_BITS = Integer.SIZE - 3;
+    // 00001111 11111111 11111111 11111111 这个值可以表示线程池的最大线程容量
     private static final int COUNT_MASK = (1 << COUNT_BITS) - 1;
     // 将-1左移29位得到RUNNING状态的值
-    private static final int RUNNING    = -1 << COUNT_BITS;
-
+    private static final int RUNNING    = -1 << COUNT_BITS;    
+    // 线程池运行状态和线程数
     private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
-
+    
     private static int ctlOf(int rs, int wc) { return rs | wc; }
-
+    
     // ...
-}
+}    
 ```
 因为涉及多线程的操作，这里为了保证原子性，ctl参数使用了AtomicInteger类型，并且通过ctlOf方法来计算出了ctl的初始值。如果你不了解位运算大概很难理解上述代码的用意。
 
-我们知道，int类型在Java中占用4byte的内存,一个byte占用8bit,所以Java中的int类型共占用32bit。对于这个32bit的内存，我们可以进行高低位的拆分。做Android开发的同学应该都了解View测量流程中的MeasureSpec参数，这个参数将32bit的int拆分成了高2位和低30位，分别表示View的测量模式和测量值。而这里的ctl与MeasureSpec类似，ctl将32位的int拆分成了高3位和低29位，分别表示线程池的运行状态和线程池中的线程个数。
+我们知道，int类型在Java中占用4byte的内存,一个byte占用8bit,所以Java中的int类型共占用32bit。对于这个32bit，我们可以进行高低位的拆分。做Android开发的同学应该都了解View测量流程中的MeasureSpec参数，这个参数将32bit的int拆分成了高2位和低30位，分别表示View的测量模式和测量值。而这里的ctl与MeasureSpec类似，ctl将32位的int拆分成了高3位和低29位，分别表示线程池的运行状态和线程池中的线程个数。
 
 下面我们通过位运算来验证一下ctl是如何工作的，当然，如果你不理解这个位运算的过程对理解线程池的源码影响并不大，所以对以下验证内容不感兴趣的同学可以直接略过。
 
-可以看到上述代码中RUNNING的值为-1左移29位，我们知道在计算机中**负数是以其绝对值的补码来表示的**，而补码是由反码加1得到，因此-1在计算机中存储形式为1的反码+1
+可以看到上述代码中RUNNING的值为-1左移29位，我们知道在计算机中**负数是以其绝对值的补码来表示的，而补码是由反码加1得到。**因此-1在计算机中存储形式为1的反码+1
 
 
 ```java
-1的原码：  00000000 00000000 00000000 00000001
-
-1的反码：  11111111 11111111 11111111 11111110
-
-加1得到-1：11111111 11111111 11111111 11111111
+1的原码：00000000 00000000 00000000 00000001
+                                            +
+1的反码：11111111 11111111 11111111 11111110
+       ---------------------------------------
+-1存储： 11111111 11111111 11111111 11111111
 
 ```
 
@@ -236,7 +237,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 // 高三位表示线程状态，即高三位为111表示RUNNING
 11100000 00000000 00000000 00000000
 ```
-而AtomicInteger初始时线程数量是0，因此ctlOf方法中的“|”运算如下：
+而AtomicInteger初始线程数量是0，因此ctlOf方法中的“|”运算如下：
 
 ```Java
 RUNNING：  11100000 00000000 00000000 00000000
@@ -247,7 +248,7 @@ RUNNING：  11100000 00000000 00000000 00000000
 
 ```
 
-RUNNING|0(线程数)即可得到ctl的初始值。同时还可以通过以下方法将ctl拆解成运行状态和线程数：
+通过RUNNING|0(线程数)即可得到ctl的初始值。同时还可以通过以下方法将ctl拆解成运行状态和线程数：
 
 
 ```java
@@ -263,12 +264,13 @@ RUNNING|0(线程数)即可得到ctl的初始值。同时还可以通过以下方
 
 ```java
  COUNT_MASK:  00001111 11111111 11111111 11111111
+                                                  
  ~COUNT_MASK: 11110000 00000000 00000000 00000000
                                                    &
  ctl:         11100000 00000000 00000000 00000000
              ----------------------------------------
- RUNNING:     11100000 00000000 00000000 00000000
-
+ RUNNING:     11100000 00000000 00000000 00000000            
+ 
 ```
 如果不理解上边的验证流程没有关系，只要知道通过runStateOf方法可以得到线程池的运行状态，通过workerCountOf可以得到线程池中的线程数即可。
 
@@ -340,7 +342,7 @@ execute方法中的逻辑可以分为三部分：
                 if (workerCountOf(c)
                     >= ((core ? corePoolSize : maximumPoolSize) & COUNT_MASK))
                     return false;
-                // 通过CAS来将线程数+1，如果成功则跳出循环，执行下边逻辑
+                // 通过CAS来将线程数+1，如果成功则跳出循环，执行下边逻辑    
                 if (compareAndIncrementWorkerCount(c))
                     break retry;
                 c = ctl.get();  // Re-read ctl
@@ -349,21 +351,21 @@ execute方法中的逻辑可以分为三部分：
                     continue retry;
             }
         }
-
+        
         // ...省略后半部分
-
+       
         return workerStarted;
     }
 ```
-这部分代码会通过是否创建核心线程来确定线程池中线程数的值，如果是创建核心线程，那么最大值不能超过corePoolSize,如果是创建非核心线程那么线程数不能超过maximumPoolSize，另外无论是创建核心线程还是非核心线程，最大线程数都不能超过线程池允许的最大线程数。如果线程数大于最大值就返回false，创建线程失败。
+这部分代码会通过是否创建核心线程来确定线程池中线程数的值，如果是创建核心线程，那么最大值不能超过corePoolSize,如果是创建非核心线程那么线程数不能超过maximumPoolSize，另外无论是创建核心线程还是非核心线程，最大线程数都不能超过线程池允许的最大线程数COUNT_MASK(有可能设置的maximumPoolSize大于COUNT_MASK)。如果线程数大于最大值就返回false，创建线程失败。
 
-接下来通过CAS将线程数加1，如果成功那么就break retry结束无线循环，如果CAS失败了则就continue retry从新开始for循环，注意这里的retry不是Java的关键字，是一个可以任意命名的字符。
+接下来通过CAS将线程数加1，如果成功那么就break retry结束无限循环，如果CAS失败了则就continue retry从新开始for循环，注意这里的retry不是Java的关键字，是一个可以任意命名的字符。
 
 接下来，如果能继续向下执行则开始执行创建线程并执行任务的工作了，看下addWorker方法的后半部分代码：
 
 ```java
    private boolean addWorker(Runnable firstTask, boolean core) {
-
+        
         // ...省略前半部分
 
         boolean workerStarted = false;
@@ -375,7 +377,7 @@ execute方法中的逻辑可以分为三部分：
             // 取出新建的线程
             final Thread t = w.thread;
             if (t != null) {
-                // 这里使用ReentranLock加锁保证线程安全
+                // 这里使用ReentrantLock加锁保证线程安全
                 final ReentrantLock mainLock = this.mainLock;
                 mainLock.lock();
                 try {
@@ -386,7 +388,7 @@ execute方法中的逻辑可以分为三部分：
                         // 线程不是处于NEW状态，说明线程已经启动，抛出异常
                         if (t.getState() != Thread.State.NEW)
                             throw new IllegalThreadStateException();
-                        // 将线程加入线程队列，这里的worker是一个HashSet
+                        // 将线程加入线程队列，这里的worker是一个HashSet   
                         workers.add(w);
                         workerAdded = true;
                         int s = workers.size();
@@ -431,12 +433,12 @@ execute方法中的逻辑可以分为三部分：
             // 通过线程工程创建线程
             this.thread = getThreadFactory().newThread(this);
         }
-
+        
         // 线程的真正执行逻辑
         public void run() {
             runWorker(this);
         }
-
+        
         // 判断线程是否是独占状态，如果不是意味着线程处于空闲状态
         protected boolean isHeldExclusively() {
             return getState() != 0;
@@ -459,7 +461,7 @@ execute方法中的逻辑可以分为三部分：
         // ...
     }
 ```
-Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使用AQS来实现了独占锁的功能，但是并没支持可重入。这里使用不可重入的特性来表示线程的执行状态，即可以通过isHeldExclusively方法来判断，如果是独占状态，说明线程正在执行任务，如果非独占状态，说明线程处于空闲状态。关于AQS我们前边文章中已经详细分析过了，不了解AQS的可以翻看前边ReentranLock的文章。
+Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使用AQS来实现了独占锁的功能，但是并没支持可重入。这里使用不可重入的特性来表示线程的执行状态，即可以通过isHeldExclusively方法来判断，如果是独占状态，说明线程正在执行任务，如果非独占状态，说明线程处于空闲状态。关于AQS我们前边文章中已经详细分析过了，不了解AQS的可以翻看前边ReentrantLock的文章。
 
 
 另外，Worker还实现了Runnable接口，因此它的执行逻辑就是在run方法中，run方法调用的是线程池中的runWorker(this)方法。任务的执行逻辑就在runWorker方法中，它的代码如下：
@@ -504,7 +506,7 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
         }
     }
 ```
-可以看到，runWorker的核心逻辑就是不断通过getTask方法从阻塞队列中获取任务并执行.通过这样的方式实现了线程的复用，避免了创建线程。这里要注意的是这里是一个“生产者-消费者”模式，getTask是从阻塞队列中取任务，所以如果阻塞队列中没有任务的时候就会处于阻塞状态。getTask中通过判断是否要回收线程而设置了等待超时事件，如果阻塞队列中一直没有任务，那么在等待keepAliveTime时间后会抛出异常。最终会走到上述代码的finally方法中，意味着有线程空闲时间超过了keepAliveTime时间，那么调用processWorkerExit方法移除Worker。processWorkerExit方法中没有复杂难以理解的逻辑，这里就不再贴代码了。我们重点看下getTask中是如何处理的，代码如下：
+可以看到，runWorker的核心逻辑就是不断通过getTask方法从阻塞队列中获取任务并执行.通过这样的方式实现了线程的复用，避免了创建线程。这里要注意的是这里是一个“生产者-消费者”模式，getTask是从阻塞队列中取任务，所以如果阻塞队列中没有任务的时候就会处于阻塞状态。getTask中通过判断是否要回收线程而设置了等待超时时间，如果阻塞队列中一直没有任务，那么在等待keepAliveTime时间后会抛出异常。最终会走到上述代码的finally方法中，意味着有线程空闲时间超过了keepAliveTime时间，那么调用processWorkerExit方法移除Worker。processWorkerExit方法中没有复杂难以理解的逻辑，这里就不再贴代码了。我们重点看下getTask中是如何处理的，代码如下：
 
 
 ```Java
@@ -514,11 +516,11 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
         for (;;) {
             int c = ctl.get();
             // ...
-
+           
 
             // Flag1. 如果配置了allowCoreThreadTimeOut==true或者线程池中的线程数大于核心线程数，则timed为true，表示开启指定线程超时后被回收
             boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
-
+            
             // ...
 
             try {
@@ -537,7 +539,7 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
 ```
 重点看getTask是如何处理空闲超时的逻辑的。我们知道，回收线程的条件是线程大于核心线程数或者配置了allowCoreThreadTimeOut为true,当线程空闲超时的情况下就会回收线程。上述代码在Flag1处先判断了如果线程池中的线程数大于核心线程数，或者开启了allowCoreThreadTimeOut，那么就需要开启线程空闲超时回收。所有在Flag2处，timed为true的情况下调用了阻塞队列的poll方法，并传入了超时时间为keepAliveTime，如果在keepAliveTime时间内，阻塞队列一直为null那么久会抛出异常，结束runWorker的循环。进而执行runWorker方法中回收线程的操作。
 
-这里需要我们理解阻塞队列poll方法的使用，poll方法接受一个时间参数，是一个阻塞操作，在给定的时间内没有获取到数据就会抛出异常。其实说白了，阻塞队列就是一个使用ReentranLock实现的“生产者-消费者”模式，我们在[深入理解Java线程的等待与唤醒机制（二）](https://juejin.cn/post/6980655421497278495/)这篇文章中使用ReentranLock实现“生产者-消费者”模型其实就是一个简单的阻塞队列，与JDK中的BlockingQueue实现机制类似。感兴趣的同学可以自己查看ArrayBlockingQueue等阻塞队列的实现，限于文章篇幅，这里就不再赘述了。
+这里需要我们理解阻塞队列poll方法的使用，poll方法接受一个时间参数，是一个阻塞操作，在给定的时间内没有获取到数据就会抛出异常。其实说白了，阻塞队列就是一个使用ReentrantLock实现的“生产者-消费者”模式，我们在[深入理解Java线程的等待与唤醒机制（二）](https://juejin.cn/post/6980655421497278495/)这篇文章中使用ReentrantLock实现“生产者-消费者”模型其实就是一个简单的阻塞队列，与JDK中的BlockingQueue实现机制类似。感兴趣的同学可以自己查看ArrayBlockingQueue等阻塞队列的实现，限于文章篇幅，这里就不再赘述了。
 
 ### 3.ThreadPoolExecutor的拒绝策略
 
@@ -585,16 +587,16 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
             // 尝试中断空闲线程
             interruptIdleWorkers();
             // 空方法，线程池关闭的hook点
-            onShutdown();
+            onShutdown(); 
         } finally {
             mainLock.unlock();
         }
         tryTerminate();
     }
-
+    
     private void interruptIdleWorkers() {
         interruptIdleWorkers(false);
-    }
+    }    
 
 ```
 修改线程池为SHUTDOWN状态后，会调用interruptIdleWorkers去中断空闲线程线程，具体实现逻辑是在interruptIdleWorkers(boolean onlyOne)方法中，如下：
@@ -602,7 +604,7 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
 
 
 ```java
-
+    
     private void interruptIdleWorkers(boolean onlyOne) {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();
