@@ -200,7 +200,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 public class ThreadPoolExecutor extends AbstractExecutorService {
     // Integer.SIZE = 32.所以 COUNT_BITS= 29
     private static final int COUNT_BITS = Integer.SIZE - 3;
-    // 00001111 11111111 11111111 11111111 这个值可以表示线程池的最大线程容量
+    // 00011111 11111111 11111111 11111111 这个值可以表示线程池的最大线程容量
     private static final int COUNT_MASK = (1 << COUNT_BITS) - 1;
     // 将-1左移29位得到RUNNING状态的值
     private static final int RUNNING    = -1 << COUNT_BITS;    
@@ -252,7 +252,7 @@ RUNNING：  11100000 00000000 00000000 00000000
 
 
 ```java
-    // 00001111 11111111 11111111 11111111
+    // 00011111 11111111 11111111 11111111
     private static final int COUNT_MASK = (1 << COUNT_BITS) - 1;
     // 获取线程池运行状态
     private static int runStateOf(int c)     { return c & ~COUNT_MASK; }
@@ -263,7 +263,7 @@ RUNNING：  11100000 00000000 00000000 00000000
 
 
 ```java
- COUNT_MASK:  00001111 11111111 11111111 11111111
+ COUNT_MASK:  00011111 11111111 11111111 11111111
                                                   
  ~COUNT_MASK: 11110000 00000000 00000000 00000000
                                                    &

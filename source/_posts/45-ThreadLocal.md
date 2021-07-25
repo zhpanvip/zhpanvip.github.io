@@ -1,7 +1,7 @@
 ---
 layout: article
 index_img: https://gitee.com/zhpanvip/images/raw/master/blog/img/threadlocal.png
-title: Java并发系列扩展篇：ThreadLocal原理其实很简单
+title: Java并发系列番外篇：ThreadLocal原理其实很简单
 date: 2021-07-19 00:26:00
 categories:
 - Java进阶
@@ -27,12 +27,12 @@ tags: [多线程]
 
 [Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://juejin.cn/post/6983213662383112206/)
 
-[Java并发系列扩展篇：ThreadLocal原理其实很简单]()
+[Java并发系列番外篇：ThreadLocal原理其实很简单](https://juejin.cn/post/6986301941269659656)
 
 多线程并发时要解决的一个最重要的问题是多线程共享内存变量同步的问题。前几篇文章无论是volatile、synchronized又或是ReentrantLock和Atomic类无不是解决这一问题。而很多情况下我们只希望某个变量对其他线程不可见，只允许某一个线程访问，而ThreadLocal就提供了这样的能力。本文章是Java并发系列的一个扩展篇，来详细的认识一下ThreadLocal及它的实现原理。
 
 ## 一、ThreadLocal基础知识
-在平时开发中用到ThreadLocal地方可能并不多，很多同学可能觉得ThreadLocal无足轻重。但事实并非如此，ThreadLocal的地位远比我们认为的重要的多。做Android开发的同学应该都比较了解Android消息机制中的Looper,Looper的底层实现就依赖于ThreadLocal。而Android系统的运行是靠Message驱动的，驱动Message的核心就是Handler和Looper，这意味着Looper支撑了整个Android系统的运行。在后端开发中，ThreadLocal也有它的应用场景，Spring采用Threadlocal的方式，来保证单个线程中的数据库操作使用的是同一个数据库连接。由此可见ThreadLocal在Java体系中占有多么者举足轻重的地位。
+在平时开发中用到ThreadLocal地方可能并不多，很多同学可能觉得ThreadLocal无足轻重。但事实并非如此，ThreadLocal的地位远比我们认为的重要的多。做Android开发的同学应该都比较了解Android消息机制中的Looper,Looper的底层实现就依赖于ThreadLocal。而Android系统的运行是靠Message驱动的，驱动Message的核心就是Handler和Looper，这意味着Looper支撑了整个Android系统的运行。在后端开发中，ThreadLocal也有它的应用场景，Spring采用Threadlocal的方式，来保证单个线程中的数据库操作使用的是同一个数据库连接。由此可见ThreadLocal在Java体系中占有着举足轻重的地位。
 
 ### 1.ThreadLocal的使用
 ThreadLocal是一个泛型类，泛型表示ThreadLocal可以存储的类型，它的使用非常简单。举个例子，在子线程中用ThreadLcoal存储一个数字，然后分别在子线程和主线程将中来获取这个值，代码如下：
@@ -76,7 +76,7 @@ main value = null
 ThreadLocal<Integer> threadLocal = ThreadLocal.withInitial(() -> 10);
 ```
 
-通过ThreadLocal的withInitial方法指定初始值为10，此时依然以此从子线程和主线程中取值，打印结果如下：
+通过ThreadLocal的withInitial方法指定初始值为10，接着分别从子线程和主线程中取值，打印结果如下：
 
 
 ```java
@@ -92,7 +92,7 @@ main value = 10
 
 ThreadLocal究竟是如何做到存储的数据只被设置数据的线程可见的呢？想要搞清楚原因就需要我们分析ThreadLocal是如何实现的了。
 
-我们从set方法着手来看。
+我们从ThreadLocal的set方法着手来看。
 
 ### 1.ThreadLocal的set过程
 
@@ -165,15 +165,15 @@ protected T initialValue() {
 }
 ```
 
-可以看到，get方法依然是先获取到当前线程，然后拿到当前线程的ThreadLocalMap，并通过ThreadLocalMap的getEntry方法将这个ThreadLocal作为key来取值。如果ThreadLocalMap为null，其实通过setInitialValue方法返回了一个null值。
+可以看到，get方法依然是先获取到当前线程，然后拿到当前线程的ThreadLocalMap，并通过ThreadLocalMap的getEntry方法将这个ThreadLocal作为key来取值。如果ThreadLocalMap为null，则会通过setInitialValue方法返回了一个null值。
 
-总的来看，set方法将value放到了当前线程的ThreadLocalMap中，而key是当前的这个ThreadLocal。而get方法则是获取当前线程中的ThreadLcoalMap，然后将这个ThreadLocal作为key来取出value。到这里其实我们已经能够解答为什么ThreadLocal中的值只能被设置这个值的线程可见了。但是似乎有点只见树木不见森林的感觉，毕竟ThreadLocalMap是什么东西呢？
+总的来看，set方法将value放到了当前线程的ThreadLocalMap中，而key是当前的这个ThreadLocal。而get方法则是获取当前线程中的ThreadLcoalMap，然后将这个ThreadLocal作为key来取出value。到这里其实我们已经能够解答为什么ThreadLocal中的值只能被设置这个值的线程可见了。但是似乎又有点只见树木不见森林的感觉，毕竟ThreadLocalMap是什么东西呢？
 
 ### 3.ThreadLocalMap
 
 从前两小节其实我们已经知道，ThreadLocalMap是一个存储K-V类型的数据结构，并且Thread类中维护了一个ThreadLocalMap的成员变量。代码如下：
 
-```
+```java
 public class Thread implements Runnable {
 
     ThreadLocal.ThreadLocalMap threadLocals = null;
@@ -239,7 +239,7 @@ private void set(ThreadLocal<?> key, Object value) {
         rehash();
 }
 ```
-通过ThreadLocalMap的set方法可以看出，ThreadLocalMap是一个哈希表结构。set方法是将value插入到哈希表中的操作。我们知道哈希表是会出现哈希冲突的，因此，上述代码首先使用线性探测再散列法进行哈希冲突的处理，然后再讲value封装成Entry，插入到Entry数组中。如果你不了解哈希表和哈希冲突，可以参考我之前写过的一篇文章[《面试官：哈希表都不知道，你是怎么看懂HashMap的？》](https://juejin.cn/post/6876105622274703368)
+通过ThreadLocalMap的set方法可以看出，ThreadLocalMap是一个哈希表结构。set方法是将value插入到哈希表中的操作。我们知道哈希表是会出现哈希冲突的，因此，上述代码首先使用线性探测再散列法进行哈希冲突的处理，然后再将value封装成Entry，插入到Entry数组中。如果你不了解哈希表和哈希冲突，可以参考我之前写过的一篇文章[《面试官：哈希表都不知道，你是怎么看懂HashMap的？》](https://juejin.cn/post/6876105622274703368)
 
 
 接下来看ThreadLocalMap的getEntry方法，这里不用想也应该知道getEntry方法一定是从哈希表中取数据的。它的代码如下：
@@ -256,7 +256,7 @@ private Entry getEntry(ThreadLocal<?> key) {
         return getEntryAfterMiss(key, i, e);
 }
 ```
-由于是从哈希表中取值，所有这个方法中一定存在两种情况，即存在哈希冲突和不存在哈希冲突。首先，如果不存在哈希冲突，那么直接从Entry数组中取出第i个元素即可。而如果存在哈希冲突，那么则需要继续线性探测来查找key的位置。getEntryAfterMiss就是线性探测的实现，无非就是循环遍历，这里就不再贴这个方法的代码了。
+由于是从哈希表中取值，所有这个方法中一定存在两种情况，即存在哈希冲突和不存在哈希冲突。首先，如果不存在哈希冲突，那么直接从Entry数组中取出第i个元素即可。而如果存在哈希冲突，那么则需要继续线性探测来查找key的位置。getEntryAfterMiss就是线性探测的实现，无非就是循环遍历然后比较，这里就不再贴这个方法的代码了。
 
 如果了解哈希表的话，看懂ThreadLocalMap的代码其实并不难。但是这里有一个问题，为什么ThreadLocalMap中的Entry要继承WeakReference呢？
 
