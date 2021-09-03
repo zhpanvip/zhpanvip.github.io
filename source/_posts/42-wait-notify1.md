@@ -28,6 +28,8 @@ tags: [多线程]
 
 [Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
 
+[Java并发系列番外篇：ThreadLocal原理其实很简单](https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/)
+
 本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。
 
 关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentrantLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentrantLock两个方面来深入分下线程的等待与唤醒。

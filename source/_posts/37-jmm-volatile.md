@@ -28,6 +28,8 @@ tags: [多线程,JMM]
 
 [Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
 
+[Java并发系列番外篇：ThreadLocal原理其实很简单](https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/)
+
 本文是Java并发系列的第一篇文章，将详细的讲解Java内存模型与volatile关键字的作用。
 
 ## 一、Java内存模型

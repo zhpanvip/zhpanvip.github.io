@@ -26,6 +26,8 @@ tags: [多线程]
 
 [Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
 
+[Java并发系列番外篇：ThreadLocal原理其实很简单](https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/)
+
 本文是Java并发系列的第三篇文章，将详细的讲解Java中的Atomic并发类与CAS。
 
 前两篇文章我们深入的讲解了synchronized关键字以及ReentrantLock，它们都是在并发过程中通过同步状态来确保只有一个线程操作共享变量的。而本篇文章我们将来认识一个无锁状态也能保证线程安全的方法，它就是JDK1.5中引入的并发包Atomic原子操作类。

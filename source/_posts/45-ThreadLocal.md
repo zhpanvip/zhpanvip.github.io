@@ -13,21 +13,21 @@ tags: [多线程]
 
 多线程并发系列文章：
 
-[这一次，彻底搞懂Java内存模型与volatile关键字](https://juejin.cn/post/6967739352784830494)
+[这一次，彻底搞懂Java内存模型与volatile关键字](https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/)
 
-[这一次，彻底搞懂Java中的synchronized关键字](https://juejin.cn/post/6973571891915128846)
+[这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
 
-[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://juejin.cn/post/6975435256111300621)
+[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
 
-[这一次，彻底搞懂Java并发包中的Atomic原子类](https://juejin.cn/post/6977993272538955806)
+[这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
 
-[深入理解Java线程的等待与唤醒机制（一）](https://juejin.cn/post/6980002998361522190)
+[深入理解Java线程的等待与唤醒机制（一）](https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/)
 
-[深入理解Java线程的等待与唤醒机制（二）](https://juejin.cn/post/6980655421497278495/)
+[深入理解Java线程的等待与唤醒机制（二）](https://zhpanvip.gitee.io/2021/07/03/43-wait-notify2/)
 
-[Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://juejin.cn/post/6983213662383112206/)
+[Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
 
-[Java并发系列番外篇：ThreadLocal原理其实很简单](https://juejin.cn/post/6986301941269659656)
+[Java并发系列番外篇：ThreadLocal原理其实很简单](https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/)
 
 多线程并发时要解决的一个最重要的问题是多线程共享内存变量同步的问题。前几篇文章无论是volatile、synchronized又或是ReentrantLock和Atomic类无不是解决这一问题。而很多情况下我们只希望某个变量对其他线程不可见，只允许某一个线程访问，而ThreadLocal就提供了这样的能力。本文章是Java并发系列的一个扩展篇，来详细的认识一下ThreadLocal及它的实现原理。
 
