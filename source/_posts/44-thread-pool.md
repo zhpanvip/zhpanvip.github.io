@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://gitee.com/zhpanvip/images/raw/master/blog/img/thread_pool.png
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/thread_pool.png
 title: Java并发系列终结篇：彻底搞懂Java线程池的工作原理
 date: 2021-07-10 13:19:12
 categories:

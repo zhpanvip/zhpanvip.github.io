@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://gitee.com/zhpanvip/images/raw/master/blog/img/generics.png
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/generics.png
 title: Java进阶--详解Java中的泛型（Generics）
 date: 2021-01-16 22:14:25
 categories:

@@ -1,7 +1,7 @@
 ---
 title: 关于
 date: 2020-08-28 14:34:13
-banner_img: https://gitee.com/zhpanvip/images/raw/master/blog/about.jpg
+banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/about.jpg
 banner_img_height: 75
 ---
 
@@ -16,7 +16,7 @@ banner_img_height: 75
 <body>
 
 <div align="center">
-   <img id="avatar" src="https://gitee.com/zhpanvip/images/raw/master/blog/favicon.png" />
+   <img id="avatar" src="https://raw.githubusercontent.com/zhpanvip/images/master/blog/favicon.png" />
 </div>
 
 <div class="text-center">
@@ -35,7 +35,7 @@ banner_img_height: 75
         </a>
         <a href="https://blog.csdn.net/qq_20521573" class="qr-trigger">
            <i class="iconfont icon-wechat-fill" aria-hidden="true"></i>
-           <img class="qr-img" src="https://gitee.com/zhpanvip/images/raw/master/project/group/wechat_gzh.jpg" alt="qrcode" />
+           <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" alt="qrcode" />
         </a>
   </div>
 </div>

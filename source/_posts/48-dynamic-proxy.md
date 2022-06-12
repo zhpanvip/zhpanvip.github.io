@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://gitee.com/zhpanvip/images/raw/master/blog/img/dynamic-proxy.png
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/dynamic-proxy.png
 title: 浅析 Java 中的动态代理
 date: 2021-08-22 11:54:41
 categories:
