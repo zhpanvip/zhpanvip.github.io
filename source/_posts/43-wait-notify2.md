@@ -33,8 +33,12 @@ tags: [多线程]
 
 上篇文章我们从“生产者-消费者”模型出发，深入的分析了wait和notify/notifyAll的底层实现。并且了解到生产者线程与消费者线程在调用wait时都会被加入到synchronized锁对象monitor的WaitSet队列中。那么在唤醒线程的时候就无法准确的唤醒某一类线程。而在[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这一篇文章中我们认识了更为灵活地显式锁ReentrantLock。ReentrantLock与synchronized类似，也有一套类似wait与notify/notifyAll的等待唤醒机制--Condition。本篇文章我们就来深入的认识ReentrantLock的Condition与线程的等待与唤醒机制。
 
+开始之前先给大家推荐一下[AndroidNote](https://github.com/zhpanvip/AndroidNote)这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。
+
 
 ## 一、认识Lock的Condition
+
+> 注：下文中将会多次出现**等待队列**这一关键词，这里指得是调用了await方法后处于等待状态的队列，赢注意与上篇文章中AQS中的**同步队列**做区分。同时，这里的**等待队列**等同于synchronized中的 _WaitSet集合。 
 
 在[这一次，彻底搞懂Java中的ReentrantLock实现原理]中关于Condition其实也有所提及，在使用Lock来保证线程同步时，我们可以使用Condition来协调线程间的协作。相比synchronize的监视器锁，Condition提供了更加灵活和精确的线程控制。它的最大特点是可以为不同的线程建立多个Condition，从而达到精确控制某一些线程的休眠与唤醒。
 
@@ -125,7 +129,7 @@ public class BreadContainer {
     }
 }
 ```
-可以看到，在上述代码中我们声明了两个Condition，一个生产者Condition，一个消费者Condition。在put方法中使用ReentrantLock来实现同步，同时，当容器满时调用生产者Condition的await方法使生产者线程进入等待状态。如果生成成功，则调用消费者Condition的signalAll方法来唤醒消费者线程。take方法与put类似，不再赘述。这里要注意的是在使用Condition前必须先获得锁。
+可以看到，在上述代码中我们声明了两个Condition，一个生产者Condition，一个消费者Condition。在put方法中使用ReentrantLock来实现同步，同时，当容器满时调用生产者Condition的await方法使生产者线程进入等待状态。如果生产成功，则调用消费者Condition的signalAll方法来唤醒消费者线程。take方法与put类似，不再赘述。这里要注意的是在使用Condition前必须先获得锁。
 
 生产者消费者类与synchronize的实现一致，代码如下：
 
@@ -214,10 +218,10 @@ public class ConditionObject implements Condition, java.io.Serializable {
     public ConditionObject() { }
 }
 ```
-ConditionObject的结构比较简单，它内部维护了一个Node类型**等待队列**（这里注意与AQS中的同步队列区分）。其中firstWaiter指向队列的头结点，而lastWaiter指向队列的尾结点。关于Node节点，在ReentrantLock那篇文章中已经详细介绍过了，它封装的是一个线程的节点，这里也不再赘述。在线程中调用了Condition的await方法后，线程就会被封装成一个Node节点，并将Node的waitStatus设置成CONDITION状态，然后插入到这个Condition的等待队列中。等到收到singal或者被中断、超时就会被从等待队列中移除。其结构示意图如下：
+ConditionObject的结构比较简单，它内部维护了一个Node类型**等待队列**。其中firstWaiter指向队列的头结点，而lastWaiter指向队列的尾结点。关于Node节点，在ReentrantLock那篇文章中已经详细介绍过了，它封装的是一个线程的节点，这里也不再赘述。在线程中调用了Condition的await方法后，线程就会被封装成一个Node节点，并将Node的waitStatus设置成CONDITION状态，然后插入到这个Condition的等待队列中。等到收到singal或者被中断、超时就会被从等待队列中移除。其结构示意图如下：
 
 
-![condition_waitset.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cfbe952c5f604c38bb6051b37b345c06~tplv-k3u1fbpfcp-watermark.image)
+![condition_waitset.png](https://img-blog.csdnimg.cn/img_convert/04a43dbeeb92d434e43460bf51a5c0ec.png)
 
 接下来我们从源码的角度来分析Condition的实现。
 
@@ -241,7 +245,7 @@ public final void await() throws InterruptedException {
         if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
             break;
     }
-    // 到这里说明节点已加入到同步队列中，调用acquireQueued开始竞争锁
+    // 到这里说明节点已加入到同步队列中，调用acquireQueued开始排队竞争锁
     if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
         interruptMode = REINTERRUPT;
     if (node.nextWaiter != null) // clean up if cancelled
@@ -321,14 +325,14 @@ private boolean findNodeFromTail(Node node) {
     }
 }
 ```
-如果isOnSyncQueue返回了true，那么说明该node节点已经进入同步队列中了，则会结束自旋并调用acquireQueued，关于acquireQueued在ReentrantLock文章中已经详细分析过了，即一个获取锁的操作。
+如果isOnSyncQueue返回了true，那么说明该node节点已经进入同步队列中了，则会结束自旋并调用acquireQueued，关于acquireQueued在ReentrantLock文章中已经详细分析过了，它是一个判断当前node的前驱节点是不是head，如果不是head则挂起线程，如果是head则唤醒并尝试获取锁的操作。
 
 总的来说，调用await方法会让线程进入等待队列，并释放锁。当等待队列中的节点被唤醒时，会将节点移入到同步队列，然后await结束自旋，并调用acquireQueued来获取锁。
 
 
 ### 2.Condition的signal方法
 
-这里我们选用signal方法来分析，signal方法类似Object中的notify方法，调用signal方法会将等待队列的首节点移入同步队列并唤醒。它的实现相比await来说比较简单，看下代码：
+可以通过调用Condition的signal或者signalAll方法来唤醒线程。不同的是signalAll方法会唤醒所有等待状态的线程，而singal只会唤醒等待队列头部的线程节点。这里我们选用signal方法来分析，signal方法类似Object中的notify方法，调用signal方法会将等待队列的首节点移入同步队列并唤醒。它的实现相比await来说会比较容易理解，看下代码：
 
 
 ```java
@@ -339,17 +343,6 @@ public final void signal() {
     if (first != null)
         // 唤醒等待队列的第一个节点
         doSignal(first);
-}
-
-
-
-final boolean transferForSignal(Node node) {
-
-    Node p = enq(node);
-    int ws = p.waitStatus;
-    if (ws > 0 || !p.compareAndSetWaitStatus(ws, Node.SIGNAL))
-        LockSupport.unpark(node.thread);
-    return true;
 }
 ```
 在signal中会拿到等待队列的首节点并调用doSignal方法将其唤醒，doSignal代码如下：
@@ -371,7 +364,8 @@ doSignal方法中是一个循环唤醒等待队列首节点的操作，核心方
 
 ```java
 final boolean transferForSignal(Node node) {
-    // 如果当前节点状态为CONDITION，则CAS将状态改为0,准备加入同步队列，如果状态不为CONDITION，则说明线程被中断，返回false，然后唤醒当前节点的后继节点
+    // 如果当前节点状态为CONDITION，则CAS将状态改为0,准备加入同步队列，
+    // 如果状态不为CONDITION，则说明线程被中断，返回false，然后唤醒当前节点的后继节点
     if (!node.compareAndSetWaitStatus(Node.CONDITION, 0))
         return false;
 
@@ -402,15 +396,15 @@ private Node enq(Node node) {
 ```
 transferForSignal实际上就是做了一个队列的转移，将node从等待队列移动到了同步队列。进入同步队列后，在wait方法中的自旋操作便能检测到node节点的状态，从而执行acquireQueued方法拿锁。
 
-总的来说signal方法会从等待队列的队首开始，尝试唤醒队首线程，如果该节点是CANCELLED状态，则继续唤醒下一个。当节点被唤醒后会将其加入到同步队列，接着wait方法停止自旋执行acquireQueued方法。
+总的来说signal方法会从等待队列的队首开始，尝试唤醒队首线程，如果该节点是CANCELLED状态，则继续唤醒下一个节点。当节点被唤醒后会将其加入到同步队列，接着wait方法停止自旋执行acquireQueued方法。
 
 
 
 ## 总结
 
-通过对Condition的await与signal方法的分析，可以看得出来这两个方法并非独立存在，而是一个相互配合的关系。await方法会将执行的线程封装成Node加入到等待队列，然后开启一个循环检测这个node看是否被加入到了同步队列，如果被加入到同步队列，那么调用acquireQueued继续竞争锁，如果没有被加入同步队列，则会一直等待。而signal方法则是将等待队列中的队首元素移动到同步队列，这样就出发了await方法的循环终结，继而能够执行acquireQueued方法。其流程如下图所示：
+通过对Condition的await与signal方法的分析，可以看得出来这两个方法并非独立存在，而是一个相互配合的关系。await方法会将执行的线程封装成Node加入到等待队列，然后开启一个循环检测这个node看是否被加入到了同步队列，如果被加入到同步队列，那么调用acquireQueued开始排队竞争锁，如果没有被加入同步队列，则会一直挂起线程等待被唤醒。而signal方法则是将等待队列中的队首元素移动到同步队列，这样就触发了await方法的循环终结，继而能够执行acquireQueued方法。其流程如下图所示：
 
 
-![await_singal.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23db71e929f24c74b85c5ce0a070954d~tplv-k3u1fbpfcp-watermark.image)
+![await_singal.png](https://img-blog.csdnimg.cn/img_convert/064e4b2517ac600732ea21dd5ba9c82d.png)
 
 关于Java线程的等待与唤醒机制，到这里就全部结束了，通过本篇文章的学习，更加深入的了解了线程等待与唤醒的原理，其实可以看得出来无论synchronized监视器锁的等待与唤醒还是Lock锁的等待与唤醒都有着类似的原理，只不过synchronized是虚拟机底层实现，而ReentrantLock是基于Java层的实现。

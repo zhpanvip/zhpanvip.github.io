@@ -53,7 +53,7 @@ tags: [多线程]
 // 实例化一个线程池
 ThreadPoolExecutor executor = new ThreadPoolExecutor(3, 10, 60,
         TimeUnit.SECONDS, new ArrayBlockingQueue<>(20));
-// 使用线程池执行一个任务
+// 使用线程池执行一个任务        
 executor.execute(() -> {
     // Do something
 });
@@ -116,7 +116,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
                               ThreadFactory threadFactory,
                               RejectedExecutionHandler handler) {
         // ...省略校验相关代码
-
+        
         this.corePoolSize = corePoolSize;
         this.maximumPoolSize = maximumPoolSize;
         this.workQueue = workQueue;
@@ -124,8 +124,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         this.threadFactory = threadFactory;
         this.handler = handler;
     }
-
-    // ...
+    
+    // ...    
 
 }
 
@@ -208,14 +208,14 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     // 00011111 11111111 11111111 11111111 这个值可以表示线程池的最大线程容量
     private static final int COUNT_MASK = (1 << COUNT_BITS) - 1;
     // 将-1左移29位得到RUNNING状态的值
-    private static final int RUNNING    = -1 << COUNT_BITS;
+    private static final int RUNNING    = -1 << COUNT_BITS;    
     // 线程池运行状态和线程数
     private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
-
+    
     private static int ctlOf(int rs, int wc) { return rs | wc; }
-
+    
     // ...
-}
+}    
 ```
 因为涉及多线程的操作，这里为了保证原子性，ctl参数使用了AtomicInteger类型，并且通过ctlOf方法来计算出了ctl的初始值。如果你不了解位运算大概很难理解上述代码的用意。
 
@@ -269,13 +269,13 @@ RUNNING：  11100000 00000000 00000000 00000000
 
 ```java
  COUNT_MASK:  00011111 11111111 11111111 11111111
-
+                                                  
  ~COUNT_MASK: 11100000 00000000 00000000 00000000
                                                    &
  ctl:         11100000 00000000 00000000 00000000
              ----------------------------------------
- RUNNING:     11100000 00000000 00000000 00000000
-
+ RUNNING:     11100000 00000000 00000000 00000000            
+ 
 ```
 如果不理解上边的验证流程没有关系，只要知道通过runStateOf方法可以得到线程池的运行状态，通过workerCountOf可以得到线程池中的线程数即可。
 
@@ -301,9 +301,11 @@ RUNNING：  11100000 00000000 00000000 00000000
         }
         // 2.到此处说明线程池中线程数大于核心线程数或者创建线程失败
         if (isRunning(c) && workQueue.offer(command)) {
-            // 如果线程是运行状态并且可以使用offer将任务加入阻塞队列未满，offer是非阻塞操作。
+            // 如果线程是运行状态并且可以使用offer将任务加入阻塞队列未满，
+            // offer是非阻塞操作。
             int recheck = ctl.get();
-            // 重新检查线程池状态，因为上次检测后线程池状态可能发生改变，如果非运行状态就移除任务并执行拒绝策略
+            // 重新检查线程池状态，因为上次检测后线程池状态可能发生改变，
+            // 如果非运行状态就移除任务并执行拒绝策略
             if (! isRunning(recheck) && remove(command))
                 reject(command);
             // 如果是运行状态，并且线程数是0，则创建线程
@@ -343,11 +345,12 @@ execute方法中的逻辑可以分为三部分：
                 return false;
 
             for (;;) {
-                // 根据core来确定创建最大线程数，超过最大值则创建线程失败，注意这里的最大值可能有s三个corePoolSize、maximumPoolSize和线程池线程的最大容量
+                // 根据core来确定创建最大线程数，超过最大值则创建线程失败，
+                // 注意这里的最大值可能有三个corePoolSize、maximumPoolSize和线程池线程的最大容量
                 if (workerCountOf(c)
                     >= ((core ? corePoolSize : maximumPoolSize) & COUNT_MASK))
                     return false;
-                // 通过CAS来将线程数+1，如果成功则跳出循环，执行下边逻辑
+                // 通过CAS来将线程数+1，如果成功则跳出循环，执行下边逻辑    
                 if (compareAndIncrementWorkerCount(c))
                     break retry;
                 c = ctl.get();  // Re-read ctl
@@ -356,9 +359,9 @@ execute方法中的逻辑可以分为三部分：
                     continue retry;
             }
         }
-
+        
         // ...省略后半部分
-
+       
         return workerStarted;
     }
 ```
@@ -370,7 +373,7 @@ execute方法中的逻辑可以分为三部分：
 
 ```java
    private boolean addWorker(Runnable firstTask, boolean core) {
-
+        
         // ...省略前半部分
 
         boolean workerStarted = false;
@@ -387,13 +390,14 @@ execute方法中的逻辑可以分为三部分：
                 mainLock.lock();
                 try {
                     int c = ctl.get();
-                    // 拿到锁湖重新检查线程池状态，只有处于RUNNING状态或者处于SHUTDOWN并且firstTask==null时候才会创建线程
+                    // 拿到锁湖重新检查线程池状态，只有处于RUNNING状态或者
+                    // 处于SHUTDOWN并且firstTask==null时候才会创建线程
                     if (isRunning(c) ||
                         (runStateLessThan(c, STOP) && firstTask == null)) {
                         // 线程不是处于NEW状态，说明线程已经启动，抛出异常
                         if (t.getState() != Thread.State.NEW)
                             throw new IllegalThreadStateException();
-                        // 将线程加入线程队列，这里的worker是一个HashSet
+                        // 将线程加入线程队列，这里的worker是一个HashSet   
                         workers.add(w);
                         workerAdded = true;
                         int s = workers.size();
@@ -428,7 +432,8 @@ execute方法中的逻辑可以分为三部分：
     {
         // 执行任务的线程
         final Thread thread;
-        // 初始化Worker时传进来的任务，可能为null，如果不空，则创建和立即执行这个task，对应核心线程创建的情况
+        // 初始化Worker时传进来的任务，可能为null，如果不空，
+        // 则创建和立即执行这个task，对应核心线程创建的情况
         Runnable firstTask;
 
         Worker(Runnable firstTask) {
@@ -438,12 +443,12 @@ execute方法中的逻辑可以分为三部分：
             // 通过线程工程创建线程
             this.thread = getThreadFactory().newThread(this);
         }
-
+        
         // 线程的真正执行逻辑
         public void run() {
             runWorker(this);
         }
-
+        
         // 判断线程是否是独占状态，如果不是意味着线程处于空闲状态
         protected boolean isHeldExclusively() {
             return getState() != 0;
@@ -511,7 +516,7 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
         }
     }
 ```
-可以看到，runWorker的核心逻辑就是不断通过getTask方法从阻塞队列中获取任务并执行.通过这样的方式实现了线程的复用，避免了创建线程。这里要注意的是这里是一个“生产者-消费者”模式，getTask是从阻塞队列中取任务，所以如果阻塞队列中没有任务的时候就会处于阻塞状态。getTask中通过判断是否要回收线程而设置了等待超时时间，如果阻塞队列中一直没有任务，那么在等待keepAliveTime时间后会抛出异常。最终会走到上述代码的finally方法中，意味着有线程空闲时间超过了keepAliveTime时间，那么调用processWorkerExit方法移除Worker。processWorkerExit方法中没有复杂难以理解的逻辑，这里就不再贴代码了。我们重点看下getTask中是如何处理的，代码如下：
+可以看到，runWorker的核心逻辑就是不断通过getTask方法从阻塞队列中获取任务并执行.通过这样的方式实现了线程的复用，避免了创建线程。这里要注意的是这里是一个“生产者-消费者”模式，getTask是从阻塞队列中取任务，所以如果阻塞队列中没有任务的时候就会处于阻塞状态。getTask中通过判断是否要回收线程而设置了等待超时时间，如果阻塞队列中一直没有任务，那么在等待keepAliveTime时间后会返回一个null。最终会走到上述代码的finally方法中，意味着有线程空闲时间超过了keepAliveTime时间，那么调用processWorkerExit方法移除Worker。processWorkerExit方法中没有复杂难以理解的逻辑，这里就不再贴代码了。我们重点看下getTask中是如何处理的，代码如下：
 
 
 ```Java
@@ -521,15 +526,17 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
         for (;;) {
             int c = ctl.get();
             // ...
+           
 
-
-            // Flag1. 如果配置了allowCoreThreadTimeOut==true或者线程池中的线程数大于核心线程数，则timed为true，表示开启指定线程超时后被回收
+            // Flag1. 如果配置了allowCoreThreadTimeOut==true或者线程池中的
+            // 线程数大于核心线程数，则timed为true，表示开启指定线程超时后被回收
             boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
-
+            
             // ...
 
             try {
-                // Flag2. 取出阻塞队列中的任务,注意如果timed为true，则会调用阻塞队列的poll方法，并设置超时时间为keepAliveTime，如果超时没有取到任务则会抛出异常。
+                // Flag2. 取出阻塞队列中的任务,注意如果timed为true，则会调用阻塞队列的poll方法，
+                // 并设置超时时间为keepAliveTime，如果超时没有取到任务则会返回null。
                 Runnable r = timed ?
                     workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
                     workQueue.take();
@@ -548,10 +555,10 @@ Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使�
 
 
 ```java
-while (count == 0) {
-  if (nanos <= 0L)
-    return null;
-  nanos = notEmpty.awaitNanos(nanos);
+while (count == 0) { 
+  if (nanos <= 0L) 
+    return null; 
+  nanos = notEmpty.awaitNanos(nanos); 
 }
 ```
 
@@ -603,16 +610,16 @@ while (count == 0) {
             // 尝试中断空闲线程
             interruptIdleWorkers();
             // 空方法，线程池关闭的hook点
-            onShutdown();
+            onShutdown(); 
         } finally {
             mainLock.unlock();
         }
         tryTerminate();
     }
-
+    
     private void interruptIdleWorkers() {
         interruptIdleWorkers(false);
-    }
+    }    
 
 ```
 修改线程池为SHUTDOWN状态后，会调用interruptIdleWorkers去中断空闲线程线程，具体实现逻辑是在interruptIdleWorkers(boolean onlyOne)方法中，如下：
@@ -620,7 +627,7 @@ while (count == 0) {
 
 
 ```java
-
+    
     private void interruptIdleWorkers(boolean onlyOne) {
         final ReentrantLock mainLock = this.mainLock;
         mainLock.lock();

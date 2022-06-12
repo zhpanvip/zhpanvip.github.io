@@ -28,9 +28,13 @@ tags: [多线程]
 
 [Java并发系列番外篇：ThreadLocal原理其实很简单](https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/)
 
-本文是Java并发系列的第三篇文章，将详细的讲解ReentrantLock与AQS的底层实现原理。
+本文是Java并发系列的第三篇文章，将详细的讲解ReentrantLockk与AQS的底层实现原理。
+
+开始之前先给大家推荐一下[AndroidNote](https://github.com/zhpanvip/AndroidNote)这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。
 
 ## 一、初识ReentrantLock
+
+> 注：下文中会多次出现**同步队列**这个关键词，这里的**同步队列**指的是没有获取到锁而处于阻塞状态的线程形成的队列。等同于上篇文章《这一次，彻底搞懂Java中的synchronized关键字》中提到的阻塞队列 _EntryList。
 
 上篇文章我们深入分析了synchronized关键字的实现原理。那么本篇文章我们来认识一下Java中另外一个同步机制--ReentrantLock。ReentrantLock是在JDK1.5的java.util.concurrent包中引入的。相比synchronized，ReentrantLock拥有更强大的并发功能。在深入分析ReentrantLock之前，我们先来了解一下ReentrantLock的使用。
 
@@ -48,21 +52,16 @@ public class ReentrantLockDemo {
         // 拿锁，如果拿不到会一直等待
         lock.lock();
         try {
-            try {
-                // 再次尝试拿锁(可重入)，拿锁最多等待100毫秒
-                if (lock.tryLock(100, TimeUnit.MILLISECONDS))
-                    i++;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                // 释放锁
-                lock.unlock();
-            }
+            // 再次尝试拿锁(可重入)，拿锁最多等待100毫秒
+            if (lock.tryLock(100, TimeUnit.MILLISECONDS))
+                i++;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             // 释放锁
+            lock.unlock(); 
             lock.unlock();
         }
-
     }
 }
 ```
@@ -323,7 +322,7 @@ public abstract class AbstractOwnableSynchronizer
 - **state** 表示同步的状态，为0时表示未加锁状态，而大于0时表示加锁状态。
 
 
-看到这里，不禁想起上篇文章讲到的synchronized锁中的monitor对象。在monitor对象中同样维护了一个_ower字段表示持有锁的线程，维护了一个_EntryList和_WaitSet的集合用来存放等待和阻塞的线程，以及一个计数器count表示锁的状态，为0时即为未加锁状态，大于0时则为加锁状态。
+看到这里，不禁想起上篇文章讲到的synchronized锁中的monitor对象。在monitor对象中同样维护了一个_ower字段表示持有锁的线程，维护了一个_EntryList和_WaitSet的集合用来存放阻塞和等待的线程，以及一个计数器count表示锁的状态，为0时即为未加锁状态，大于0时则为加锁状态。
 
 是不是惊奇的发现AQS与synchronized的monitor竟然有异曲同工之妙。但是AQS的功能却远不止如此。
 
@@ -364,12 +363,12 @@ public abstract class AbstractOwnableSynchronizer
         throw new UnsupportedOperationException();
     }
 ```
-tryAcquire的实现在上一章的NonfairSync和FairSync类中已经分析过了，这个方法会通过CAS去尝试拿锁，返回值表示是否成功获取锁。最理想的情况是通过tryAcquire方法直接拿到了锁。但是如果没有拿到锁该怎么办呢？可以看到在tryAcquire返回false的时候接着又调用了addWaiter方法将其加入到了同步队列。这意味着线程进入到了阻塞状态，排队并且等待阻塞唤醒机制，这一机制主要是依赖一个变形的CLH队列来实现的，同时唤醒线程就是在acquireQueued方法中，后边详细分析
+tryAcquire的实现在上一章的NonfairSync和FairSync类中已经分析过了，这个方法会通过CAS去尝试拿锁，返回值表示是否成功获取锁。最理想的情况是通过tryAcquire方法直接拿到了锁。但是如果没有拿到锁该怎么办呢？可以看到在tryAcquire返回false的时候接着又调用了addWaiter方法将其加入到了同步队列。这意味着线程进入到了阻塞状态，排队并且等待持有锁的线程释放锁，这一机制主要是依赖一个变形的CLH队列来实现的，同时唤醒线程就是在acquireQueued方法中，后边详细分析
 
 
 ### 2.AQS与双向CLH队列
 
-CLH队列是Craig、Landin and Hagersten队列的简称（Craig、Landin and Hagersten是三个人的名字），它是单向链表。而AQS中的队列是CLH变体的虚拟双向队列。在AQS中将每条请求锁的线程封装成一个Node节点来实现锁的分配。关于Node节点，在上文中已经有所提及，来看一下Node中的代码：
+CLH队列是Craig、Landin and Hagersten队列的简称（Craig、Landin and Hagersten是三个人的名字），它是单向链表。而AQS中的队列是CLH变体的虚拟双向队列。在AQS中将所有请求锁失败的线程或者调用了await方法的线程封装成一个Node节点来实现锁的分配。关于Node节点，在上文中已经有所提及，来看一下Node中的代码：
 
 
 ```Java
@@ -392,7 +391,7 @@ static final class Node {
     volatile Node prev;
     // 同步队列的后继节点
     volatile Node next;
-    // 等待的线程
+    // 阻塞状态或者等待状态的线程
     volatile Thread thread;
 
     Node nextWaiter;
@@ -415,11 +414,12 @@ static final class Node {
 ```
 
 可以看到，在Node中封装了等待的线程和线程当前的状态，其中线程的状态有四种，分别为CANCELLED、SIGNAL、CONDITION和PROPAGATE，它们分别表示的含义如下：
+
 - **CANCELLED** 表示线程被取消的状态。同步队列中的线程等待超时或者被中断后会将waitStatus改为CANCELLED。
 
 - **SIGNAL** 表示节点处于被唤醒状态，当其前驱结点释放了同步锁或者被取消后就会通知处于SIGNAL状态的后继节点的线程执行。
 
-- **CONDITION** 处于等待队列中的节点会被标记为此种状态，当调用了Condition的singal方法后，CONDITION状态的节点会总等待队列转移到同步队列中，等待获取锁。
+- **CONDITION** 调用了await方法后处于等待状态的线程节点会被标记为此种状态，当调用了Condition的singal方法后，CONDITION状态会变为SIGNAL状态，并且会在适当的时机从等待队列转移到同步队列中。
 
 - **PROPAGATE** 这种状态与共享模式有关，在共享模式下，表示节点处于可运行状态。
 
@@ -458,9 +458,9 @@ private final void initializeSyncQueue() {
         tail = h;
 }
 ```
-注意，在aquire方法中调用addWaiter方法时传入的参数是Node.EXCLUSIVE，表示独占模式。通过new Node(mode)可以实例化Node时会设置当前线程。
+注意，在aquire方法中调用addWaiter方法时传入的参数是Node.EXCLUSIVE，表示独占模式。通过new Node(mode)实例化Node时会设置当前线程。
 
-接下来开启一个死循环进行node插入队尾的操作。如果队列不为空的话，那么通过CAS将node节点插入队尾，如果队列为空，则会去初始化队列，在初始化队列中又实例化了一个空的Node节点作为head，并将tail也指向这个头结点，初始化完成后会继续执行死循环进行node插入操作。从这里也可以看出同步队列的头结点是一个不存储任何数据的节点。
+接下来开启一个死循环进行node插入队尾的操作。如果队列不为空的话，那么通过CAS将node节点插入队尾，如果队列为空，则会去初始化队列，在初始化队列中又实例化了一个空的Node节点作为head，并将tail也指向这个头结点。初始化完成后会继续执行死循环进行node插入操作。从这里也可以看出同步队列的头结点是一个不存储任何数据的节点。
 
 在将节点加入到同步队列后，节点就会开启自旋操作，并观察前驱节点的状态，等待满足执行的条件。这一操作是在acquire方法中的acquireQueued()方法中进行的。
 
@@ -667,9 +667,9 @@ private void unparkSuccessor(Node node) {
 
 ## 五、总结
 
-关于ReentrantLock与AQS的实现相对来说比较难以理解。本篇文章虽然写了很长的篇幅，但是也没有面面俱到，讲完ReentrantLock与AQS的全部知识点。本篇文章的分析仅仅涉及到了排它锁（独占锁），没有分析ReentrantLock共享锁的实现，关于Condition本篇文章并未涉及到。如果后边有时间，可以再写篇文章来分析Condition。
+关于ReentrantLock与AQS的实现相对来说比较难以理解。本篇文章虽然写了很长的篇幅，但是也没有面面俱到的讲完ReentrantLock与AQS的全部知识点。本篇文章的分析仅仅涉及到了排它锁（独占锁），没有分析ReentrantLock共享锁的实现，关于Condition本篇文章并未涉及到，如果后边有时间，可以再写篇文章来分析Condition。
 
-最后，不妨概括一下ReentrantLock独占锁拿锁和排队的流程：ReentrantLock内部通过FairSync和NonfairSync来实现公平锁和非公平锁。它们都是继承与AQS实现，在AQS内部通过state来标记同步状态，如果state为0，线程可以直接获取锁，如果state大于0，则线程会被封装成Node节点进入CLH队列中等待执行。AQS的CLH队列是一个双向的链表结构，头结点是一个空的Node节点。新来的node节点会被插入队尾并开启自旋去判断它的前驱节点是不是头结点。如果是头结点则尝试获取锁，如果不是头结点，则根据条件进行挂起操作。
+最后，不妨概括一下ReentrantLock独占锁拿锁和排队的流程：ReentrantLock内部通过FairSync和NonfairSync来实现公平锁和非公平锁。它们都是继承自AQS实现，在AQS内部通过state来标记同步状态，如果state为0，线程可以直接获取锁，如果state大于0，则线程会被封装成Node节点进入CLH队列并阻塞线程。AQS的CLH队列是一个双向的链表结构，头结点是一个空的Node节点。新来的node节点会被插入队尾并开启自旋去判断它的前驱节点是不是头结点。如果是头结点则尝试获取锁，如果不是头结点，则根据条件进行挂起操作。
 
 画一个流程图大家可做参考：
 
