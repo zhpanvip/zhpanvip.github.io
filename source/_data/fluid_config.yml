@@ -368,7 +368,7 @@ footer:
   # 展示网站的 PV、UV 统计数
   # Display website PV and UV statistics
   statistics:
-    enable: true
+    enable: false
 
     # 统计数据来源，如果使用 leancloud 需要设置 `web_analytics: leancloud` 中的参数；如果使用 busuanzi 可能会有请求失败的情况
     # Data source. If use leancloud, you need to set the parameter in `web_analytics: leancloud`
@@ -403,7 +403,7 @@ footer:
 index:
   # 首页 Banner 头图，可以是相对路径或绝对路径，以下相同
   # Path of Banner image, can be a relative path or an absolute path, the same on other pages
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/default.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/default.jpg
 
   # 头图高度，屏幕百分比
   # Height ratio of banner image
@@ -476,7 +476,7 @@ index:
 # 通过 hexo new page 命令创建的页面
 # Custom Page through `hexo new page`
 page:
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/default.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/default.jpg
   banner_img_height: 75
   banner_mask_alpha: 0.3
 
@@ -485,7 +485,7 @@ page:
 # Post Page
 #---------------------------
 post:
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/article.jpg
   banner_img_height: 70 # available: 0 - 100
   banner_mask_alpha: 0.3 # available: 0 - 1.0
 
@@ -572,7 +572,7 @@ post:
              </a>
           <a href="https://blog.csdn.net/qq_20521573" class="qr-trigger">
              <i class="iconfont icon-wechat-fill" aria-hidden="true"></i>
-             <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" alt="qrcode" />
+             <img class="qr-img" src="https://cdn.jsdelivr.net/gh/zhpanvip/images/project/group/wechat_gzh.jpg" alt="qrcode" />
           </a>
         </div>
   </div>'
@@ -586,7 +586,7 @@ post:
   # Custom content at the bottom of the post page (located above the footer)
   custom:
     enable: true
-    content: '<img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">'
+    content: '<img src="https://cdn.jsdelivr.net/gh/zhpanvip/images/project/group/wechat_gzh.jpg" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">'
 
   # 文章图片可点击放大
   # Zoom feature of images
@@ -739,7 +739,7 @@ twikoo:
 # Archive Page
 #---------------------------
 archive:
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/categories.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/categories.jpg
   banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:
@@ -750,7 +750,7 @@ archive:
 #---------------------------
 category:
   enable: true
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/label.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/label.jpg
   banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:
@@ -774,7 +774,7 @@ category:
 #---------------------------
 tag:
   enable: true
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/tag.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/tag.jpg
   banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:
@@ -792,7 +792,7 @@ tag:
 #---------------------------
 about:
   enable: true
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/about.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/about.jpg
   banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:  # 打字机内容
@@ -812,7 +812,7 @@ about:
 #---------------------------
 page404:
   enable: true
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/default.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/default.jpg
   banner_img_height: 100
   banner_mask_alpha: 0.3
   subtitle: "Page not found"
@@ -823,7 +823,7 @@ page404:
 #---------------------------
 links:
   enable: true
-  banner_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg
+  banner_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/article.jpg
   banner_img_height: 75
   banner_mask_alpha: 0.3
   subtitle:

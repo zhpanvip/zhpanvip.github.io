@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/jmm.png
+index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/jmm.png
 title: 这一次，彻底搞懂Java内存模型与volatile关键字
 date: 2021-05-30 00:07:05
 categories:

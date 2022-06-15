@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/synchronized.png
+index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/synchronized.png
 title: 这一次，彻底搞懂Java中的synchronized关键字
 date: 2021-06-14 17:12:26
 categories:

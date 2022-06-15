@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/sparsearray.png
+index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/sparsearray.png
 title: 这一次，彻底搞懂SparseArray实现原理
 date: 2021-06-13 00:04:43
 categories:

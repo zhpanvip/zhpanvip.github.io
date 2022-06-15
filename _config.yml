@@ -81,7 +81,7 @@ meta_generator: true
 ## http://momentjs.com/docs/#/displaying/format/
 date_format: YYYY-MM-DD
 time_format: HH:mm:ss
-## updated_option supports 'mtime'# Hexo Configuration
+  ## updated_option supports 'mtime'# Hexo Configuration
   ### Docs: https://hexo.io/docs/configuration.html
   ### Source: https://github.com/hexojs/hexo/
   #
@@ -186,7 +186,7 @@ time_format: HH:mm:ss
   ## Deployment
   ### Docs: https://hexo.io/docs/one-command-deployment
   #deploy:
-  #  type: git
+#  type: git
 #  repository: https://gitee.com/zhpanvip/zhpanvip.git
 #  branch: master, 'date', 'empty'
 updated_option: 'mtime'
@@ -211,6 +211,5 @@ theme: fluid
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-#  repository: https://gitee.com/zhpanvip/zhpanvip.git
-  repository: https://github.com/zhpanvip/zhpanvip.github.io.git
+  repository: https://gitee.com/zhpanvip/zhpanvip.git
   branch: master
