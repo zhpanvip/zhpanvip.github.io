@@ -11,12 +11,16 @@ tags: [Binder]
 
 说起Android的进程间通信，想必大家都会不约而同的想起Android中的Binder机制。而提起Binder，想必也有不少同学会想起初学Android时被Binder和AIDL支配的恐惧感。但是作为一个Android开发者，Binder是我们必须掌握的知识。因为它是构架整个Android大厦的钢筋和混凝土，连接了Android各个系统服务和上层应用。只有了解了Binder机制才能更加深入的理解Android开发和Android Framework。这也是为什么无论是《Android开发艺术探索》还是《深入理解Android内核涉及思想》这些进阶类书籍把进程间通信和Binder机制放到靠前章节的原因，它太重要了，重要到整个Android Framework都离不开Binder的身影。
 
-本篇文章我们暂且不去探讨Binder的底层实现，因为就目前而言，笔者掌握的程度也不足以去输出Binder实现原理的的内容。因此，为了不误导大家，这里就来写一写Binder的基础用法以及AIDL。虽然关于Binder和AIDL的基础用法网上的内容比比皆是。但是浅显易懂的内容并不多见。也就导致了很多人看完后仍不知所云。本篇文章，我将通过我自己的学习思路来带大家认识Binder机制和AIDL。
+本篇文章我们暂且不去探讨Binder的底层实现，因为就目前而言，笔者掌握的程度也不足以去输出Binder实现原理的的内容。因此，为了不误导大家，这里就来写一写Binder的基础用法以及AIDL。虽然关于Binder和AIDL的基础用法网上的内容比比皆是。但是能把Binder和AIDL写的浅显易懂的文章并不多见。也就导致了很多人觉得Binder跟AIDL的使用都很难。
+
+本篇文章，我将通过我自己的学习思路来带大家认识Binder机制和AIDL。
+
+开始之前先给大家推荐一下[AndroidNote](https://github.com/zhpanvip/AndroidNote)这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。
 
 
 ## 一、进程间通信
 
-在操作系统中，每个进程都有一块独立的内存空间。为了保证进程的安全性，操作系统都会有一套严格的安全机制来禁止进程间的非法访问。毕竟，如果你的APP能访问到别的APP的运行空间，或者别的APP可以轻而易举的访问到你APP的运行空间，想象一下你是不是崩溃的心都有了。所以，操作系统层面会对应用进程进行内存隔离，以保证APP的运行安全。但是，很多情况下进程间也是需要相互通信的，例如剪贴板的功能，可以从一个程序中复制信息到另一个程序。这就是进程间通信诞生的背景。
+在操作系统中，每个进程都有一块独立的内存空间。为了保证程序的的安全性，操作系统都会有一套严格的安全机制来禁止进程间的非法访问。毕竟，如果你的APP能访问到别的APP的运行空间，或者别的APP可以轻而易举的访问到你APP的运行空间，想象一下你是不是崩溃的心都有了。所以，操作系统层面会对应用进程进行内存隔离，以保证APP的运行安全。但是，很多情况下进程间也是需要相互通信的，例如剪贴板的功能，可以从一个程序中复制信息到另一个程序。这就是进程间通信诞生的背景。
 
 > 广义的讲，进程间通信（Inter-process communication,简称IPC）是指运行在不同进程中的若干线程间的数据交换。
 
@@ -60,7 +64,7 @@ public class GradeService extends Service {
             return super.onTransact(code, data, reply, flags);
         }
         // 根据姓名查询学生成绩
-        public int getStudentGrade(String name) {
+        public int getStudentGrade(String name) {         
             return StudentMap.getStudentGrade(name);
         }
     };
@@ -74,7 +78,7 @@ public class GradeService extends Service {
 ```
 因为我们要实现的是跨进程通信，因此，我们将这个服务端的Service设置到远程进程中，在AndroidManifest文件中如下：
 
-```
+```xml
 <service
     android:name="com.zhpan.sample.binder.server.GradeService"
     android:process=":server">
@@ -146,20 +150,23 @@ public class BinderActivity extends AppCompatActivity {
 ```
 
 
-就这么简单，一个用Binder实现的进程通信就完成了。是不是有点出乎你所料？但是Binder的使用就是这么简单呀。那我们之前写的AIDL呢？AIDL生成的那一堆是什么玩意儿？莫慌，我们且往下看。
+客户端的代码就是通过绑定远程服务，然后获取到服务的Binder代理，来查询学生成绩。可见，使用Binder实现进程间通信是非常简单的，可以说简单的有点出乎所料。那我们之前写的AIDL是什么呢？AIDL生成的那一堆是什么玩意儿？我们且往下看。
 
 ## 三、代理模式优化Binder使用
 
-首先，我们的服务端保持跟上一章不变，客户端使用代理模式进行优化，让代理类来完成Binder的任务。
+虽然上一章中的代码已经非常简单了，但是还是有可以优化的空间。我们可以通过设计模式来进行优化，让代码更加简洁。
 
-接下来，需要一个接口，代码如下：
+首先需要定义一个接口查询成绩的接口IGradeInterface，代码如下：
 
 ```java
 public interface IGradeInterface {
+    // 查询成绩接口
     int getStudentGrade(String name);
 }
 ```
-接着，我们实现一个自定义的Binder，并实现上述接口，代码如下：
+### 1.服务端代码优化
+
+接着，对服务端的代码进行优化。我们实现一个自定义的GradeBinder，并实现上述接口，代码如下：
 
 ```java
 public class GradeBinder extends Binder implements IGradeInterface {
@@ -182,18 +189,34 @@ public class GradeBinder extends Binder implements IGradeInterface {
     }
 }
 ```
-这段代码比较容易理解，就不再多费口舌了。接下来来看代理类的实现，它会持有Binder，并替代Binder来完成进程间通信。代码如下：
+上述代码将查询成绩的相关逻辑从Service搬到了GradeBinder中。因此，此时Service中只需要在onBind的时候返回GradeBinder的实例即可。代码如下：
+
+```java
+public class GradeService extends Service {
+
+    public static final int REQUEST_CODE=1000;
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return new GradeBinder();
+    }
+}
+```
+### 2.客户端代码优化
+
+客户端优化的思路是在连接到远程服务时候实例化一个代理类，代理类持有Binder，让代理类行使Binder的权利。首先来看代理类的代码实现：
 
 ```java
 public class BinderProxy implements IGradeInterface {
     // 被代理的Binder
     private final IBinder mBinder;
-
+    // 私有化构造方法
     private BinderProxy(IBinder binder) {
         mBinder = binder;
     }
 
-  	// 通过Binder查询成绩
+    // 通过Binde读取成绩
     @Override
     public int getStudentGrade(String name) {
         Parcel data = Parcel.obtain();
@@ -211,13 +234,13 @@ public class BinderProxy implements IGradeInterface {
         }
         return grade;
     }
-
+		
     // 实例化Binder代理类的对象
     public static IGradeInterface asInterface(IBinder iBinder) {
         if (iBinder == null) {
             return null;
-        }
-
+        } 
+        
         if (iBinder instanceof IGradeInterface) {
             LogUtils.e("当前进程");
             // 如果是同一个进程的请求，则直接返回Binder
@@ -231,9 +254,9 @@ public class BinderProxy implements IGradeInterface {
 
 }
 ```
-上述代码asInterface方法中通过判断Binder是不是IGradeInterface从而确定是不是跨进程的通信。如果不是跨进程通信，则返回当前这个Binder，否则就返回Binder的这个代理类。
+BinderProxy类的构造方法被设置成了private。同时提供了一个asInterface方法中，这个方法通过判断Binder是不是IGradeInterface类型从而确定是不是跨进程的通信。如果不是跨进程通信，则返回当前这个Binder，否则就返回Binder的这个代理类。
 
-这样，我们便完了客户端的代码优化，接着来看客户端的连接代码，如下：
+接下来客户端连接上远程服务的时候使用BinderProxy获取Binder或者BinderProxy实例。代码如下：
 
 ```java
 public class BinderProxyActivity extends BaseViewBindingActivity<ActivityBinderBinding> {
@@ -261,7 +284,7 @@ public class BinderProxyActivity extends BaseViewBindingActivity<ActivityBinderB
         binding.btnFindGrade.setOnClickListener(view -> ToastUtils.showShort("Anna grade is " + mBinderProxy.getStudentGrade("Anna")));
     }
 
-		// 绑定服务
+    // 绑定服务
     private void bindGradeService() {
         String action = "android.intent.action.server.gradeservice";
         Intent intent = new Intent(action);
@@ -271,20 +294,22 @@ public class BinderProxyActivity extends BaseViewBindingActivity<ActivityBinderB
 
 }
 ```
-可以看到，这时候的代码整洁了不少。
+可以看到，此时的代码相比第一章的代码整洁了不少。但是，代码写起来似乎还没有第一章中的方便。主要是因为要我们增加一个IGradeInterface接口，还要自定义一个GradeBinder，同时，还需要写代理类的相关代码，感觉非常繁琐。那么有没有办法让代码简洁，写起来还不繁琐呢？答案是肯定的，使用AIDL就可以实现。
 
 ## 四、AIDL
 
-终于到了最让人头大的AIDL环节了，但是，这里我保证对于AIDL绝对让你一看就会。AIDL是Android Interface Description Languaged 简写。用于描写客户端/服务端通信接口的一种描述语言。其实说人话就是通过定义AIDL接口来生成第二章中的代理类。即AIDL的原理其实跟上一章的代理模式优化Binder的使用是一样的。目的就是为了省去我们自己编写代理的代码。AIDL的使用非常简单，大致步骤如下：
+AIDL是Android Interface Description Languaged 简写。用于描写客户端/服务端通信接口的一种描述语言。提起AIDL相信很多人都会觉得头大，定义一个AIDL接口，生成了那么多不知所云的代码，看起来简直就是灾难。先别担心，如果你看懂了第三章的内容，那么其实你已经完全掌握了AIDL。没错，说白了AIDL生成的那一坨代码其实就是我们第三章中写的代码。即AIDL的原理其实就是使用了代理模式对Binder的使用进行了优化，使用AIDL保证了代码的整洁，同时也省去了自己编写繁琐的代理类相关代码。
+
+关于AIDL的使用就非常简单了。
 
 ### 1.创建AIDL接口
 
-首先，我们在要创建AIDL的目录上右键->New->AIDL->AIDl File 来创建一个AIDL文件，如下图所示：
+首先，在要创建AIDL的目录上右键->New->AIDL->AIDl File 来创建一个AIDL文件，如下图所示：
 
 ![截屏2021-08-06 上午12.29.39.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07778cc901ce4de3a0717e4ba65809c7~tplv-k3u1fbpfcp-watermark.image)
 
 
-创建一个名为IGradeService的AIDL文件，如下：
+创建一个名为IGradeService的AIDL文件，并添加一个getStudentGrade的方法。代码如下：
 
 ```java
 // IGradeService.aidl
@@ -303,18 +328,18 @@ interface IGradeService {
     int getStudentGrade(String name);
 }
 ```
-代码很简单，AIDL中有一个getStudentGrade的方法。
+接着Rebuild一下项目后IDE就会自动生成AIDL的代码了。
 
 ### 2.AIDL生成的代码
 
-接着Rebuild项目后就会看到在build目录下com.zhpan.sample.binder.aidl包中生成了一个名为IGradeService的接口，代码如下：
+在项目的build目录下com.zhpan.sample.binder.aidl包中会看到自动生成的一个名为IGradeService的接口，代码如下：
 
 ```java
 // 这个接口相当于上一章中的IGradeInterface接口
 public interface IGradeService extends android.os.IInterface {
-
+  
   ...
-
+  
   // Stub是一个Binder，相当于上一章中的GradeBinder
   public static abstract class Stub extends android.os.Binder
       implements com.zhpan.sample.binder.aidl.IGradeService {
@@ -325,7 +350,7 @@ public interface IGradeService extends android.os.IInterface {
     }
 
     public static IGradeService asInterface(android.os.IBinder obj) {
-
+      
       if ((obj == null)) {
         return null;
       }
@@ -474,12 +499,13 @@ public interface IGradeService extends android.os.IInterface {
 }
 ```
 
-上述代码中的重要位置都加了代码注释，可以看到，通过AIDL生成的代码和上一章我们使用代理模式优化后的代码基本原理是一致的，只不过生成的代码都被放在了同一个类中。到这里，是不是突然觉得AIDL原来就这么简单啊！
+瞥一眼代码会发现IGradeService接口中有一个名为Stub的内部类，它继承了Binder，并实现了IGradeService接口，并且它的内部有一个asInterface的方法，这个方法与我们上一章BinderProxy中的asInterface一致，只是写的位置不同而已。另外在Stub的onTranscation方法的TRANSACTION_getStudentGrade条件中的代码与GradeBinder的onTranscation方法代码是一样的。
 
-好了，我们来看下客户端的使用吧。
+接着，Stub类中还有一个名为Proxy的内部类。Proxy类与上一章的BinderProxy相对应。可以看到Proxy类的构造方法并没有修饰符，而BinderProxy的构造方法被声明成了private，都可以防止外部通过构造方法区实例化代理类的对象。Proxy的getStudentGrade方法与BinderProxy中的getStudentGrade一样，通过Binder去读取服务端的写入数据。
 
 ### 3.AIDL客户端
-使用AIDL的客户端实现也非常简单，几乎与第三章中的代码一致，如下：
+
+使用AIDL的客户端实现几乎与第三章中的代码一致。只不过是在连接到服务端后通过IGradeService.Stub下的asInterface方法来获取Binder或者Binder的代理对象。代码如下：
 
 ```java
 public class AidlActivity extends BaseViewBindingActivity<ActivityBinderBinding> {
@@ -506,7 +532,7 @@ public class AidlActivity extends BaseViewBindingActivity<ActivityBinderBinding>
       	// 查询学生成绩
         binding.btnFindGrade.setOnClickListener(view -> getStudentGrade("Anna"));
     }
-
+  
     // 绑定服务
     private void bindGradeService() {
         String action = "android.intent.action.server.aidl.gradeservice";
@@ -514,7 +540,7 @@ public class AidlActivity extends BaseViewBindingActivity<ActivityBinderBinding>
         intent.setPackage(getPackageName());
         bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
     }
-
+  
     // 查询成绩
     private void getStudentGrade(String name) {
         int grade = 0;
@@ -528,12 +554,14 @@ public class AidlActivity extends BaseViewBindingActivity<ActivityBinderBinding>
 }
 ```
 
+到这里，关于AIDL的介绍就结束了。有没有惊奇的发现AIDL原来这么简单！
+
 ## 五、总结
 
 本篇文章主要带大家认识了进程间通信和Binder与AIDL的使用。通过本篇文章的学习可以发现Binder与AIDL其实是非常简单的。了解了Binder之后，我们就可以去更加深入的学习Android Framework层的知识了。
 
 
-
+[AndroidNote](https://github.com/zhpanvip/AndroidNote)
 
 
 
