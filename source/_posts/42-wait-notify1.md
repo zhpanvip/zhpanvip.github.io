@@ -12,25 +12,25 @@ tags: [多线程]
 
 多线程并发系列文章：
 
-[这一次，彻底搞懂Java内存模型与volatile关键字](https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/)
+[这一次，彻底搞懂Java内存模型与volatile关键字](https://juejin.cn/post/6967739352784830494)
 
-[这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)
+[这一次，彻底搞懂Java中的synchronized关键字](https://juejin.cn/post/6973571891915128846)
 
-[这一次，彻底搞懂Java中的ReentrantLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)
+[这一次，彻底搞懂Java中的ReentranLock实现原理](https://juejin.cn/post/6975435256111300621)
 
-[这一次，彻底搞懂Java并发包中的Atomic原子类](https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/)
+[这一次，彻底搞懂Java并发包中的Atomic原子类](https://juejin.cn/post/6977993272538955806)
 
-[深入理解Java线程的等待与唤醒机制（一）](https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/)
+[深入理解Java线程的等待与唤醒机制（一）](https://juejin.cn/post/6980002998361522190)
 
-[深入理解Java线程的等待与唤醒机制（二）](https://zhpanvip.gitee.io/2021/07/03/43-wait-notify2/)
+[深入理解Java线程的等待与唤醒机制（二）](https://juejin.cn/post/6980655421497278495/)
 
-[Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/)
+[Java并发系列终结篇：彻底搞懂Java线程池的工作原理](https://juejin.cn/post/6983213662383112206/)
 
-[Java并发系列番外篇：ThreadLocal原理其实很简单](https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/)
+[Java并发系列番外篇：ThreadLocal原理其实很简单](https://juejin.cn/post/6986301941269659656)
 
 本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。
 
-关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentrantLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentranLock两个方面来深入分下线程的等待与唤醒。
+关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentranLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentranLock两个方面来深入分下线程的等待与唤醒。
 
 开始之前先给大家推荐一下[AndroidNote](https://github.com/zhpanvip/AndroidNote)这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。
 
@@ -44,7 +44,7 @@ tags: [多线程]
 
 “生产者-消费者”模型是一个典型的线程协作通信的例子。在这一模型中有两类角色，即若干个生产者线程和若干个消费者线程。生产者线程负责提交用户请求，消费者线程负责处理生产者提交的请求。很多情况下，生产者与消费者不能够达到一定的平衡，即有时候生产者生产的速度过快，消费之来不及消费；而有时候可能是消费者过于旺盛，生产者来不及生产。在此情况下就需要一个生产者与消费者共享的内存缓存区来平衡二者的协作。生产者与消费者之间通过共享内存缓存区进行通信，从而平衡生产者与消费者线程，并将生产者和消费者解耦。如下图所示：
 
-![1C2478F7-48B7-4ACA-A575-ABF8B71F40B9.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b129a2e7034c474791c35ceb89e3af18~tplv-k3u1fbpfcp-watermark.image)
+![1C2478F7-48B7-4ACA-A575-ABF8B71F40B9.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/08aa1fce00cb43fb830907d484e6911e~tplv-k3u1fbpfcp-zoom-1.image)
 
 当队列容器中没有商品的时候，就需要让消费者处于等待状态，而当容器满了之后就需要生产者处于等待状态。而消费者每消费一个商品，又会通知正在等待的生产者可以进行生产了；当生产则生产一个商品，也会通知正在等待的消费者可以消费了。
 
@@ -63,6 +63,7 @@ public class BreadContainer {
     LinkedList<Bread> list = new LinkedList<>();
     // 容器容量
     private final static int CAPACITY = 10;
+
     /**
      * 放入面包
      */
@@ -77,14 +78,14 @@ public class BreadContainer {
         }
         list.add(bread);
         // 面包生产成功后通知消费者线程
-        notifyAll();
+        notify();
         System.out.println(Thread.currentThread().getName() + " product a bread" + bread.toString() + " size = " + list.size());
     }
 
     /**
      * 取出面包
      */
-    public synchronized void take() {
+    public synchronized Bread take() {
         while (list.isEmpty()) {
             try {
                 // 如果容器为空，则阻塞消费者线程
@@ -95,8 +96,9 @@ public class BreadContainer {
         }
         Bread bread = list.removeFirst();
         // 消费后通知生产者生产面包
-        notifyAll();
+        notify();
         System.out.println("Consumer " + Thread.currentThread().getName() + " consume a bread" + bread.toString() + " size = " + list.size());
+        return bread;
     }
 }
 ```
@@ -105,40 +107,41 @@ public class BreadContainer {
 
 而take方法则是取出面包的操作，当容器为空，则阻塞消费者线程，让其进行等待，如果成功消费面包后则通知生产者开始生产。
 
-另外需要注意一下，这两个方法都使用了synchronized关键字，如果你看过[这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)这篇文章的话应该知道此时synchronized加锁的对象就是这两个方法所在的实例对象，即BreadContainer对象，而在这两个方法中调用的wait()和notifyAll()两个方法同样属于BreadContainer对象。记住这段话，这里留个Flag,我们后边分析。
+另外需要注意一下，这两个方法都使用了synchronized关键字，如果你看过[这一次，彻底搞懂Java中的synchronized关键字](https://zhpanvip.gitee.io/2021/06/14/39-synchronized/)这篇文章的话应该知道此时synchronized加锁的对象就是这两个方法所在的实例对象，即BreadContainer对象，而在这两个方法中调用的wait()和notify()两个方法同样属于BreadContainer对象。记住这段话，这里留个Flag,我们后边分析。
 
 接下来生产者与消费者的实现就比较简单了，代码如下：
 
 
 ```java
 // 生产者
-public class Producer implements Runnable {
+public class Producer {
+
     private final BreadContainer container;
 
-    public Producer(BreadContainer container) {
-        this.container = container;
+    public Producer() {
+        container = new BreadContainer();
     }
 
-    @Override
-    public void run() {
-        // 生产者生产面包
+    public BreadContainer getContainer() {
+        return container;
+    }
+    
+    // 生产者生产面包
+    public void makeBread() {
         container.put(new Bread());
     }
 }
 
-// 消费者
-public class Consumer implements Runnable {
+public class Consumer {
+    BreadContainer container;
 
-    private final BreadContainer container;
-
-    public Consumer(BreadContainer container) {
+    public Consumer(BreadContainer container){
         this.container = container;
     }
-
-    @Override
-    public void run() {
-        // 消费者消费面包
-        container.take();
+    
+    // 消费者取出面包
+    public Bread takeBread() {
+        return container.take();
     }
 }
 ```
@@ -146,28 +149,32 @@ public class Consumer implements Runnable {
 接下来在测试代码中，同时开启多个生产者线程与多个消费者线程
 
 ```java
-    public static void main(String[] args) {
-        BreadContainer container = new BreadContainer();
+public static void main(String[] args) {
 
-        new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
-                new Thread(new Producer(container)).start();
-            }
-        }).start();
+    // 实例化生产者
+    Producer producer = new Producer();
 
-        new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
-                new Thread(new Consumer(container)).start();
-            }
-        }).start();
+    // 生产者线程
+    new Thread(() -> {
+        for (int i = 0; i < 10000; i++) {
+            producer.makeBread();
+        }
+    }).start();
 
-    }
-
+    // 消费者线程
+    new Thread(() -> {
+        for (int i = 0; i < 1000; i++) {
+            Consumer consumer = new Consumer(producer.getContainer());
+            Bread bread = consumer.takeBread();
+            bread.eat();
+        }
+    }).start();
+}
 ```
 
 此时运行main方法，生成者与消费者线程就可以很好的协同工作了。
 
-注意，在main方法中我们实例化了一个BreadContainer对象，上边Flag处说的synchronized锁的对象即为这个container，调用的wait和notifyAll方法也是container实例的方法。到这里不知道你是否会有疑问，究竟container的wait和notify方法对象成做了什么能让线程阻塞和唤醒呢？被阻塞的线程放到哪里去了？为什么要调用container对象中的wait和notifyAll方法？如果换成调用其他对象的wait和notifyAll是否可行呢？
+注意，在main方法中我们实例化了一个BreadContainer对象，上边Flag处说的synchronized锁的对象即为这个container，调用的wait和notify方法也是container实例的方法。到这里不知道你是否会有疑问，究竟container的wait和notify方法对象成做了什么能让线程阻塞和唤醒呢？被阻塞的线程放到哪里去了？为什么要调用container对象中的wait和notify方法？如果换成调用其他对象的wait和notify是否可行呢？
 
 
 ## 二、wait()与notify底层实现原理
@@ -341,11 +348,11 @@ inline void ObjectMonitor::DequeueSpecificWaiter(ObjectWaiter* node) {
 
 可以看到，DequeueWaiter 函数中又调用了 DequeueSpecificWaiter 函数，在这个函数中，如果队列只有一个节点，则将`_WaitSet`置空，即取出头结点后，队列中没有元素了。如果有多个节点，那么 会将头结点从队列中取出，并重新拼接好 `_WaitSet` 队列。然后将取出的这个节点的前驱节点和后继节点置空。
 
-notify 函数接下来的代码判断如果 iterator 不为 NULL 说明存在等待状态的线程，需要将这个等待的线程转入阻塞线程的队列中去。接下来根据 Policy 来执行不同的逻辑，Policy 默认值为2，所以这里只关注默认情况情况。即当Policy为2时，接着将 `_EntryList`赋值给List，如果List等于NULL，说明此时没有阻塞状态的线程。那么就将 `_EntryList ` 指向 iterator。标志着这个等待中的线程进入了阻塞状态，并且能够获取锁了，但此时线程还未被唤醒。如果List等于NULL，那么就通过CAS将等待状态的线程移入到了`_cxq` 队列，`_cxq` 队列只是一个临时队列，在后边exit函数中最终还是会被移入`_EntryList`中。这里一定要注意区分**阻塞状态**与**等待状态**，以及**等待队列**和**阻塞队列**。
+notify 函数接下来的代码判断如果 iterator 不为 NULL 说明存在等待状态的线程，需要将这个等待的线程转入阻塞线程的队列中去。接下来根据 Policy 来执行不同的逻辑，Policy 默认值为2，所以这里只关注默认情况情况。即当Policy为2时，接着将 `_EntryList`赋值给List，如果List等于NULL，说明此时没有阻塞状态的线程。那么就将 `_EntryList ` 指向 iterator。标志着这个等待中的线程进入了阻塞状态，并且能够获取锁了，但此时线程还未被唤醒。如果List等于NULL，那么就通过CAS将等待状态的线程移入到了`_cxq` 队列，`_cxq`队列只是一个临时队列，在后边exit函数中最终还是会被移入`_EntryList`中。这里一定要注意区分**阻塞状态**与**等待状态**，以及**等待队列**和**阻塞队列**。
 
 ### 3.虚拟机的exist函数
 
-可见notify函数中只是对线程进行了队列转移，并没有被实际唤醒。而实际唤醒线程的操作就是在本章第1小节中已经提到的exist中实现的。只不过此时exist函数的调用时机是在虚拟机读取到 monitorexist 指令之后。看下简化后的 exit 函数代码，如下： 
+可见notify函数中只是对线程进行了队列转移，并没有被实际唤醒。而实际唤醒线程的操作就是在本章第1小节中已经提到的exist中实现的。只不过此时exist函数的调用时机是在虚拟机读取到 monitorexist 指令之后。看下简化后的 exit 函数代码，如下：
 
 
 ```C++
@@ -443,10 +450,9 @@ exist函数的代码比较繁杂，这里做了简化，由于QMode默认值是0
 
 
 
-
 ## 三、小结
 
-本篇文章从一个简单的“生产者-消费者”模型着手，认识了Object中wait和notify/notifyAll方法，并且深入的分析了虚拟机底层对这两个方法的实现。Java代码中的 synchronized 关键字通过编译器编译成字节码的monitorenter/monitorexist指令，当虚拟机执行到相关指令后则会调用虚拟机底层相关的函数，进行拿锁和释放锁的操作。而由于锁对象Object关联了monitor对象，故可以调用这个Object对象中的 wait 和 notify/notifyAll 方法来阻塞和唤醒线程。而这两个方法亦是调用了虚拟机底层的相关函数，wait 函数会将线程封装成 WaitObject 并将其插入到等待队列中，而notify/notifyAll 则会将线程从等待队列中取出并转移到`_EntryList`队列或者转移到`_cxq`队列，等到持有锁的线程执行完毕并读取到 monitorexist 指令后调用了虚拟机的 exist 函数来释放锁并唤醒`_EntryList` 队列或者`_cxq`队列中的线程。
+本篇文章从一个简单的“生产者-消费者”模型着手，认识了Object中wait和notify方法，并且深入的分析了虚拟机底层对这两个方法的实现。Java代码中的 synchronized 关键字通过编译器编译成字节码的monitorenter/monitorexist指令，当虚拟机执行到相关指令后则会调用虚拟机底层相关的函数，进行拿锁和释放锁的操作。而由于锁对象Object关联了monitor对象，故可以调用这个Object对象中的 wait 和 notify/notifyAll 方法来阻塞和唤醒线程。而这两个方法亦是调用了虚拟机底层的相关函数，wait 函数会将线程封装成 WaitObject 并将其插入到等待队列中，而notify/notifyAll 则会将线程从等待队列中取出并转移到`_EntryList`队列或者转移到`_cxq`队列，等到持有锁的线程执行完毕并读取到 monitorexist 指令后调用了虚拟机的 exist 函数来释放锁并唤醒`_EntryList` 队列或者`_cxq`队列中的线程。
 
 synchronized 锁的这种等待与唤醒机制很显然有一个弊端。仍然以”生产者-消费者“模型为例，由于生产者线程和消费者线程都会被加入到同一个WaitSet队列中，通过 notifyAll 方法并不能精确的控制唤醒哪一类线程。而在[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这篇文章中我们认识了ReentranLock，ReentranLock与 synchronized 相仿也有类似的等待与唤醒机制，并且能够精确的控制唤醒指定的线程。那么，ReentranLock是怎么实现的呢？我们下篇再议。
 
