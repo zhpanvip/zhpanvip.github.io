@@ -8,6 +8,7 @@ categories:
 tags: [多线程]
 
 ---
+
 多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁...等等一系列让人眼花缭乱的并发知识。
 
 多线程并发系列文章：
@@ -132,16 +133,19 @@ public class Producer {
     }
 }
 
+// 消费者
 public class Consumer {
     BreadContainer container;
 
     public Consumer(BreadContainer container){
         this.container = container;
     }
-    
-    // 消费者取出面包
-    public Bread takeBread() {
-        return container.take();
+
+    public void takeBread() {
+        for (; ; ) {
+            Bread bread = container.take();
+            bread.eat();
+        }
     }
 }
 ```
@@ -153,22 +157,17 @@ public static void main(String[] args) {
 
     // 实例化生产者
     Producer producer = new Producer();
-
-    // 生产者线程
+    // 实例化消费者
+    Consumer consumer = new Consumer(producer.getContainer());
+    // 开启生产者线程
     new Thread(() -> {
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 100000; i++) {
             producer.makeBread();
         }
     }).start();
 
-    // 消费者线程
-    new Thread(() -> {
-        for (int i = 0; i < 1000; i++) {
-            Consumer consumer = new Consumer(producer.getContainer());
-            Bread bread = consumer.takeBread();
-            bread.eat();
-        }
-    }).start();
+    // 消费者在主线程消费   
+    consumer.takeBread();
 }
 ```
 
@@ -452,7 +451,7 @@ exist函数的代码比较繁杂，这里做了简化，由于QMode默认值是0
 
 ## 三、小结
 
-本篇文章从一个简单的“生产者-消费者”模型着手，认识了Object中wait和notify方法，并且深入的分析了虚拟机底层对这两个方法的实现。Java代码中的 synchronized 关键字通过编译器编译成字节码的monitorenter/monitorexist指令，当虚拟机执行到相关指令后则会调用虚拟机底层相关的函数，进行拿锁和释放锁的操作。而由于锁对象Object关联了monitor对象，故可以调用这个Object对象中的 wait 和 notify/notifyAll 方法来阻塞和唤醒线程。而这两个方法亦是调用了虚拟机底层的相关函数，wait 函数会将线程封装成 WaitObject 并将其插入到等待队列中，而notify/notifyAll 则会将线程从等待队列中取出并转移到`_EntryList`队列或者转移到`_cxq`队列，等到持有锁的线程执行完毕并读取到 monitorexist 指令后调用了虚拟机的 exist 函数来释放锁并唤醒`_EntryList` 队列或者`_cxq`队列中的线程。
+本篇文章从一个简单的“生产者-消费者”模型着手，认识了Object中wait和notify/notifyAll方法，并且深入的分析了虚拟机底层对这两个方法的实现。Java代码中的 synchronized 关键字通过编译器编译成字节码的monitorenter/monitorexist指令，当虚拟机执行到相关指令后则会调用虚拟机底层相关的函数，进行拿锁和释放锁的操作。而由于锁对象Object关联了monitor对象，故可以调用这个Object对象中的 wait 和 notify/notifyAll 方法来阻塞和唤醒线程。而这两个方法亦是调用了虚拟机底层的相关函数，wait 函数会将线程封装成 WaitObject 并将其插入到等待队列中，而notify/notifyAll 则会将线程从等待队列中取出并转移到`_EntryList`队列或者转移到`_cxq`队列，等到持有锁的线程执行完毕并读取到 monitorexist 指令后调用了虚拟机的 exist 函数来释放锁并唤醒`_EntryList` 队列或者`_cxq`队列中的线程。
 
 synchronized 锁的这种等待与唤醒机制很显然有一个弊端。仍然以”生产者-消费者“模型为例，由于生产者线程和消费者线程都会被加入到同一个WaitSet队列中，通过 notifyAll 方法并不能精确的控制唤醒哪一类线程。而在[这一次，彻底搞懂Java中的ReentranLock实现原理](https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/)这篇文章中我们认识了ReentranLock，ReentranLock与 synchronized 相仿也有类似的等待与唤醒机制，并且能够精确的控制唤醒指定的线程。那么，ReentranLock是怎么实现的呢？我们下篇再议。
 
