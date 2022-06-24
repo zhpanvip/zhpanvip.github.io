@@ -5,7 +5,6 @@
 /gradle/wrapper/gradle-wrapper.properties
 /.idea/
 /gradle/wrapper/
-/.deploy_git/
 /public
 /db.json
 .DS_Store
