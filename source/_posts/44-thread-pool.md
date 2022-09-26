@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/thread_pool.png
+index_img: https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d3d6097cbe4a40e68dc6121ae30bbdc6~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp?
 title: Java并发系列终结篇：彻底搞懂Java线程池的工作原理
 date: 2021-07-10 13:19:12
 categories:

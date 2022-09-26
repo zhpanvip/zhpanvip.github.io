@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/wait_notify2.png
+index_img: https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/45a67f68f95e488982ede7d161e1b608~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp
 title: 深入理解Java线程的等待与唤醒机制（二）
 date: 2021-07-03 19:16:59
 categories:

@@ -1,7 +1,7 @@
 ---
 layout: article
 title: 这一次，彻底搞懂Java中的ReentrantLock实现原理
-index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/reentranlock.png
+index_img: https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0ff3c9f93d064aa788dcf54c5dd78618~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp
 date: 2021-06-19 18:20:16
 categories:
 - Java进阶

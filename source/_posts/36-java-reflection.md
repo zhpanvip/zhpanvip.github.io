@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/reflection.png
+index_img: https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0b2d5e84e8d044f5acbd4180265f0921~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp
 title: Java进阶--深入理解Java的反射机制
 date: 2021-01-14 23:53:35
 categories:

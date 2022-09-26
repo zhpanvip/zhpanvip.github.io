@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/binder_aidl.png
+index_img: https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1760390b306b4cf1be6d77c69ae792e5~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp?
 title: 不得不说的Android Binder机制与AIDL
 date: 2021-08-06 00:48:46
 categories:

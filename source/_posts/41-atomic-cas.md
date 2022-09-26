@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://cdn.jsdelivr.net/gh/zhpanvip/images/blog/img/atomic.png
+index_img: https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2b9d2ad0c7d94b4599fabbde7724e7ad~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp
 title: 这一次，彻底搞懂Java并发包中的Atomic原子类
 date: 2021-06-26 14:50:06
 categories:
