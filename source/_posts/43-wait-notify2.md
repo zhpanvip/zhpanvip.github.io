@@ -38,7 +38,7 @@ tags: [多线程]
 
 ## 一、认识Lock的Condition
 
-> 注：下文中将会多次出现**等待队列**这一关键词，这里指得是调用了await方法后处于等待状态的队列，赢注意与上篇文章中AQS中的**同步队列**做区分。同时，这里的**等待队列**等同于synchronized中的 _WaitSet集合。 
+> 注：下文中将会多次出现**等待队列**这一关键词，这里指得是调用了await方法后处于等待状态的队列，赢注意与上篇文章中AQS中的**同步队列**做区分。同时，这里的**等待队列**等同于synchronized中的 _WaitSet集合。
 
 在[这一次，彻底搞懂Java中的ReentrantLock实现原理]中关于Condition其实也有所提及，在使用Lock来保证线程同步时，我们可以使用Condition来协调线程间的协作。相比synchronize的监视器锁，Condition提供了更加灵活和精确的线程控制。它的最大特点是可以为不同的线程建立多个Condition，从而达到精确控制某一些线程的休眠与唤醒。
 
@@ -47,20 +47,20 @@ Condition是一个接口，内部主要提供了一些线程休眠与唤醒相�
 
 ```Java
 public interface Condition {
-    // 使当前线程进入等待状态,可以相应中断请求
-    void await() throws InterruptedException;
-    // 使当前线程进入等待状态，不响应中断请求
-    void awaitUninterruptibly();
-    // 使当前线程进入等待状态，直到被唤醒或中断，或者经过指定的等待时间。nanosTimeout单位纳秒
-    long awaitNanos(long nanosTimeout) throws InterruptedException;
-    // 同awaitNanos方法，可以指定时间单位
-    boolean await(long time, TimeUnit unit) throws InterruptedException;
-    // 使线程进入等待状态，直到被被唤醒或者中断，或者到截止的时间
-    boolean awaitUntil(Date deadline) throws InterruptedException;
-    // 唤醒一个等待在Condition上的线程，与notify功能类似 
-    void signal();
-    // 唤醒所有等待在Condition上的线程，与notifyAll类似
-    void signalAll();
+  // 使当前线程进入等待状态,可以相应中断请求
+  void await() throws InterruptedException;
+  // 使当前线程进入等待状态，不响应中断请求
+  void awaitUninterruptibly();
+  // 使当前线程进入等待状态，直到被唤醒或中断，或者经过指定的等待时间。nanosTimeout单位纳秒
+  long awaitNanos(long nanosTimeout) throws InterruptedException;
+  // 同awaitNanos方法，可以指定时间单位
+  boolean await(long time, TimeUnit unit) throws InterruptedException;
+  // 使线程进入等待状态，直到被被唤醒或者中断，或者到截止的时间
+  boolean awaitUntil(Date deadline) throws InterruptedException;
+  // 唤醒一个等待在Condition上的线程，与notify功能类似 
+  void signal();
+  // 唤醒所有等待在Condition上的线程，与notifyAll类似
+  void signalAll();
 }
 
 ```
@@ -75,58 +75,58 @@ Condition的实现类是在AQS中的ConditionObject，关于ConditionObject我�
 
 ```Java
 public class BreadContainer {
-    LinkedList<Bread> list = new LinkedList<>();
-    private final static int CAPACITY = 10;
-    Lock lock = new ReentrantLock();
-    private final Condition providerCondition = lock.newCondition();
-    private final Condition consumerCondition = lock.newCondition();
+  LinkedList<Bread> list = new LinkedList<>();
+  private final static int CAPACITY = 10;
+  Lock lock = new ReentrantLock();
+  private final Condition providerCondition = lock.newCondition();
+  private final Condition consumerCondition = lock.newCondition();
 
-    public void put(Bread bread) {
+  public void put(Bread bread) {
+    try {
+      lock.lock();
+      while (list.size() == CAPACITY) {
         try {
-            lock.lock();
-            while (list.size() == CAPACITY) {
-                try {
-                    // 如果容器已满，则阻塞生产者线程
-                    providerCondition.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            list.add(bread);
-            // 面包生产成功后通知消费者线程
-            consumerCondition.signalAll();
-            System.out.println(Thread.currentThread().getName() + " product a bread" + bread.toString() + " size = " + list.size());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
+          // 如果容器已满，则阻塞生产者线程
+          providerCondition.await();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
         }
-    }
+      }
+      list.add(bread);
+      // 面包生产成功后通知消费者线程
+      consumerCondition.signalAll();
+      System.out.println(Thread.currentThread().getName() + " product a bread" + bread.toString() + " size = " + list.size());
 
-    public void take() {
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  public void take() {
+    try {
+      lock.lock();
+      while (list.isEmpty()) {
         try {
-            lock.lock();
-            while (list.isEmpty()) {
-                try {
-                    // 如果容器为空，则阻塞消费者线程
-                    consumerCondition.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            Bread bread = list.removeFirst();
-            // 消费后通知生产者生产面包
-            providerCondition.signalAll();
-            System.out.println("Consumer " + Thread.currentThread().getName() + " consume a bread" + bread.toString() + " size = " + list.size());
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock();
+          // 如果容器为空，则阻塞消费者线程
+          consumerCondition.await();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
         }
+      }
+      Bread bread = list.removeFirst();
+      // 消费后通知生产者生产面包
+      providerCondition.signalAll();
+      System.out.println("Consumer " + Thread.currentThread().getName() + " consume a bread" + bread.toString() + " size = " + list.size());
+
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      lock.unlock();
     }
+  }
 }
 ```
 可以看到，在上述代码中我们声明了两个Condition，一个生产者Condition，一个消费者Condition。在put方法中使用ReentrantLock来实现同步，同时，当容器满时调用生产者Condition的await方法使生产者线程进入等待状态。如果生产成功，则调用消费者Condition的signalAll方法来唤醒消费者线程。take方法与put类似，不再赘述。这里要注意的是在使用Condition前必须先获得锁。
@@ -137,31 +137,31 @@ public class BreadContainer {
 ```Java
 // 生产者
 public class Producer implements Runnable {
-    private final BreadContainer container;
+  private final BreadContainer container;
 
-    public Producer(BreadContainer container) {
-        this.container = container;
-    }
+  public Producer(BreadContainer container) {
+    this.container = container;
+  }
 
 
-    @Override
-    public void run() {
-        container.put(new Bread());
-    }
+  @Override
+  public void run() {
+    container.put(new Bread());
+  }
 }
 // 消费者
 public class Consumer implements Runnable {
 
-    private final BreadContainer container;
+  private final BreadContainer container;
 
-    public Consumer(BreadContainer container) {
-        this.container = container;
-    }
+  public Consumer(BreadContainer container) {
+    this.container = container;
+  }
 
-    @Override
-    public void run() {
-        container.take();
-    }
+  @Override
+  public void run() {
+    container.take();
+  }
 }
 ```
 
@@ -171,21 +171,21 @@ public class Consumer implements Runnable {
 ```Java
 public class Test {
 
-    public static void main(String[] args) {
-        BreadContainer container = new BreadContainer();
-        new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
-                new Thread(new Producer(container)).start();
-            }
-        }).start();
+  public static void main(String[] args) {
+    BreadContainer container = new BreadContainer();
+    new Thread(() -> {
+      for (int i = 0; i < 100; i++) {
+        new Thread(new Producer(container)).start();
+      }
+    }).start();
 
-        new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
-                new Thread(new Consumer(container)).start();
-            }
-        }).start();
+    new Thread(() -> {
+      for (int i = 0; i < 100; i++) {
+        new Thread(new Consumer(container)).start();
+      }
+    }).start();
 
-    }
+  }
 }
 ```
 运行后生产者线程与消费者线程可以很好的实现线程协作。与使用synchronized不同的是这里有两个Condition，分别来控制生产者和消费者。
@@ -201,7 +201,7 @@ public class Test {
 // ReentrantLock#Sync
 final ConditionObject newCondition() {
     return new ConditionObject();
-}
+    }
 ```
 可见，在第一章BreadContainer中的providerCondition与consumerCondition是两个不同的ConditionObject实例。
 
@@ -210,18 +210,18 @@ ConditionObject的类结构如下：
 
 ```java
 public class ConditionObject implements Condition, java.io.Serializable {
-    // 指向等待队列的头结点
-    private transient Node firstWaiter;
-    // 指向等待队列的尾结点
-    private transient Node lastWaiter;
+  // 指向等待队列的头结点
+  private transient Node firstWaiter;
+  // 指向等待队列的尾结点
+  private transient Node lastWaiter;
 
-    public ConditionObject() { }
+  public ConditionObject() { }
 }
 ```
 ConditionObject的结构比较简单，它内部维护了一个Node类型**等待队列**。其中firstWaiter指向队列的头结点，而lastWaiter指向队列的尾结点。关于Node节点，在ReentrantLock那篇文章中已经详细介绍过了，它封装的是一个线程的节点，这里也不再赘述。在线程中调用了Condition的await方法后，线程就会被封装成一个Node节点，并将Node的waitStatus设置成CONDITION状态，然后插入到这个Condition的等待队列中。等到收到singal或者被中断、超时就会被从等待队列中移除。其结构示意图如下：
 
 
-![condition_waitset.png](https://img-blog.csdnimg.cn/img_convert/04a43dbeeb92d434e43460bf51a5c0ec.png)
+![condition_waitset.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cfbe952c5f604c38bb6051b37b345c06~tplv-k3u1fbpfcp-watermark.image)
 
 接下来我们从源码的角度来分析Condition的实现。
 
@@ -405,6 +405,6 @@ transferForSignal实际上就是做了一个队列的转移，将node从等待�
 通过对Condition的await与signal方法的分析，可以看得出来这两个方法并非独立存在，而是一个相互配合的关系。await方法会将执行的线程封装成Node加入到等待队列，然后开启一个循环检测这个node看是否被加入到了同步队列，如果被加入到同步队列，那么调用acquireQueued开始排队竞争锁，如果没有被加入同步队列，则会一直挂起线程等待被唤醒。而signal方法则是将等待队列中的队首元素移动到同步队列，这样就触发了await方法的循环终结，继而能够执行acquireQueued方法。其流程如下图所示：
 
 
-![await_singal.png](https://img-blog.csdnimg.cn/img_convert/064e4b2517ac600732ea21dd5ba9c82d.png)
+![await_singal.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23db71e929f24c74b85c5ce0a070954d~tplv-k3u1fbpfcp-watermark.image)
 
 关于Java线程的等待与唤醒机制，到这里就全部结束了，通过本篇文章的学习，更加深入的了解了线程等待与唤醒的原理，其实可以看得出来无论synchronized监视器锁的等待与唤醒还是Lock锁的等待与唤醒都有着类似的原理，只不过synchronized是虚拟机底层实现，而ReentrantLock是基于Java层的实现。

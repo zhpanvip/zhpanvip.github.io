@@ -96,7 +96,7 @@ ExecutorService executorService2 = Executors.newCachedThreadPool();
 根据上述线程池生命周期状态的描述，可以画出如下所示的线程池生命周期状态流程示意图。
 
 
-![threadpoollifecycle.png](https://img-blog.csdnimg.cn/img_convert/1bdabfa6e245bc47b727fae191d02818.png)
+![threadpoollifecycle.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5d8c1f1d6d344862a9ba46eeb3fd101a~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 
 ## 二、线程池的工作机制
@@ -153,32 +153,32 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
 （1）当execute方法提交一个任务时，如果线程池中线程数小于corePoolSize,那么不管线程池中是否有空闲的线程，都会创建一个新的线程来执行任务。
 
-![thread_pool1.png](https://img-blog.csdnimg.cn/img_convert/34ae30ddb3d2bb4bd5f4244281890b98.png)
+![thread_pool1.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5c039cb2ce0e45d896a4dfc3a9b1fb16~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 
 （2）当execute方法提交一个任务时，线程池中的线程数已经达到了corePoolSize,且此时没有空闲的线程，那么则会将任务存储到workQueue中。
 
 
-![thread_pool2.png](https://img-blog.csdnimg.cn/img_convert/d9779d2b3a8e41a3b76e82169e6ce947.png)
+![thread_pool2.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fe5b20e71cb44dee9785bc9b97a984c2~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 （3）如果execute提交任务时线程池中的线程数已经到达了corePoolSize,并且workQueue已满，那么则会创建新的线程来执行任务，但总线程数应该小于maximumPoolSize。
-![thread_pool3.png](https://img-blog.csdnimg.cn/img_convert/64bf924a2a84cea4624ddd1861bd56c4.png)
+![thread_pool3.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c851dfaae2aa42509ff6e6f5692677b1~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 （4）如果线程池中的线程执行完了当前的任务，则会尝试从workQueue中取出第一个任务来执行。如果workQueue为空则会阻塞线程。
 
-![thread_pool4.png](https://img-blog.csdnimg.cn/img_convert/1c2cddba4b922b4a301dac3873937d94.png)
+![thread_pool4.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ae71487680d442018ec986298a4aa6a4~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 （5）如果execute提交任务时，线程池中的线程数达到了maximumPoolSize，且workQueue已满，此时会执行拒绝策略来拒绝接受任务。
 
-![thread_pool5.png](https://img-blog.csdnimg.cn/img_convert/ccf4135834efe64536ecd31ff82e7b31.png)
+![thread_pool5.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/54aa9d3b5ddc46d1a368e23228324fdd~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 （6）如果线程池中的线程数超过了corePoolSize，那么空闲时间超过keepAliveTime的线程会被销毁，但程池中线程个数会保持为corePoolSize。
 
-![thread_pool6.png](https://img-blog.csdnimg.cn/img_convert/8ea28c544aa0ae9fa5ff3688f1fbc475.png)
+![thread_pool6.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/62a1b6b1198c4a8ebcabe3da1904cb80~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 （7）如果线程池存在空闲的线程，并且设置了allowCoreThreadTimeOut为true。那么空闲时间超过keepAliveTime的线程都会被销毁。
 
 
-![thread_pool7.png](https://img-blog.csdnimg.cn/img_convert/238d66a64ef2536c0c2d56061ab88748.png)
+![thread_pool7.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/98a5abfc71f34183a9ff7aecd5d40b42~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp)
 
 ### 3.线程池的拒绝策略
 

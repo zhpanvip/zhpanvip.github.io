@@ -1,7 +1,7 @@
 ---
 layout: article
 index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/generics.png
-title: Java进阶--详解Java中的泛型（Generics）
+title: 详解Java中的泛型（Generics）
 date: 2021-01-16 22:14:25
 categories:
 - Java进阶
@@ -37,9 +37,9 @@ Java泛型是在JDK1.5中引进来的一个概念。泛型意为泛化的参数�
 修改上面的代码，将List泛型指定为Integer，当我们添加非整数类型的参数时IDE就会提示相应的错误。并且在编译时编译器也会抛出错误致使程序无法编译成字节码文件。如下图所示。
 
 IDE提示异常：
-![IDE提示类型错误](https://img-blog.csdnimg.cn/20210116170553325.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70)
+![IDE提示类型错误](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a1ff68ecc01a49e0b203c1567fdeda30~tplv-k3u1fbpfcp-zoom-1.image)
 编译时编译器抛出异常：
-![编译器编译错误](https://img-blog.csdnimg.cn/20210116171903386.png)
+![编译器编译错误](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/72f460c366e1471bac3759aeff8e3987~tplv-k3u1fbpfcp-zoom-1.image)
 通过这一个例子可以认识到泛型在Java中有着多么重要的意义。当然，泛型的用途远不止这一点，比如我们可以通过自定义的泛型类结合多态来提高程序的可可扩展性等。
 
 ## 二、泛型基本使用
@@ -184,7 +184,7 @@ public class Response<T extends BaseData>{![在这里插入图片描述](https:/
 
 接下来，我们来测试一下Response泛型的作用范围，将String作为Response的泛型参数，IDE则会提示mismatch的错误，并且无法通过编译。
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210116193511309.png)
+![在这里插入图片描述](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2f6ca2609a664a8c8105e3b73ca51c6a~tplv-k3u1fbpfcp-zoom-1.image)
 只有指定Response的泛型为BaseData或者其子类才能正常编译。
 
 ### 5.泛型与通配符
@@ -221,7 +221,7 @@ person = student;
 person = teacher;
 ```
 熟悉Java多态的同学都应该知道上边的代码是没有任何错误的。那么再来看下边的代码：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/2021011620061790.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7e990a9d5c2d4f589f4c196244d246b5~tplv-k3u1fbpfcp-zoom-1.image)
 
 上述代码IDE却提示了一个mismatch的错误。但是如果我们就是希望personList能够接受studentList也能够接受teacherList应该怎么办呢？这种情况在现实开发中可是非常常见的。此时，我们就可以用通配符来解决，将personList的泛型修改为\<? extends Person>即可，代码如下：
 
@@ -234,7 +234,7 @@ personList = studentList;
 personList = teacherList;
 ```
 另外，我们还可以通过\<? super Student>来指定接收Student或者Student的父类，代码如下：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210116202145499.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70#pic_center)
+![在这里插入图片描述](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/94a4501ccac34ee38fec1c3600e4108d~tplv-k3u1fbpfcp-zoom-1.image)
 可以看到上述代码中listSuper的泛型声明为了\<? super Student>，此时listSuper就只能接收Student以及其父类的集合。所以可以看到，代码中将studentList与personList以及ObjectList正常赋值给listSuper，但是teacherList赋值给listSuper则会报错。
 
 ## 三、泛型的类型擦除
@@ -250,16 +250,16 @@ personList = teacherList;
 ```java
 public class Model {
 
-    public void test() {
-    	List<String> list=new ArrayList();
-    	 list.add("abc");
-    }
-    
-    public void test2() {
-    	List list=new ArrayList();
-    	list.add("abc");
-    }
-   
+  public void test() {
+    List<String> list=new ArrayList();
+    list.add("abc");
+  }
+
+  public void test2() {
+    List list=new ArrayList();
+    list.add("abc");
+  }
+
 }
 ```
 可以看到，这个类中有两个方法，这两个方法不同的地方在于test方法中指定了List的泛型为String，而test2方法中未指定List的泛型。我们先将Model.java通过javac工具编译成Model.class文件，然后通过javap反汇编Model.class文件，得到结果如下：
@@ -268,36 +268,36 @@ public class Model {
 $ javap -c Model.class
 Compiled from "Model.java"
 public class com.test.reflection.Model {
-  public com.test.reflection.Model();
+public com.test.reflection.Model();
     Code:
-       0: aload_0
-       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
-       4: return
+    0: aload_0
+    1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+    4: return
 
-  public void test();
+public void test();
     Code:
-       0: new           #2                  // class java/util/ArrayList
-       3: dup
-       4: invokespecial #3                  // Method java/util/ArrayList."<init>":()V
-       7: astore_1
-       8: aload_1
-       9: ldc           #4                  // String abc
-      11: invokeinterface #5,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-      16: pop
-      17: return
+    0: new           #2                  // class java/util/ArrayList
+    3: dup
+    4: invokespecial #3                  // Method java/util/ArrayList."<init>":()V
+    7: astore_1
+    8: aload_1
+    9: ldc           #4                  // String abc
+    11: invokeinterface #5,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+    16: pop
+    17: return
 
-  public void test2();
+public void test2();
     Code:
-       0: new           #2                  // class java/util/ArrayList
-       3: dup
-       4: invokespecial #3                  // Method java/util/ArrayList."<init>":()V
-       7: astore_1
-       8: aload_1
-       9: ldc           #4                  // String abc
-      11: invokeinterface #5,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
-      16: pop
-      17: return
-}
+    0: new           #2                  // class java/util/ArrayList
+    3: dup
+    4: invokespecial #3                  // Method java/util/ArrayList."<init>":()V
+    7: astore_1
+    8: aload_1
+    9: ldc           #4                  // String abc
+    11: invokeinterface #5,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+    16: pop
+    17: return
+    }
 ```
 通过反汇编指令可以看到test1方法与test2方法并无任何区别，并且可以看到第18和30行的注释：
 
@@ -309,32 +309,32 @@ public class com.test.reflection.Model {
 
 ```java
 		List<String> list=new ArrayList<>();
-		list.add("abc");
-		
-		Class<List> listClass=List.class;
+    list.add("abc");
+
+    Class<List> listClass=List.class;
 		
 		try {
-			Method addMethod=listClass.getDeclaredMethod("add", Object.class);
-			addMethod.invoke(list, 123);
-			
-		} catch (NoSuchMethodException | SecurityException|IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException e) {
-			e.printStackTrace();
-		}
-		
-		System.out.println("list.size() = "+list.size());
-		
-		for (Object obj : list) {
-			System.out.println(obj.toString());
-		}
+            Method addMethod=listClass.getDeclaredMethod("add", Object.class);
+    addMethod.invoke(list, 123);
+
+    } catch (NoSuchMethodException | SecurityException|IllegalAccessException
+    | IllegalArgumentException | InvocationTargetException e) {
+    e.printStackTrace();
+    }
+
+    System.out.println("list.size() = "+list.size());
+
+    for (Object obj : list) {
+    System.out.println(obj.toString());
+    }
 ```
 
 输出结果：
 
 ```java
 list.size() = 2
-abc
-123
+    abc
+    123
 ```
 
 
