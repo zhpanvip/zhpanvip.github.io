@@ -1,0 +1,670 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>深入理解Java的反射机制 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="深入理解Java的反射机制">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-01-14 23:53" pubdate>
+        2021年1月14日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      5.1k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      31
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">深入理解Java的反射机制</h1>
+            
+            <div class="markdown-body">
+              <p>在上篇文章<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573/article/details/109193527">《深入JVM–探索Java虚拟机的类加载机制》</a>中我们深入探讨了JVM的类加载机制。我们知道，在实例化一个类时，如果这个类还没有被虚拟机加载，那么虚拟机会先执行类加载过程，将该类所对应的字节码读取到虚拟机，并生成一个与这个类对应的Class对象。而在类加载的过程中，由于有双亲委派机制的存在，虚拟机保证了同一个类会被同一个类加载器所加载，进而保证了在虚拟机中只存在一个被加载类所对应的Class实例。而这个Class实例与我们今天要讲的反射有着莫大的关系。</p>
+<h2 id="一、Java反射机制概述"><a href="#一、Java反射机制概述" class="headerlink" title="一、Java反射机制概述"></a>一、Java反射机制概述</h2><p>在学习反射之前，我们先来搞清楚几个概念：</p>
+<ul>
+<li>Class类是什么？</li>
+<li>Class对象是什么？</li>
+<li>Class对象与我们的Java类有什么关系？</li>
+</ul>
+<p>假设现在有一个Person类，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">package</span> com.test.reflection;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span> </span>&#123;<br>	<br>    <span class="hljs-keyword">private</span> String name;<br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">int</span> age;<br>    <span class="hljs-keyword">public</span> String sex;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-title">Person</span><span class="hljs-params">()</span> </span>&#123;<br><br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Person</span><span class="hljs-params">(String name, <span class="hljs-keyword">int</span> age)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>();<br>        <span class="hljs-keyword">this</span>.name = name;<br>        <span class="hljs-keyword">this</span>.age = age;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setName</span><span class="hljs-params">(String name)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.name = name;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setAge</span><span class="hljs-params">(<span class="hljs-keyword">int</span> age)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.age = age;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setSex</span><span class="hljs-params">(String sex)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.sex = sex;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">getName</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> name;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getAge</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> age;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">testPrivateMethod</span><span class="hljs-params">()</span> </span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;testPrivateMethod被调用&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>你是否能通过Person类来解释清楚上边提到的三个问题呢？我们不妨接着往下看。</p>
+<h3 id="1-Class类与Class对象"><a href="#1-Class类与Class对象" class="headerlink" title="1.Class类与Class对象"></a>1.Class类与Class对象</h3><p>提到Class类，大家多多少少都应该有些接触，即使你没有使用过反射，也不可避免的接触到Class类。例如，在Android中进行Activity页面跳转的时候，我们需要一个Intent，而实例化Intent则需用到Intent的构造方法，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Intent</span><span class="hljs-params">(Context packageContext, Class&lt;?&gt; cls)</span> </span>&#123;<br>        mComponent = <span class="hljs-keyword">new</span> ComponentName(packageContext, cls);<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到，Intent的构造方法中的第二个参数，接受的就是一个Class对象。到这里，我们应该都明白，Class就是JDK为我们提供的一个普普通通的Java类，它跟我们自己定义一个Person类其实并无任何本质上的区别。我们进入Class类的源码可以看到，Class类是一个泛型类，并且它实现了若干个接口，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Class</span>&lt;<span class="hljs-title">T</span>&gt; <span class="hljs-keyword">implements</span> <span class="hljs-title">java</span>.<span class="hljs-title">io</span>.<span class="hljs-title">Serializable</span>,</span><br><span class="hljs-class">                              <span class="hljs-title">GenericDeclaration</span>,</span><br><span class="hljs-class">                              <span class="hljs-title">Type</span>,</span><br><span class="hljs-class">                              <span class="hljs-title">AnnotatedElement</span>,</span><br><span class="hljs-class">                              <span class="hljs-title">TypeDescriptor</span>.<span class="hljs-title">OfField</span>&lt;<span class="hljs-title">Class</span>&lt;?&gt;&gt;,</span><br><span class="hljs-class">                              <span class="hljs-title">Constable</span> </span>&#123;<br>	<span class="hljs-comment">// ...省略主体代码</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>既然Class就是一个普普通通的Java类，那在使用它的时候一定需要实例化出来一个Class对象。但奇怪的是，我们在平时写代码的时候好像从来没有通过new关键字来实例化过Class对象？那它到底是在哪里被实例化的呢？了解类加载机制的同学想必应该都清楚，当然，我们在文章开头也已经提到了，Class对象是在类加载的时候由虚拟机自动生成的。</p>
+<p>我们以上边的Person类为例，当我们使用new关键字实例化Person对象的时候，如果Person类的字节码还没有被加载到虚拟机，那么虚拟机首先启动类加载器将Person类的字节码读取到虚拟机中，并为其生成一个Class&lt;Person&gt;的实例，而类加载器的双亲委派模型保证了虚拟机中只会生成一个Class&lt;Person&gt;的实例。而如果在实例化Person对象的时候，Person已经被加载到了虚拟机，则无需再进行Person的类加载过程，直接实例化Person即可。到这里，我们似乎可以感觉到Person对象跟Class&lt;Person&gt;一定存在着某种关系。我们接着往下看。</p>
+<h3 id="2-Person类与Class-lt-Person-gt-对象的关系"><a href="#2-Person类与Class-lt-Person-gt-对象的关系" class="headerlink" title="2.Person类与Class&lt;Person&gt;对象的关系"></a>2.Person类与Class&lt;Person&gt;对象的关系</h3><p>现在，我们回想一下我们在进行Activity页面跳转的时候Intent构造方法的第二个参数传的是什么呢？是不是像下边这样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">Intent intent=<span class="hljs-keyword">new</span> Intent(<span class="hljs-keyword">this</span>,MainActivity.class);<br></code></pre></td></tr></table></figure>
+<p>通过MainActivity.class我们可以得到MainActivity对应的Class对象：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;MainActivity&gt; mainActivityClass = MainActivity.class;<br></code></pre></td></tr></table></figure>
+<p>而mainActivityClass 对象就是虚拟机在加载MainActivity的时候生成的，并且虚拟机保证了mainActivityClass在虚拟机中是唯一的。<br>这一过程对于Person类也是一样的，我们可以通过Person .class来拿到虚拟机中唯一的一个Class&lt;Person&gt;实例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass=Person.class;<br></code></pre></td></tr></table></figure>
+<p>另外，我们还可以通过Person 的实例对象来获得Class&lt;Person&gt;对象，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs java">Person person=<span class="hljs-keyword">new</span> Person();<br>Class&lt;Person&gt; personClass=(Class&lt;Person&gt;)person.getClass();<br></code></pre></td></tr></table></figure>
+<p>当然，除了上述两种方法之外，我们还可以通过Person类的包名来获得Class&lt;Person&gt;的实例，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">try</span> &#123;<br>		Class&lt;Person&gt; personClass=(Class&lt;Person&gt;)Class.forName(<span class="hljs-string">&quot;com.test.reflection&quot;</span>);<br>	&#125; <span class="hljs-keyword">catch</span> (ClassNotFoundException e) &#123;<br>		e.printStackTrace();<br>	&#125;<br></code></pre></td></tr></table></figure>
+
+<p>由于Class&lt;Person &gt;对象在虚拟机中是唯一的，那么上述三种方法获取到的Class&lt;Person &gt;一定是同一个实例。</p>
+<h2 id="二、什么是反射？"><a href="#二、什么是反射？" class="headerlink" title="二、什么是反射？"></a>二、什么是反射？</h2><p>好了，上边啰嗦了这么多，终于到了正题了。那到底什么是反射呢？我们来看下百度百科给出的定义：</p>
+<blockquote>
+<p>Java的反射（reflection）机制是指在程序的运行状态中，可以构造任意一个类的对象，可以了解任意一个对象所属的类，可以了解任意一个类的成员变量和方法，可以调用任意一个对象的属性和方法。这种动态获取程序信息以及动态调用对象的功能称为Java语言的反射机制。</p>
+</blockquote>
+<p>虽然上述定义对反射的描述已经非常清楚。但是对于没有了解过反射的同学来说看了之后可能还是一头雾水。下面，在第一章的基础上来说下我来说下我对反射的理解：</p>
+<p><strong>在Java中，所有已经被虚拟机的类加载器加载过的类（称为T）都会在虚拟机中生成一个唯一的与T类所对应的Class&lt;T&gt;对象。在程序运行时，通过这个Class&lt;T&gt;对象，我们可以实例化出来一个T对象；可以通过Class&lt;T&gt;对象访问T对象中的任意成员变量，调用T对象中的任意方法，甚至可以对T对象中的成员变量进行修改。我们将这一系列操作称为Java的反射机制。</strong></p>
+<p>到这里我们发现，其实Java的反射也没有那么神秘了。说白了就是通过Class对象来操控我们的对象罢了。因此，接下来我们想要弄懂反射只需要来详细的认识一下Class这个类给我们提供的API即可。</p>
+<h3 id="1-Java反射相关类"><a href="#1-Java反射相关类" class="headerlink" title="1.Java反射相关类"></a>1.Java反射相关类</h3><p>我们知道，一个Java类可以包含成员变量、构造方法、以及普通方法。同时，我们又知道Java是一种很纯粹的面向对象的语言。在Java语言中，万物皆对象，类的成员变量、构造方法以及普通方法在Java中也被封装成了对象。它们分别对应Field类、Constructor类以及Method类。这几个类与反射息息相关。因此，在开始之前，我们需要先了解下这几个与反射相关的类，如下图：<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/86c57545a37b4c40bb31900eb1ba4f5c~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
+<ul>
+<li><strong>Field 类</strong>：位于Java.lang.reflect包下，在Java反射中Field用于获取某个类的属性或该属性的属性值。</li>
+<li><strong>Constructor 类：</strong> 位于java.lang.reflect包下，它代表某个类的构造方法，用来管理所有的构造函数的类。</li>
+<li><strong>Method 类：</strong> 位于java.lang.reflect包下,在Java反射中Method类描述的是类的方法信息（包括：方法修饰符、方法名称、参数列表等等）。</li>
+<li><strong>Class 类：</strong> Class类在上文我们已经多次提到，它表示正在运行的 Java 应用程序中的类的实例。</li>
+<li><strong>Object 类：</strong> Object类大家应该都比较熟悉了。它是所有 Java 类的父类。所有对象都默认实现了 Object 类的方法。在Object对象中，可以通过getClass()来获得该类对应的Class实例。</li>
+</ul>
+<h3 id="2-Java反射常用API"><a href="#2-Java反射常用API" class="headerlink" title="2.Java反射常用API"></a>2.Java反射常用API</h3><p>通过上文我们已经知道，所谓的反射，其实就是通过API操作Class对象。因此，在进行反射操作的第一步我们应该首先拿到Class的实例。在第一种中我们已经知道可以通过三种方式来获得Class的实例。以获取Person类的Class对象为例，三种方法分别如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 通过类的class获得Class实例</span><br>Class&lt;Person&gt; personClass=Person.class;<br><span class="hljs-comment">// 通过类的包名获得Class实例</span><br>Class&lt;Person&gt; personClass=(Class&lt;Person&gt;)Class.forName(<span class="hljs-string">&quot;com.test.reflection&quot;</span>);<br><span class="hljs-comment">// 通过对象获得Class实例</span><br>Person person=<span class="hljs-keyword">new</span> Person();<br>Class&lt;Person&gt; personClass=(Class&lt;Person&gt;)person.getClass();<br></code></pre></td></tr></table></figure>
+<p>在拿到Person类的Class实例后，我们就可以通过Class实例获取到Person类中的任意成员，包括构造方法、普通方法、成员变量等。</p>
+<h4 id="2-1获取所有构造方法"><a href="#2-1获取所有构造方法" class="headerlink" title="2.1获取所有构造方法"></a>2.1获取所有构造方法</h4><p> Class类中为我们提供了两个获取构造方法的API，这两个方法如下：</p>
+<ul>
+<li>Constructor[] getDeclaredConstructors() 用于获取当前类中所有构造方法。但不包括包括父类中的构造方法。</li>
+<li>Constructor[]  getConstructors()  用于获取本类中所有public修饰的构造方法,不包括父类的构造方法。</li>
+</ul>
+<p><strong>（1）getDeclaredConstructors()</strong> </p>
+<p>以Person类为例，我们来先来尝试getDeclaredConstructors方法的使用：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass=Person.class;<br>Constructor[] declaredConstructors= personClass.getDeclaredConstructors();<br><span class="hljs-keyword">for</span>(Constructor declaredConstructor:declaredConstructors) &#123;<br>	System.out.println(declaredConstructor);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>注意，我们在Person类中声明了两个构造方法，其中无参构造方法是一个私有的构造方法。我们来看下上述代码的打印结果：</p>
+<blockquote>
+<p>private com.test.reflection.Person()<br>public com.test.reflection.Person(java.lang.String,int)</p>
+</blockquote>
+<p>可以看到，getDeclaredConstructors方法可以获取到类中包括私有构造方法在内的所有构造方法。</p>
+<p><strong>（2） getConstructors()</strong>  </p>
+<p>接着我们将getDeclaredConstructors()方法换成getConstructors()方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass=Person.class;<br>Constructor[] declaredConstructors= personClass.getConstructors();<br><span class="hljs-keyword">for</span>(Constructor declaredConstructor:declaredConstructors) &#123;<br>	System.out.println(declaredConstructor);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>再来看输出结果：</p>
+<blockquote>
+<p>public com.test.reflection.Person(java.lang.String,int)</p>
+</blockquote>
+<p>此时，只有被声明了public的方法被打印了出来。</p>
+<h4 id="2-2-获取指定构造方法"><a href="#2-2-获取指定构造方法" class="headerlink" title="2.2 获取指定构造方法"></a>2.2 获取指定构造方法</h4><p>在Class中同样提供了两个获取指定构造方法的API，如下：</p>
+<ul>
+<li>Constructor<T> getDeclaredConstructor(Class&lt;?&gt;… parameterTypes)  该方法用来获取类中任意的构造方法，包括private修饰的构造方法。无法通过该方法获取到父类的构造方法。</li>
+<li>Constructor<T> getConstructor(Class&lt;?&gt;… parameterTypes)  该方法只能用来获取该类中public的构造方法。无法获取父类中的构造方法。</li>
+</ul>
+<p>我们可以尝试使用getDeclaredConstructor方法来获取Person的私有构造方法与public的有参构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">try</span> &#123;<br>     Constructor&lt;Person&gt; declaredConstructor = personClass.getDeclaredConstructor();<br>     Constructor&lt;Person&gt; declaredConstructor2 = personClass.getDeclaredConstructor(String.class,<span class="hljs-keyword">int</span>.class);<br> &#125; <span class="hljs-keyword">catch</span> (NoSuchMethodException e) &#123;<br>     e.printStackTrace();<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>而如果使用getConstructor获取私有方法，则会抛出java.lang.NoSuchMethodException。</p>
+<h4 id="2-3-使用反射实例化对象"><a href="#2-3-使用反射实例化对象" class="headerlink" title="2.3 使用反射实例化对象"></a>2.3 使用反射实例化对象</h4><p>通过反射实例化对象有多种途径，可以使用Class的newInstance方法，同时也可以使用Constructor类。</p>
+<ul>
+<li>通过Class的newInstance实例化Person</li>
+<li>使用Constructor实例化对象</li>
+</ul>
+<p><strong>（1）通过Class的newInstance实例化对象</strong><br>这种方式使用起来非常简单，直接调用newInstance方法即可完成对象的实例化。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br>      <span class="hljs-keyword">try</span> &#123;<br>          Person person = personClass.newInstance();<br>      &#125; <span class="hljs-keyword">catch</span> (IllegalAccessException | InstantiationException e) &#123;<br>          e.printStackTrace();<br>      &#125;<br></code></pre></td></tr></table></figure>
+<p>但是，通过这一方法有一定的局限性。即只能实例化无参构造方法的类，同时这个无参构造方法不能使用private修饰。否则会抛出异常。这个方法在Java 9中已经被声明为Deprecated，并且推荐使用Constructor来实例化对象。</p>
+<p><strong>（2） 使用Constructor实例化对象</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">try</span> &#123;<br>           Constructor&lt;Person&gt; declaredConstructor = personClass.getDeclaredConstructor(String.class, <span class="hljs-keyword">int</span>.class);<br>           Person ryan = declaredConstructor.newInstance(<span class="hljs-string">&quot;Ryan&quot;</span>, <span class="hljs-number">18</span>);<br>           System.out.println(ryan.getName() + <span class="hljs-string">&quot;---&quot;</span> + ryan.getAge());<br>       &#125; <span class="hljs-keyword">catch</span> (NoSuchMethodException | InvocationTargetException<br>               | InstantiationException | IllegalAccessException e) &#123;<br>           e.printStackTrace();<br>       &#125;<br></code></pre></td></tr></table></figure>
+<p>如上代码，我们通过Person的有参Constructor实例化出来一个Person类，并输出如下结果：</p>
+<blockquote>
+<p>Ryan—18</p>
+</blockquote>
+<p>而通过Constructor实例化私有的构造方法时，需要通过Constructor的setAccessible(true)来使Constructor可见，进而进行实例化。否则则会抛出IllegalAccessException异常。实例化私有构造方法的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">try</span> &#123;<br>           Constructor&lt;Person&gt; declaredConstructor = personClass.getDeclaredConstructor();<br>           declaredConstructor.setAccessible(<span class="hljs-keyword">true</span>);<br>           Person ryan = declaredConstructor.newInstance();<br>       &#125; <span class="hljs-keyword">catch</span> (NoSuchMethodException | InvocationTargetException<br>               | InstantiationException | IllegalAccessException e) &#123;<br>           e.printStackTrace();<br>       &#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="2-4-使用反射获取类的所有成员变量"><a href="#2-4-使用反射获取类的所有成员变量" class="headerlink" title="2.4 使用反射获取类的所有成员变量"></a>2.4 使用反射获取类的所有成员变量</h4><p>Class同样提供了两方法来获取类的成员变量，分别如下：</p>
+<ul>
+<li>getDeclaredFields()  获取该类中所有成员变量，无法获取到从父类中继承的成员变量。</li>
+<li>getFields()  获取类中所有public的成员变量，包括从父类中继承的public的成员变量。</li>
+</ul>
+<p>（1）首先通过getDeclaredFields()来获取Person的成员变量，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br>      Field[] declaredFields = personClass.getDeclaredFields();<br>      <span class="hljs-keyword">for</span> (Field field : declaredFields) &#123;<br>          System.out.println(field.toString());<br>      &#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果为：</p>
+<blockquote>
+<p>private java.lang.String com.test.reflection.Person.name<br>protected int com.test.reflection.Person.age<br>public java.lang.String com.test.reflection.Person.sex</p>
+</blockquote>
+<p>可以看到，无论时private修饰的成员变量还是public修饰的成员变量都通过getDeclaredFields获取到。<br>（2）接着来看getFields()方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br>      Field[] fields = personClass.getFields();<br>      <span class="hljs-keyword">for</span> (Field field : fields) &#123;<br>          System.out.println(field.toString());<br>      &#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果为：</p>
+<blockquote>
+<p>public java.lang.String com.test.reflection.Person.sex</p>
+</blockquote>
+<p>可以看到，通过getFields方法只获取到了Person类中public的成员变量。</p>
+<h4 id="2-5-反射获取并修改类的成员变量"><a href="#2-5-反射获取并修改类的成员变量" class="headerlink" title="2.5 反射获取并修改类的成员变量"></a>2.5 反射获取并修改类的成员变量</h4><p>可以通过getDeclaredField方法与getField获取类中从成员变量，区别如下：</p>
+<ul>
+<li>getDeclaredField(String) 获取该类任意修饰符的成员变量，但不包括从父类中继承的成员变量。</li>
+<li>getField(String) 获取该类任意public修饰的成员变量，包括从父类中继承的public的成员变量。</li>
+</ul>
+<p>获取Person类的私有成员变量，并通过反射来修改Person对象中的私有变量name,代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br>Person person = <span class="hljs-keyword">new</span> Person(<span class="hljs-string">&quot;Ryan&quot;</span>, <span class="hljs-number">18</span>);<br><span class="hljs-keyword">try</span> &#123;<br>    System.out.println(<span class="hljs-string">&quot;反射修改前name为:&quot;</span> + person.getName());<br>    <span class="hljs-comment">// 获取Person中的私有成员变量name</span><br>    Field name = personClass.getDeclaredField(<span class="hljs-string">&quot;name&quot;</span>);<br>    <span class="hljs-comment">// 将name设置为可见</span><br>    name.setAccessible(<span class="hljs-keyword">true</span>);<br>    <span class="hljs-comment">// 修改person实例中name的值</span><br>    name.set(person, <span class="hljs-string">&quot;Helen&quot;</span>);<br>    System.out.println(<span class="hljs-string">&quot;反射修改后name为:&quot;</span> + person.getName());<br>&#125; <span class="hljs-keyword">catch</span> (NoSuchFieldException e) &#123;<br>    e.printStackTrace();<br>&#125; <span class="hljs-keyword">catch</span> (IllegalAccessException e) &#123;<br>    e.printStackTrace();<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>输出结果如下：</p>
+<blockquote>
+<p>反射修改前name为:Ryan<br>反射修改后name为:Helen</p>
+</blockquote>
+<h4 id="2-6-反射获取类中的所有方法"><a href="#2-6-反射获取类中的所有方法" class="headerlink" title="2.6 反射获取类中的所有方法"></a>2.6 反射获取类中的所有方法</h4><ul>
+<li>getDeclaredMethods() 获取本类中所有方法，不包括从父类中继承的方法。</li>
+<li>getMethods()  获取类中所有public方法，包括从父类中继承的public方法。</li>
+</ul>
+<p><strong>（1）getDeclaredMethods()</strong> </p>
+<p>通过getDeclaredMethods获取Person中的所有方法（不包括父类）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br><span class="hljs-comment">// 获取类中的所有方法，包括私有方法，但不包括父类中的方法。</span><br>Method[] declaredMethods = personClass.getDeclaredMethods();<br><span class="hljs-comment">// 遍历并打印方法信息</span><br><span class="hljs-keyword">for</span> (Method method :declaredMethods) &#123;<br>    System.out.println(<span class="hljs-string">&quot;getDeclaredMethods:&quot;</span>+method.toString());<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>输出结果如下：</p>
+<blockquote>
+<p>getDeclaredMethods:public java.lang.String com.test.reflection.Person.getName()<br>getDeclaredMethods:public int com.test.reflection.Person.getAge()<br>getDeclaredMethods:private void com.test.reflection.Person.testPrivateMethod()</p>
+</blockquote>
+<p><strong>（2）getMethods</strong></p>
+<p>通过getMethods获取Person中的所有public方法（包括父类）：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br><span class="hljs-comment">//	获取Person类中的所有方法，包括父类的方法</span><br>Method[] methods = personClass.getMethods();<br><span class="hljs-comment">// 遍历methods并打印方法信息</span><br><span class="hljs-keyword">for</span> (Method method : methods) &#123;<br>    System.out.println(<span class="hljs-string">&quot;getMethods:&quot;</span>+method.toString());<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果如下：</p>
+<blockquote>
+<p>getMethods:public java.lang.String com.test.reflection.Person.getName()<br>getMethods:public int com.test.reflection.Person.getAge()<br>getMethods:public final void java.lang.Object.wait(long,int) throws java.lang.InterruptedException<br>getMethods:public final void java.lang.Object.wait() throws java.lang.InterruptedException<br>getMethods:public final native void java.lang.Object.wait(long) throws java.lang.InterruptedException<br>getMethods:public boolean java.lang.Object.equals(java.lang.Object)<br>getMethods:public java.lang.String java.lang.Object.toString()<br>getMethods:public native int java.lang.Object.hashCode()<br>getMethods:public final native java.lang.Class java.lang.Object.getClass()<br>getMethods:public final native void java.lang.Object.notify()<br>getMethods:public final native void java.lang.Object.notifyAll()</p>
+</blockquote>
+<h4 id="2-7-使用反射调用对象的方法"><a href="#2-7-使用反射调用对象的方法" class="headerlink" title="2.7 使用反射调用对象的方法"></a>2.7 使用反射调用对象的方法</h4><p><strong>(1) 反射调用对象的私有方法</strong></p>
+<p>通过反射调用Person类中的私有方法testPrivateMethod，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">try</span> &#123;<br>    <span class="hljs-comment">// 获取Person类中的私有方法testPrivateMethod</span><br>    Method testPrivateMethod = personClass.getDeclaredMethod(<span class="hljs-string">&quot;testPrivateMethod&quot;</span>);<br>    <span class="hljs-comment">// 将testPrivateMethod方法设置为可见</span><br>    testPrivateMethod.setAccessible(<span class="hljs-keyword">true</span>);<br>    <span class="hljs-comment">// 反射调用testPrivateMethod方法</span><br>    testPrivateMethod.invoke(person);<br>&#125; <span class="hljs-keyword">catch</span> (NoSuchMethodException e) &#123;<br>    e.printStackTrace();<br>&#125; <span class="hljs-keyword">catch</span> (IllegalAccessException e) &#123;<br>    e.printStackTrace();<br>&#125; <span class="hljs-keyword">catch</span> (InvocationTargetException e) &#123;<br>    e.printStackTrace();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果为：</p>
+<blockquote>
+<p>testPrivateMethod被调用</p>
+</blockquote>
+<h2 id="三、关于反射的一些问题"><a href="#三、关于反射的一些问题" class="headerlink" title="三、关于反射的一些问题"></a>三、关于反射的一些问题</h2><h3 id="1-是否可以通过反射修改final类型的成员变量？"><a href="#1-是否可以通过反射修改final类型的成员变量？" class="headerlink" title="1.是否可以通过反射修改final类型的成员变量？"></a>1.是否可以通过反射修改final类型的成员变量？</h3><p>在写Java代码的时候，如果我们将一个成员变量声明为了final类型，那么就必须在声明时候或者在构造方法中为其赋初始值，否则程序是无法编译通过的。那我们是否可以通过反射来修改final类型的成员变量呢？不妨来尝试一下。我们将Person中的sex改为private与final修饰，并为其赋初始值为“male”。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span> </span>&#123;<br>	<span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> String sex =<span class="hljs-string">&quot;male&quot;</span>;<br>	<span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">getSex</span><span class="hljs-params">()</span> </span>&#123;<br>    	<span class="hljs-keyword">return</span> sex;<br>    &#125;<br>	<span class="hljs-comment">// ...省略其它代码</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>下面通过反射来尝试将sex的值修改为”female”，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br>      Person person = <span class="hljs-keyword">new</span> Person(<span class="hljs-string">&quot;Ryan&quot;</span>, <span class="hljs-number">18</span>);<br>      <span class="hljs-keyword">try</span> &#123;<br>          Field sex = personClass.getDeclaredField(<span class="hljs-string">&quot;sex&quot;</span>);<br>          System.out.println(<span class="hljs-string">&quot;修改性别前：&quot;</span> + person.getSex());<br>          sex.set(person, <span class="hljs-string">&quot;female&quot;</span>);<br>          System.out.println(<span class="hljs-string">&quot;修改性别后：&quot;</span> + person.getSex());<br>      &#125; <span class="hljs-keyword">catch</span> (NoSuchFieldException e) &#123;<br>          e.printStackTrace();<br>      &#125; <span class="hljs-keyword">catch</span> (IllegalAccessException e) &#123;<br>          e.printStackTrace();<br>      &#125;<br></code></pre></td></tr></table></figure>
+<p>运行之后程序并未报错，输出结果如下：</p>
+<blockquote>
+<p>修改性别前：male<br>修改性别后：male</p>
+</blockquote>
+<p>可以看到，我们通过反射并没有成功修改sex的值，这意味着final修饰的成员变量无法通过反射修改吗？这倒未必。我们接着来看下边的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span> </span>&#123;<br>	<span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Object mObject = <span class="hljs-keyword">new</span> Object();<br>	<span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">getObject</span><span class="hljs-params">()</span> </span>&#123;<br>    	<span class="hljs-keyword">return</span> mObject ;<br>    &#125;<br>	<span class="hljs-comment">// ...省略其它代码</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>我们在Person中添加一个Object的成员变量，并将其声明为private final。接下来仍然通过反射来尝试修改mObject的值。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs java">Class&lt;Person&gt; personClass = Person.class;<br>        Person person = <span class="hljs-keyword">new</span> Person(<span class="hljs-string">&quot;Ryan&quot;</span>, <span class="hljs-number">18</span>);<br>        <span class="hljs-keyword">try</span> &#123;<br>            Field object = personClass.getDeclaredField(<span class="hljs-string">&quot;mObject&quot;</span>);<br>            System.out.println(<span class="hljs-string">&quot;修改Object前：&quot;</span> + person.getObject().toString());<br>            Object newObject = <span class="hljs-keyword">new</span> Object();<br>            System.out.println(<span class="hljs-string">&quot;newObject：&quot;</span> + newObject.toString());<br>            object.setAccessible(<span class="hljs-keyword">true</span>);<br>            object.set(person, newObject);<br>            System.out.println(<span class="hljs-string">&quot;修改Object后：&quot;</span> + person.getObject().toString());<br>        &#125; <span class="hljs-keyword">catch</span> (NoSuchFieldException e) &#123;<br>            e.printStackTrace();<br>        &#125; <span class="hljs-keyword">catch</span> (IllegalAccessException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果如下：</p>
+<blockquote>
+<p>修改Object前：java.lang.Object@4926097b<br>newObject：java.lang.Object@762efe5d<br>修改Object后：java.lang.Object@762efe5d</p>
+</blockquote>
+<p>有没有很奇怪？上边的String通过反射修改没有成功，而将代码换成Object之后，同样的代码，Object的成员变量却被修改成功了，这是怎么回事呢？其实，了解Java编译的同学应该比较清楚。编译器在编译Java文件的时候会将final修饰的基本类型和String优化为一个常量。我们来看下反编译后的class文件就明白了。我们将Person编译的class文件在AS中打开，如下图：<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d368dd6fcf4f4a2a9258d79949bf83f9~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
+<p>可以清楚的看到在class文件中getSex方法返回的是一个“male”字面量，而getObject返回的却是mObject。所以，即使通过代码将final修饰的String类型修改成功，在get的时候由于编译器的优化无法拿到修改后的值。</p>
+<p>通过上边的例子<strong>可以确定通过反射是能够修改final修饰的成员变量的。只是如果该成员变量是基本数据类型或者String类型会被编译器优化成字面量，从而无法获得修改后的值。</strong></p>
+<h3 id="2-为什么说反射会影响程序性能？"><a href="#2-为什么说反射会影响程序性能？" class="headerlink" title="2.为什么说反射会影响程序性能？"></a>2.为什么说反射会影响程序性能？</h3><p>在项目开发中，我们在能不使用反射的情况下就不使用反射，因为反射会影响程序的性能。这是我们大家都熟知的。但是你知道为什么说反射会影响程序的性能吗？要解开这一个问题就需要我们深入反射的源码来查看反射过程中都做了什么操作。由于这块内容比较庞大，限于篇幅，关于反射影响性能的问题将在下一篇文章中详细分析。敬请期待。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Java%E5%8F%8D%E5%B0%84/">Java反射</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/01/16/java-generics/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">详解Java中的泛型（Generics）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/12/29/35.viewpager2-swiping-conflict/">
+                        <span class="hidden-mobile">这可能是ViewPager2滑动冲突最全处理方案</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

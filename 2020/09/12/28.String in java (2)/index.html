@@ -1,0 +1,555 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>深入理解Java中的字符串(二) - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="深入理解Java中的字符串(二)">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-09-12 14:05" pubdate>
+        2020年9月12日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      19
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">深入理解Java中的字符串(二)</h1>
+            
+            <div class="markdown-body">
+              <p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2020/09/08/27.String%20in%20java(1)/">上篇文章</a>我们深入分析了String的内存和它的一些特性。本篇文章我们深入的来分析一下与String相关的另外两个类，它们分别是StringBuilder和StringBuffer。这两个类与String有什么关系呢？首先我们看下下边这张类图：</p>
+<p><img src="//p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/efcd2b3191a44d948bd9698478bd9588~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif"><br>从图中可以看出StringBuilder和StringBuffer都继承了AbstractStringBuilder，而AbstractStringBuilder与String实现了共同的接口CharSequence。</p>
+<p>我们知道，字符串是由一系列字符组成的，String的内部就是基于char数组（jdk9之后基于byte数组）实现的，而数组通常是一块连续的内存区域，在数组初始化的时候就需要指定数组的大小。上一篇文章中我们已经知道String是不可变的，因为它内部的数组被声明为了final，同时，String的字符拼接、插入、删除等操作均是通过实例化新的对象实现的。而今天要认识的StringBuilder和StringBuffer与String相比就具有了动态性。接下来就让我们一起来认识下这两个类。</p>
+<h2 id="一、StringBuilder"><a href="#一、StringBuilder" class="headerlink" title="一、StringBuilder"></a>一、StringBuilder</h2><p>在StringBuilder的父类AbstractStringBuilder 中可以看到如下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AbstractStringBuilder</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Appendable</span>, <span class="hljs-title">CharSequence</span> </span>&#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * The value is used for character storage.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">char</span>[] value;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * The count is the number of characters used.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">int</span> count;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>StringBuilder与String一样都是基于char数组实现的，不同的是StringBuilder没有final修饰，这就意味着StringBuilder是可以被动态改变的。接下来看下StringBuilder无参构造方法，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment">    * Constructs a string builder with no characters in it and an</span><br><span class="hljs-comment">    * initial capacity of 16 characters.</span><br><span class="hljs-comment">    */</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">StringBuilder</span><span class="hljs-params">()</span> </span>&#123;<br>       <span class="hljs-keyword">super</span>(<span class="hljs-number">16</span>);<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>在这个方法中调用了父类的构造方法，到AbstractStringBuilder 中看到其构造方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Creates an AbstractStringBuilder of the specified capacity.</span><br><span class="hljs-comment"> */</span><br>AbstractStringBuilder(<span class="hljs-keyword">int</span> capacity) &#123;<br>    value = <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[capacity];<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>AbstractStringBuilder的构造方法内部初始化了一个容量为capacity的数组。也就是说StringBuilder默认初始化了一个容量为16的char[]数组。StringBuilder中除了无参构造外还提供了多个构造方法，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment">    * Constructs a string builder with no characters in it and an</span><br><span class="hljs-comment">    * initial capacity specified by the &#123;<span class="hljs-doctag">@code</span> capacity&#125; argument.</span><br><span class="hljs-comment">    *</span><br><span class="hljs-comment">    * <span class="hljs-doctag">@param</span>      capacity  the initial capacity.</span><br><span class="hljs-comment">    * <span class="hljs-doctag">@throws</span>     NegativeArraySizeException  if the &#123;<span class="hljs-doctag">@code</span> capacity&#125;</span><br><span class="hljs-comment">    *               argument is less than &#123;<span class="hljs-doctag">@code</span> 0&#125;.</span><br><span class="hljs-comment">    */</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">StringBuilder</span><span class="hljs-params">(<span class="hljs-keyword">int</span> capacity)</span> </span>&#123;<br>       <span class="hljs-keyword">super</span>(capacity);<br>   &#125;<br><br>   <span class="hljs-comment">/**</span><br><span class="hljs-comment">    * Constructs a string builder initialized to the contents of the</span><br><span class="hljs-comment">    * specified string. The initial capacity of the string builder is</span><br><span class="hljs-comment">    * &#123;<span class="hljs-doctag">@code</span> 16&#125; plus the length of the string argument.</span><br><span class="hljs-comment">    *</span><br><span class="hljs-comment">    * <span class="hljs-doctag">@param</span>   str   the initial contents of the buffer.</span><br><span class="hljs-comment">    */</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">StringBuilder</span><span class="hljs-params">(String str)</span> </span>&#123;<br>       <span class="hljs-keyword">super</span>(str.length() + <span class="hljs-number">16</span>);<br>       append(str);<br>   &#125;<br><br>   <span class="hljs-comment">/**</span><br><span class="hljs-comment">    * Constructs a string builder that contains the same characters</span><br><span class="hljs-comment">    * as the specified &#123;<span class="hljs-doctag">@code</span> CharSequence&#125;. The initial capacity of</span><br><span class="hljs-comment">    * the string builder is &#123;<span class="hljs-doctag">@code</span> 16&#125; plus the length of the</span><br><span class="hljs-comment">    * &#123;<span class="hljs-doctag">@code</span> CharSequence&#125; argument.</span><br><span class="hljs-comment">    *</span><br><span class="hljs-comment">    * <span class="hljs-doctag">@param</span>      seq   the sequence to copy.</span><br><span class="hljs-comment">    */</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">StringBuilder</span><span class="hljs-params">(CharSequence seq)</span> </span>&#123;<br>       <span class="hljs-keyword">this</span>(seq.length() + <span class="hljs-number">16</span>);<br>       append(seq);<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>这段代码的第一个方法初始化一个指定容量大小的StringBuilder。另外两个构造方法分别可以传入String和CharSequence来初始化StringBuilder，这两个构造方法的容量均会在传入字符串长度的基础上在加上16。</p>
+<h3 id="1-StringBuilder的append操作与扩容"><a href="#1-StringBuilder的append操作与扩容" class="headerlink" title="1.StringBuilder的append操作与扩容"></a>1.StringBuilder的append操作与扩容</h3><p>上篇文章已经知道通过StringBuilder的append方法可以进行高效的字符串拼接，append方法是如何实现的呢？这里以append（String）为例，可以看到StringBuilder的append调用了父类的append方法，其实不止append，StringBuilder类中操作字符串的方法几乎都是通过父类来实现的。append方法源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-comment">// StringBuilder</span><br>	<span class="hljs-meta">@Override</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> StringBuilder <span class="hljs-title">append</span><span class="hljs-params">(String str)</span> </span>&#123;<br>       <span class="hljs-keyword">super</span>.append(str);<br>       <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>   &#125;<br><br> <span class="hljs-comment">// AbstractStringBuilder</span><br> <span class="hljs-function"><span class="hljs-keyword">public</span> AbstractStringBuilder <span class="hljs-title">append</span><span class="hljs-params">(String str)</span> </span>&#123;<br>       <span class="hljs-keyword">if</span> (str == <span class="hljs-keyword">null</span>)<br>           <span class="hljs-keyword">return</span> appendNull();<br>       <span class="hljs-keyword">int</span> len = str.length();<br>       ensureCapacityInternal(count + len);<br>       str.getChars(<span class="hljs-number">0</span>, len, value, count);<br>       count += len;<br>       <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>   &#125;<br><br></code></pre></td></tr></table></figure>
+<p>在append方法的第一行首先进行了null检查，等于null的时候调用了appendNull方法。其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">private</span> AbstractStringBuilder <span class="hljs-title">appendNull</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">int</span> c = count;<br>        ensureCapacityInternal(c + <span class="hljs-number">4</span>);<br>        <span class="hljs-keyword">final</span> <span class="hljs-keyword">char</span>[] value = <span class="hljs-keyword">this</span>.value;<br>        value[c++] = <span class="hljs-string">&#x27;n&#x27;</span>;<br>        value[c++] = <span class="hljs-string">&#x27;u&#x27;</span>;<br>        value[c++] = <span class="hljs-string">&#x27;l&#x27;</span>;<br>        value[c++] = <span class="hljs-string">&#x27;l&#x27;</span>;<br>        count = c;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>appendNull方法中首先调用了ensureCapacityInternal来确保字符串数组容量充值，关于ensureCapacityInternal这个方法下边再详细分析。接下来可以看到把”null”的字符添加到了char[]数组value中。</p>
+<p>上文我们提到，StringBuilder内部数组的默认容量是16，因此，在进行字符串拼接的时候需要先确保char[]数组有足够的容量。因此，在appendNull方法以及append方法中都调用了ensureCapacityInternal方法来检查char[]数组是否有足够的容量，如果容量不足则会对数组进行扩容，ensureCapacityInternal源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ensureCapacityInternal</span><span class="hljs-params">(<span class="hljs-keyword">int</span> minimumCapacity)</span> </span>&#123;<br>        <span class="hljs-comment">// overflow-conscious code</span><br>        <span class="hljs-keyword">if</span> (minimumCapacity - value.length &gt; <span class="hljs-number">0</span>)<br>            expandCapacity(minimumCapacity);<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>这里判读如果拼接后的字符串长度大于字符串数组的长度则会调用expandCapacity进行扩容。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">expandCapacity</span><span class="hljs-params">(<span class="hljs-keyword">int</span> minimumCapacity)</span> </span>&#123;<br>        <span class="hljs-keyword">int</span> newCapacity = value.length * <span class="hljs-number">2</span> + <span class="hljs-number">2</span>;<br>        <span class="hljs-keyword">if</span> (newCapacity - minimumCapacity &lt; <span class="hljs-number">0</span>)<br>            newCapacity = minimumCapacity;<br>        <span class="hljs-keyword">if</span> (newCapacity &lt; <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-keyword">if</span> (minimumCapacity &lt; <span class="hljs-number">0</span>) <span class="hljs-comment">// overflow</span><br>                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> OutOfMemoryError();<br>            newCapacity = Integer.MAX_VALUE;<br>        &#125;<br>        value = Arrays.copyOf(value, newCapacity);<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>expandCapacity的逻辑也很简单，首先通过原数组的长度乘2并加2后计算得到扩容后的数组长度。接下来判断了newCapacity如果小于minimumCapacity，则将minimumCapacity值赋值给了newCapacity。这里因为调用expandCapacity方法的不止一个地方，所以加这句代码确保安全。</p>
+<p>而接下来的一句代码就很有趣了，newCapacity 和minimumCapacity 还有可能小于0吗？当minimumCapacity小于0的时候竟然还抛出了一个OutOfMemoryError异常。其实，这里小于0是因为越界了。我们知道在计算机中存储的都是二进制，乘2相当于向左移了一位。以byte为例，一个byte有8bit,在有符号数中最左边的一个bit位是符号位，正数的符号位为0，负数为1。那么一个byte可以表示的大小范围为[-128~127]，而如果一个数字大于127时则会出现越界，即最左边的符号位会被左边第二位的1顶替，就出现了负数的情况。当然，并不是byte而是int,但是原理是一样的。</p>
+<p>另外在这个方法的最后一句通过Arrays.copyOf进行了一个数组拷贝，其实Arrays.copyOf在上篇文章中就有见到过，在这里不妨来分析一下这个方法，看源码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">char</span>[] copyOf(<span class="hljs-keyword">char</span>[] original, <span class="hljs-keyword">int</span> newLength) &#123;<br>       <span class="hljs-keyword">char</span>[] copy = <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[newLength];<br>       System.arraycopy(original, <span class="hljs-number">0</span>, copy, <span class="hljs-number">0</span>,<br>                        Math.min(original.length, newLength));<br>       <span class="hljs-keyword">return</span> copy;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>咦？copyOf方法中竟然也去实例化了一个对象！！那不会影响性能吗？莫慌，看一下这里仅仅是实例化了一个newLength长度的空数组，对于数组的初始化其实仅仅是指针的移动而已，浪费的性能可谓微乎其微。接着这里通过System.arraycopy的native方法将原数组复制到了新的数组中。</p>
+<h3 id="2-StringBuilder的subString-方法toString-方法"><a href="#2-StringBuilder的subString-方法toString-方法" class="headerlink" title="2.StringBuilder的subString()方法toString()方法"></a>2.StringBuilder的subString()方法toString()方法</h3><p>StringBuilder中其实没有subString方法，subString的实现是在StringBuilder的父类AbstractStringBuilder中的。它的代码非常简单，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">substring</span><span class="hljs-params">(<span class="hljs-keyword">int</span> start, <span class="hljs-keyword">int</span> end)</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (start &lt; <span class="hljs-number">0</span>)<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> StringIndexOutOfBoundsException(start);<br>        <span class="hljs-keyword">if</span> (end &gt; count)<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> StringIndexOutOfBoundsException(end);<br>        <span class="hljs-keyword">if</span> (start &gt; end)<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> StringIndexOutOfBoundsException(end - start);<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> String(value, start, end - start);<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>在进行了合法判断之后，substring直接实例化了一个String对象并返回。这里和String的subString实现其实并没有多大差别。<br>而StringBuilder的toString方法的实现其实更简单，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> String <span class="hljs-title">toString</span><span class="hljs-params">()</span> </span>&#123;<br>       <span class="hljs-comment">// Create a copy, don&#x27;t share the array</span><br>       <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> String(value, <span class="hljs-number">0</span>, count);<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>这里直接实例化了一个String对象并将StringBuilder中的value传入，我们来看下String(value, 0, count)这个构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">String</span><span class="hljs-params">(<span class="hljs-keyword">char</span> value[], <span class="hljs-keyword">int</span> offset, <span class="hljs-keyword">int</span> count)</span> </span>&#123;<br>      <span class="hljs-keyword">if</span> (offset &lt; <span class="hljs-number">0</span>) &#123;<br>          <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> StringIndexOutOfBoundsException(offset);<br>      &#125;<br>      <span class="hljs-keyword">if</span> (count &lt; <span class="hljs-number">0</span>) &#123;<br>          <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> StringIndexOutOfBoundsException(count);<br>      &#125;<br>      <span class="hljs-comment">// Note: offset or count might be near -1&gt;&gt;&gt;1.</span><br>      <span class="hljs-keyword">if</span> (offset &gt; value.length - count) &#123;<br>          <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> StringIndexOutOfBoundsException(offset + count);<br>      &#125;<br>      <span class="hljs-keyword">this</span>.value = Arrays.copyOfRange(value, offset, offset+count);<br>  &#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到，在String的这个构造方法中又通过Arrays.copyOfRange方法进行了数组拷贝，Arrays.copyOfRange的源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">char</span>[] copyOfRange(<span class="hljs-keyword">char</span>[] original, <span class="hljs-keyword">int</span> from, <span class="hljs-keyword">int</span> to) &#123;<br>     <span class="hljs-keyword">int</span> newLength = to - from;<br>     <span class="hljs-keyword">if</span> (newLength &lt; <span class="hljs-number">0</span>)<br>         <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalArgumentException(from + <span class="hljs-string">&quot; &gt; &quot;</span> + to);<br>     <span class="hljs-keyword">char</span>[] copy = <span class="hljs-keyword">new</span> <span class="hljs-keyword">char</span>[newLength];<br>     System.arraycopy(original, from, copy, <span class="hljs-number">0</span>,<br>                      Math.min(original.length - from, newLength));<br>     <span class="hljs-keyword">return</span> copy;<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>Arrays.copyOfRange与Arrays.copyOf类似，内部都是重新实例化了一个char[]数组，所以String构造方法中的this.value与传入进来的value不是同一个对象。<strong>意味着StringBuilder在每次调用toString的时候生成的String对象内部的char[]数组并不是同一个！这里立一个Falg</strong>！</p>
+<h3 id="3-StringBuilder的其它方法"><a href="#3-StringBuilder的其它方法" class="headerlink" title="3.StringBuilder的其它方法"></a>3.StringBuilder的其它方法</h3><p>StringBuilder除了提供了append方法、subString方法以及toString方法外还提供了还提供了插入（insert）、删除（delete、deleteCharAt）、替换（replace）、查找（indexOf）以及反转（reverse）等一些列的字符串操作的方法。但由于实现都非常简单，这里就不再赘述了。</p>
+<h2 id="二、StringBuffer"><a href="#二、StringBuffer" class="headerlink" title="二、StringBuffer"></a>二、StringBuffer</h2><p>在第一节已经知道，StringBuilder的方法几乎都是在它的父类AbstractStringBuilder中实现的。而StringBuffer同样继承了AbstractStringBuilder，这就意味着StringBuffer的功能其实跟StringBuilder并无太大差别。我们通过StringBuffer几个方法来看</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs java">	 <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * A cache of the last value returned by toString. Cleared</span><br><span class="hljs-comment">     * whenever the StringBuffer is modified.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">transient</span> <span class="hljs-keyword">char</span>[] toStringCache;<br><br>  	<span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> StringBuffer <span class="hljs-title">append</span><span class="hljs-params">(String str)</span> </span>&#123;<br>        toStringCache = <span class="hljs-keyword">null</span>;<br>        <span class="hljs-keyword">super</span>.append(str);<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@throws</span> StringIndexOutOfBoundsException &#123;<span class="hljs-doctag">@inheritDoc</span>&#125;</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@since</span>      1.2</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> StringBuffer <span class="hljs-title">delete</span><span class="hljs-params">(<span class="hljs-keyword">int</span> start, <span class="hljs-keyword">int</span> end)</span> </span>&#123;<br>        toStringCache = <span class="hljs-keyword">null</span>;<br>        <span class="hljs-keyword">super</span>.delete(start, end);<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>    &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@throws</span> StringIndexOutOfBoundsException &#123;<span class="hljs-doctag">@inheritDoc</span>&#125;</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@since</span>      1.2</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> StringBuffer <span class="hljs-title">insert</span><span class="hljs-params">(<span class="hljs-keyword">int</span> index, <span class="hljs-keyword">char</span>[] str, <span class="hljs-keyword">int</span> offset,</span></span><br><span class="hljs-function"><span class="hljs-params">                                            <span class="hljs-keyword">int</span> len)</span></span><br><span class="hljs-function">    </span>&#123;<br>        toStringCache = <span class="hljs-keyword">null</span>;<br>        <span class="hljs-keyword">super</span>.insert(index, str, offset, len);<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>    &#125;<br><br><span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> String <span class="hljs-title">substring</span><span class="hljs-params">(<span class="hljs-keyword">int</span> start)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> substring(start, count);<br>    &#125;<br><br><span class="hljs-comment">// ...</span><br></code></pre></td></tr></table></figure>
+<p>可以看到在StringBuffer的方法上都加上了synchronized关键字,也就是说StringBuffer的所有操作都是线程安全的。所以，在多线程操作字符串的情况下应该首选StringBuffer。<br>另外，我们注意到在StringBuffer的方法中比StringBuilder多了一个toStringCache的成员变量 ，从源码中看到toStringCache是一个char[]数组。它的注释是这样描述的：</p>
+<blockquote>
+<p>toString返回的最后一个值的缓存，当StringBuffer被修改的时候该值都会被清除。</p>
+</blockquote>
+<p>我们再观察一下StringBuffer中的方法，发现只要是操作过操作过StringBuffer中char[]数组的方法，toStringCache都被置空了！而没有操作过字符数组的方法则没有对其做置空操作。另外，注释中还提到了 toString方法，那我们不妨来看一看StringBuffer中的 toString，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br> <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> String <span class="hljs-title">toString</span><span class="hljs-params">()</span> </span>&#123;<br>     <span class="hljs-keyword">if</span> (toStringCache == <span class="hljs-keyword">null</span>) &#123;<br>         toStringCache = Arrays.copyOfRange(value, <span class="hljs-number">0</span>, count);<br>     &#125;<br>     <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> String(toStringCache, <span class="hljs-keyword">true</span>);<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>这个方法中首先判断当toStringCache 为null时会通过 Arrays.copyOfRange方法对其进行赋值，Arrays.copyOfRange方法上边已经分析过了，他会重新实例化一个char[]数组，并将原数组赋值到新数组中。这样做有什么影响呢？细细思考一下不难发现在不修改StringBuffer的前提下，多次调用StringBuffer的toString方法，生成的String对象都共用了同一个字符数组–toStringCache。这里是StringBuffer和StringBuilder的一点区别。至于StringBuffer中为什么这么做其实并没有很明确的原因，可以参考StackOverRun<br><a target="_blank" rel="noopener" href="https://stackoverrun.com/cn/q/12697236">《Why StringBuffer has a toStringCache while StringBuilder not?》</a>中的一个回答:</p>
+<blockquote>
+<p>1.因为StringBuffer已经保证了线程安全，所以更容易实现缓存（StringBuilder线程不安全的情况下需要不断同步toStringCache）<br>2.可能是历史原因</p>
+</blockquote>
+<h2 id="三、-总结"><a href="#三、-总结" class="headerlink" title="三、 总结"></a>三、 总结</h2><p>本篇文章到此就结束了。《深入理解Java中的字符串》通过两篇文章深入的分析了String、StringBuilder与StringBuffer三个字符串相关类。这块内容其实非常简单，只要花一点时间去读一下源码就很容易理解。当然，如果你没看过此部分源码相信这篇文章能够帮助到你。不管怎样，相信大家通过阅读本文还是能有一些收获。解了这些知识后可以帮助我们在开发中对字符串的选用做出更好的选择。同时，这块内容也是面试常客，相信大家读完本文去应对面试官的问题也会绰绰有余。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/String/">String</a>
+                    
+                      <a class="hover-with-bg" href="/tags/StringBuilder/">StringBuilder</a>
+                    
+                      <a class="hover-with-bg" href="/tags/StringBuffer/">StringBuffer</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/09/19/29.Java%20GC/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">垃圾回收机制全面解析</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/09/08/27.String%20in%20java(1)/">
+                        <span class="hidden-mobile">深入理解Java中的字符串(一)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

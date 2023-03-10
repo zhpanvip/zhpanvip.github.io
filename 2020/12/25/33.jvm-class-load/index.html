@@ -1,0 +1,581 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>探索Java虚拟机的类加载机制 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="探索Java虚拟机的类加载机制">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-12-25 22:07" pubdate>
+        2020年12月25日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.7k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      25
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">探索Java虚拟机的类加载机制</h1>
+            
+            <div class="markdown-body">
+              <p>我们知道Java程序在编译的过程中需要先经过javac将Java文件编译成字节码文件才能被虚拟机执行。而类加载指的就是将编译好的字节码（不仅仅指.class文件中的字节码，任意的字节码流都可以被读取到JVM）读取到JVM的内存中的过程。虚拟机在加载.class文件时会对数据进行校验、转换解析和初始化。最终形成可以被虚拟机直接使用的Java类型。这个过程称作虚拟机的类加载机制。类加载机制是虚拟机中很重要的一部分内容，在面试中出现的频率也是比较高。因此，作为一个Java程序员，JVM的类加载机制是我们必须掌握的知识。</p>
+<p>为了更好的理解类加载的过程，我们先来看一道类加载的面试题：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// Person.java</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span></span>&#123;<br>    <span class="hljs-keyword">static</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;I&#x27;m a person&quot;</span>);<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// Stuent.java</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Person</span></span>&#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> String indentity=<span class="hljs-string">&quot;Student&quot;</span>;<br>    <span class="hljs-keyword">static</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;I&#x27;m a student&quot;</span>);<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Ryan</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Student</span></span>&#123;<br>    <span class="hljs-keyword">static</span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;I&#x27;m Ryan&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>接下来我们我们写一个测试类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test</span> </span>&#123;<br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>&#123;	<br>		System.out.println(<span class="hljs-string">&quot;Ryan.indentity=&quot;</span> + Ryan.indentity);<br>	&#125;	<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>大家可以先不要看下边的答案，试着分析一下会输出什么样的结果。</p>
+<p>好了，公布答案，上述代码结果输出如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java">I<span class="hljs-string">&#x27;m a persion</span><br><span class="hljs-string">I&#x27;</span>m a student<br>Ryan.indentity=Student<br></code></pre></td></tr></table></figure>
+
+<p>是否和你的答案一样呢？如果不一样，那说明你还没有清楚的理解JVM的类加载机制。接下来不妨就来学习一下JVM的类加载吧。</p>
+<h2 id="一、类加载的过程"><a href="#一、类加载的过程" class="headerlink" title="一、类加载的过程"></a>一、类加载的过程</h2><p>一个类从被加载到虚拟机内存中开始，到卸载出虚拟机内存为止，它的声明周期会经历加载（Loading）、连接（Linking）、初始化（Initialization）、使用（Using）和卸载（Unloading）这几个阶段。而连接阶段又包含验证（Verification）、准备（Preparation）、解析（Resolution）三个阶段。如下图所示：<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/783e7cea90b74dc98ad6ab37c87ba3cd~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>其中，加载、验证、准备、初始化和卸载这五个阶段的顺序是确定的，而解析阶段则不一定：它在某些情况下可以在初始化阶段之后再开始。接下来，我们来详细的了解Java虚拟机中类加载的过程，即加载、验证、准备、解析和初始化这五个阶段。</p>
+<h3 id="1-加载阶段"><a href="#1-加载阶段" class="headerlink" title="1.加载阶段"></a>1.加载阶段</h3><p>加载阶段是类加载过程的第一个阶段。这一阶段JVM会通过类的全限定名（可能来自.class文件，也可能来自ZIP压缩包、网络等，甚至可以是运行时生成。）来读取类的二进制字节流。并将读取到的二进制字节流转化为方法区的运行时数据结构，然后在内存中生成一个代表这个类的java.lang.Class对象。</p>
+<p>简单的来说，这一阶段就是将类的字节码二进制流读取到JVM，并生成代表这个类的Class对象。</p>
+<h3 id="2-连接"><a href="#2-连接" class="headerlink" title="2.连接"></a>2.连接</h3><p>连接阶段包含了验证、准备、解析三个过程。</p>
+<h4 id="（1）验证"><a href="#（1）验证" class="headerlink" title="（1）验证"></a>（1）验证</h4><p>这一阶段的目的是为了保证class文件字节流符合当前虚拟机的要求。并且保证这些数据代码运行后不会危害虚拟机自身安全。验证阶段大致会完成四个阶段的检验：文件格式验证、元数据验证、字节码验证、符号引用验证。</p>
+<p><strong>文件格式验证</strong></p>
+<p>这一阶段验证字节流是否符合Class文件格式的规范，并且能被当前的虚拟机处理。</p>
+<p><strong>元数据验证</strong></p>
+<p>这一阶段是对字节码描述的信息进行语义分析，保证其描述的信息符合Java语言规范的要求。</p>
+<p><strong>字节码验证</strong><br>这一阶段会通过数据流和控制流分析，确定程序语义是否合法，符合逻辑。这个阶段对类的方法体就行校验分析，保证被校验的类的方法在运行时不会做危害虚拟机安全的事情。</p>
+<p><strong>符号引用验证</strong><br>最后一个阶段的校验发生在虚拟机符号引用转化为直引用的时候，这个转化动作将在连接的第三阶段–解析阶段发生。符号引用校验可以看做是对类自身以外（常量池的各种符号引用）的信息进行匹配性校验。</p>
+<h4 id="（2）准备"><a href="#（2）准备" class="headerlink" title="（2）准备"></a>（2）准备</h4><p><strong>准备阶段是类加载机制中很重要的一个阶段。</strong> 这一阶段是正式为类中定义的静态变量（被static修饰的变量）分配内存并设置类变量初始值的阶段。这些变量所使用的内存都应该在方法区中进行分配。我们知道，在JDK7之前，Hotspot虚拟机使用永久代来实现方法区。而在JDK8之后，方法区被放在了Java堆中。因此，类变量也会随着Class对象一起存放在Java堆中。</p>
+<p>另外，关于准备阶段有两点需要注意：</p>
+<p> ①  <strong>为变量分配内存</strong>  我们知道，Java类中的变量可以分为<strong>成员变量</strong>与<strong>类变量</strong>，类变量是指被static修饰的变量，其他类型的变量都属于成员变量。而<strong>准备阶段的内存分配仅包括类变量，不包括成员变量</strong>，<strong>成员变量</strong>只有在对象实例化的时候随着对象一起分配到Java堆中。</p>
+<p>例如下面的代码在准备阶段只会为value分配内存，而不会为str分配内存。</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test</span> &#123;</span><br>	  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> value = <span class="hljs-number">123</span>;<br>	  <span class="hljs-keyword">public</span>  <span class="hljs-keyword">String</span> str = <span class="hljs-string">&quot;123&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>② <strong>为类变量赋初始值</strong> 在准备阶段，JVM会为类变量分配内存，并对其初始化。<strong>而初始化的值并非我们在代码中赋予的值，而是数据类型的零值。</strong> 例如上述代码中经过准备阶段后value的值是0，而并非123。但如果给value再加一个final修饰符，那么经过准备阶段，value的值就是123（因为此时的value相当于一个常量），这是因为在编译时Javac会为value生成ConstantValue属性，在准备阶段虚拟机就会根据ConstantValue的设置将value赋值为123。</p>
+<h4 id="（3）解析"><a href="#（3）解析" class="headerlink" title="（3）解析"></a>（3）解析</h4><p>解析阶段是虚拟机将常量池的符号引用替换为直接引用的过程。这一阶段不太重要，了解即可。</p>
+<h3 id="3-初始化"><a href="#3-初始化" class="headerlink" title="3.初始化"></a>3.初始化</h3><p>初始化是类加载的最后一个阶段，也是类加载过程中最重要的一个阶段。在这一阶段用户定义的Java程序代码（字节码）才真正开始执行。什么意思呢？刚才提到在准备阶段JVM会为类变量赋默认的初始值，<strong>而初始化阶段类变量才会被赋予我们在代码中声明的值。JVM会根据语句执行顺序对类对象进行初始化</strong>。</p>
+<p>在《Java虚拟机规范》中并没有强制约束在什么情况下开始执行类加载的第一个“加载”阶段，但是对于初始化阶段《Java虚拟机规范》中却有着严格的约束。一般来说当 JVM 遇到下面 6 种情况的时候会触发类加载的初始化（在执行初始化阶段之前需要先执行加载、验证和准备阶段）：</p>
+<p>① 遇到 new、getstatic、putstatic、invokestatic 这四条字节码指令时，如果类没有进行过初始化，则需要先触发其初始化。生成这4条指令的最常见的Java代码场景是：使用new关键字实例化对象的时候、读取或设置一个类的静态字段（被final修饰、已在编译器把结果放入常量池的静态字段除外）的时候，以及调用一个类的静态方法的时候。</p>
+<p>② 使用 java.lang.reflect 包的方法对类进行反射调用的时候，如果类没有进行过初始化，则需要先触发其初始化。</p>
+<p>③ 当初始化一个类的时候，如果发现其父类还没有进行过初始化，则需要先触发其父类的初始化。</p>
+<p>④ 当虚拟机启动时，用户需要指定一个要执行的主类（包含main()方法的那个类），虚拟机会先初始化这个主类。</p>
+<p>⑤ 当使用 JDK1.7 动态语言支持时，如果一个 java.lang.invoke.MethodHandle实例最后的解析结果<br>REF_getstatic,REF_putstatic,REF_invokeStatic 的方法句柄，并且这个方法句柄所对应的类没有进行初始化，则需要先出触发其初始化。</p>
+<p>⑥ 当一个接口中定义了JDK8新加入的默认方法（被default关键字修饰的接口方法）时，如果有这个接口的实现类发生了初始化，那该接口要在其之前被初始化。</p>
+<h2 id="二、类加载例题分析"><a href="#二、类加载例题分析" class="headerlink" title="二、类加载例题分析"></a>二、类加载例题分析</h2><p>在了解了类加载的过程后，我们通过几个例题分析来深入的理解类加载。</p>
+<h3 id="1-开篇例题分析"><a href="#1-开篇例题分析" class="headerlink" title="1.开篇例题分析"></a>1.开篇例题分析</h3><p>开篇的面试题中在main方法中调用了Ryan.indentity，而indentity是位于Ryan父类Student中的类变量。根据初始化阶段中的第①点我们可以知道：</p>
+<blockquote>
+<p>读取或设置一个类的静态字段（被final修饰、已在编译器把结果放入常量池的静态字段除外）的时候，以及调用一个类的静态方法的时候会触发类的初始化。</p>
+</blockquote>
+<p>因此，此时会首先去加载并初始化Ryan类，而从初始化③中我们知道：</p>
+<blockquote>
+<p>当初始化一个类的时候，如果发现其父类还没有进行过初始化，则需要先触发其父类的初始化。</p>
+</blockquote>
+<p> 因此，最先被加载并被初始化的类应该是Person类，Person类的初始化导致了首先输出 <em>I’m a person</em>语句。<br> 接着Student类被加载，所以第二行输出 了<em>I’m a student</em> 。最后完成Ryan类的加载并输出 <em>Ryan.indentity=Student</em></p>
+<h3 id="2-例题二"><a href="#2-例题二" class="headerlink" title="2.例题二"></a>2.例题二</h3><p>给出Singleton 类如下代码所示，请分析程序的输出结果。大家可以先不要答案，试着自己分析一下结果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Singleton</span> </span>&#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Singleton singleton = <span class="hljs-keyword">new</span> Singleton();<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> x;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> y = <span class="hljs-number">0</span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-title">Singleton</span><span class="hljs-params">()</span> </span>&#123;<br>        ++x;<br>        ++y;<br>        System.out.println(<span class="hljs-string">&quot;Singleton构造方法执行，x = &quot;</span> + x +<span class="hljs-string">&quot;,y = &quot;</span> + y);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;singleton.x = &quot;</span> + singleton.x);<br>        System.out.println(<span class="hljs-string">&quot;singleton.x = &quot;</span> + singleton.y);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java">Singleton构造方法执行，x = <span class="hljs-number">1</span>,y = <span class="hljs-number">1</span><br>singleton.x = <span class="hljs-number">1</span><br>singleton.x = <span class="hljs-number">0</span><br></code></pre></td></tr></table></figure>
+<p>如果不了解类加载的过程，会觉得这是一个很奇怪的输出结果。x、y的初始值都是0，在构造方法种经过了同样的“++”操作，而最后的输出结果为什么不一样呢？我们还是先从出发类初始化的几个条件着手。</p>
+<p>1）从触发类初始化的第④ 个条件可知，虚拟机启动时会先加载包含main方法的类。因此Singleton 首先会触发类加载流程。</p>
+<p>2）而经过加载、验证流程后，进入类加载的准备阶段，这一阶段虚拟机会为类变量分配内存和并对其进行初始化赋值。注意，准备阶段只会给类变量赋默认值，经过准备阶段后结果如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Singleton</span> </span>&#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Singleton singleton = <span class="hljs-keyword">null</span>;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> x = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> y = <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>3）初始化阶段会根据代码顺序为类变量赋代码中声明的值。因此，首先会实例化Singleton ，并将实例化后的值赋给singleton。而此时，由于x、y还没有被赋值。因此x、y均为0。所以，在经过“++”操作后输出x、y的值均为1。</p>
+<p>4）接下来为x、y赋代码中声明的值，而在我们的代码中x没有赋初始值，y则被赋值为0。因此，此时x仍然为1，而y则被赋值为0.</p>
+<p>5）类加载完成后打印x、y的值。</p>
+<p>经过以上两个例题的分析，相信大家对JVM的类加载机制有了一个更清楚的认识。而在类加载机制中除了类加载的过程，还有一个很重要的知识点，那就是类加载器，我们接着往下看。</p>
+<h2 id="三、类加载器"><a href="#三、类加载器" class="headerlink" title="三、类加载器"></a>三、类加载器</h2><p>前两章我们了解了类加载的过程，而类加载的过程则是由类加载器来完成的。类加载器在Java程序中起到的作用可以说远超类加载阶段。我们在程序中使用到的任意一个类都需要类加载器将其加载到虚拟机，并且由类加载器保证被加载类的唯一性。这里我们需要明白一点：<strong>两个类是否相等的前提条件是这两个类是由同一个类加载器加载的。如果两个类来自同一个Class文件，但是被同一个虚拟机下不同的类加载器加载，那么这两个类必定不相等。</strong></p>
+<p>那么问题来了，虚拟机是如何保证同一个Class文件只能被同一个类加载器加载的呢？要解答这个问题首先要了解类加载器的划分。</p>
+<h3 id="1-类加载器的分类"><a href="#1-类加载器的分类" class="headerlink" title="1.类加载器的分类"></a>1.类加载器的分类</h3><p>在Java中类加载器分为启动类加载器（Bootstrap Class Loader）、扩展类加载器（Extension Class Loader）、应用类加载器（Application Class Loader）以及自定义类加载器（User Class Loader）。接下来我们就分别来认识这几种类加载器。</p>
+<h4 id="1）启动类加载器（Bootstrap-Class-Loader）"><a href="#1）启动类加载器（Bootstrap-Class-Loader）" class="headerlink" title="1）启动类加载器（Bootstrap Class Loader）"></a>1）启动类加载器（Bootstrap Class Loader）</h4><p>这个类加载器是虚拟机的一部分，使用C++语言实现。这个类加载器只负责加载存放在<JAVA_HOME>\lib目录，或者被-Xbootclasspath参数所指定的路径中存放的Java虚拟机能够识别的（按照文件名识别，如rt.jar、tool.jar。名字不符合的类库即使放在lib目录下也不会被加载）类库加载到虚拟机中。</p>
+<h4 id="2）扩展类加载器（Extension-Class-Loader）"><a href="#2）扩展类加载器（Extension-Class-Loader）" class="headerlink" title="2）扩展类加载器（Extension Class Loader）"></a>2）扩展类加载器（Extension Class Loader）</h4><p>这个类加载器位于类sun.miss.Launcher$ExtClassLoader中，并且是由Java代码所实现的。它负责加载<Java_HOME>\lib\ext目录中，或被java.ext.dirs系统变量所指定的路径中所有的类库。开发者可以直接在程序中使用扩展类加载器来加载Class文件。</p>
+<h4 id="3）应用程序类加载器（Application-Class-Loader）"><a href="#3）应用程序类加载器（Application-Class-Loader）" class="headerlink" title="3）应用程序类加载器（Application Class Loader）"></a>3）应用程序类加载器（Application Class Loader）</h4><p>这个类加载器位于sun.misc.Launcher$AppClassLoader中，同样是由Java语言实现。他负责加载用户类路径（ClassPath)上所有的类库。开发者同样可以直接在代码中使用这个类加载器。如果程序中没有自定义的类加载器，一般情况下这个就是程序中默认的类加载器。</p>
+<h4 id="4）自定义类加载器（User-Class-Loader）"><a href="#4）自定义类加载器（User-Class-Loader）" class="headerlink" title="4）自定义类加载器（User Class Loader）"></a>4）自定义类加载器（User Class Loader）</h4><p>除了上述三种Java系统中的类加载器外，很多情况下用户还会通过自定义类加载器加载所需要的类。诸如增加除了磁盘位置之外的Class文件来源，或者通过类加载器实现类的隔离、重载等功能</p>
+<h3 id="2-双亲委派模型"><a href="#2-双亲委派模型" class="headerlink" title="2.双亲委派模型"></a>2.双亲委派模型</h3><p>在本章开头我们已经提到两个类相等的前提条件应该是这两个类是由同一个类加载器加载的。既然Java种存在这么多的类加载器，那么Java是如何保证同一个类都是由同一个类加载器加载的呢？这主要得益于类加载器的“双亲委派模型”。接下来我们就来认识一下什么是“双亲委派模型”。</p>
+<p>如下图所示，展示了各个类加载器之间的层次关系就是本节要讲的“双亲委派模型”<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0af264e166d44d59a7b95383fc516d15~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>双亲委派模型要求除了顶层启动类加载器外，其余的类加载器都应该有自己的父类加载器。而这里类加载器之间的父子关系不是通过继承来实现的，而是通过组合的关系来复用父加载器的代码。</p>
+<p>双亲委派模型的工作过程如下：</p>
+<blockquote>
+<p>如果一个类加载器收到了类加载的请求，首先它不会自己尝试加载这个类，而是把这个请求委派给父类加载器来完成，每个层次的类加载器都是如此。因此，所有的类加载请求最终都会被传送到最顶层的启动类加载器种，只有当父加载器无法找到这个加载请求的类时，子类加载器才会尝试去完成加载。</p>
+</blockquote>
+<p>双亲委派模型的代码实现非常简单，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">synchronized</span> Class&lt;?&gt; loadClass(String name, <span class="hljs-keyword">boolean</span> resolve)<span class="hljs-keyword">throws</span> ClassNotFoundException &#123;<br>        <span class="hljs-comment">// 首先检查该类型是否已经被加载过了</span><br>        Class c = findLoadedClass(name);<br>        <span class="hljs-keyword">if</span> (c == <span class="hljs-keyword">null</span>) &#123; <span class="hljs-comment">//如果这个类还没有被加载，则尝试加载该类</span><br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-keyword">if</span> (parent != <span class="hljs-keyword">null</span>) &#123; <span class="hljs-comment">// 如果存在父类加载器，就委派给父类加载器加载</span><br>                    c = parent.loadClass(name, <span class="hljs-keyword">false</span>);<br>                &#125; <span class="hljs-keyword">else</span> &#123; <span class="hljs-comment">// 如果不存在父类加载器，就尝试使用启动类加载器加载</span><br>                    c = findBootstrapClass0(name);<br>                &#125;<br>            &#125; <span class="hljs-keyword">catch</span> (ClassNotFoundException e) &#123;<span class="hljs-comment">// 父类加载器找不到要加载的类，则抛出ClassNotFoundException </span><br>                <span class="hljs-comment">// 尝试调用自身的findClass方法进行类加载</span><br>                c = findClass(name);<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (resolve) &#123;<br>            resolveClass(c);<br>        &#125;<br>        <span class="hljs-keyword">return</span> c;<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>这段代码的逻辑非常清晰易懂，代码中已经做了详细的注释说明。正是因为双亲委派模型具备一种带有优先级的层次关系，使得无论哪个类加载最终都会委派给处于最顶层的启动类加载器进行加载，因此保证了在程序种各个类加载器环境中都能够保证是同一个类。</p>
+<h2 id="四、小结"><a href="#四、小结" class="headerlink" title="四、小结"></a>四、小结</h2><p>类加载机制通常是很多面试者的噩梦，碰到类加载的面试题只能束手无策。而通过本篇文章的学习，你会发现其实类加载是一个很简单的过程，只要记住类加载的几个重要阶段，就能轻松驾驭大多数相关试题。另外，类加载器也是一个重要的知识点。虽然重要，但也简单，用短短几行代码通过”双亲委派模型“就实现了类加载的过程。不得不让我们佩服Java设计的精妙。</p>
+<h2 id="五、参考-amp-推荐阅读"><a href="#五、参考-amp-推荐阅读" class="headerlink" title="五、参考&amp;推荐阅读"></a>五、参考&amp;推荐阅读</h2><p>《深入理解Java虚拟机 第三版》 作者周志明</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/chanshuyi/p/the_java_class_load_mechamism.html">两道面试题，带你解析Java类加载机制</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/JVM/">JVM</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E7%B1%BB%E5%8A%A0%E8%BD%BD/">类加载</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/12/27/34.bvp-v3-4-usage/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">跟ViewHolder说再见！实现一个无限轮播图究竟有多简单？</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/11/29/32.Bye%20ButterKnife/">
+                        <span class="hidden-mobile">ButterKnife被弃用，ViewBinding才是findView的未来？</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

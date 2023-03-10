@@ -1,0 +1,541 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>Android夜间模式实现方案 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Android夜间模式实现方案">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2017-07-27 23:45" pubdate>
+        2017年7月27日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      14
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Android夜间模式实现方案</h1>
+            
+            <div class="markdown-body">
+              <p>对于一款阅读类的软件，夜间模式是不可缺少的。最初看到这个需求时候觉得无从下手，没有一点头绪。后来通过查阅资料发现Android官方在Support Library 23.2.0中已经加入了夜间主题。也就是只需要通过更换主题便可实现日间模式和夜间模式的切换。下面截取项目实现的夜间模式效果图：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNzI3MjEyOTM4NjYy?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"><br>效果看起来还比较nice，没有闪屏，过度也比较平滑。那么项目中的这个日间、夜间模式切换效果是如何实现的呢？下面将从以下几个方面来讲解：</p>
+<ul>
+<li>一 实现夜间模式需要的配置</li>
+<li>二 实现白天和夜间模式的切换</li>
+<li>三 实现夜间模式时遇到的问题及解决方案</li>
+</ul>
+<p>一、实现夜间模式需要的配置<br>1.首先在gradel中引入以下依赖</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">compile</span> &#x27;com.android.support:appcompat-v<span class="hljs-number">7</span>:<span class="hljs-number">25</span>.<span class="hljs-number">3</span>.<span class="hljs-number">1</span>&#x27;<br></code></pre></td></tr></table></figure>
+<p>2.让我们项目的主题继承夜间模式主题，在style中设置如下主题：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">style</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;AppTheme&quot;</span> <span class="hljs-attr">parent</span>=<span class="hljs-string">&quot;Theme.AppCompat.DayNight&quot;</span>&gt;</span><br><span class="xml">       <span class="hljs-comment">&lt;!-- Customize your theme here. --&gt;</span></span><br><span class="xml">       <span class="hljs-tag">&lt;<span class="hljs-name">item</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;colorPrimary&quot;</span>&gt;</span>@color/colorPrimary<span class="hljs-tag">&lt;/<span class="hljs-name">item</span>&gt;</span></span><br><span class="xml">       <span class="hljs-tag">&lt;<span class="hljs-name">item</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;colorPrimaryDark&quot;</span>&gt;</span>@color/colorPrimaryDark<span class="hljs-tag">&lt;/<span class="hljs-name">item</span>&gt;</span></span><br><span class="xml">       <span class="hljs-tag">&lt;<span class="hljs-name">item</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;colorAccent&quot;</span>&gt;</span>@color/colorAccent<span class="hljs-tag">&lt;/<span class="hljs-name">item</span>&gt;</span></span><br>   <span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span><br></code></pre></td></tr></table></figure>
+<p>3.新建drawable-night和values-night的资源目录。如果要适配不同分辨率的屏幕则可新建drawable-night-hdip、drawable-night-xhdpi等目录来存放不同分辨率的图片资源。values-night目录下存放与夜间模式相关的value文件。本篇文章讲解仅以夜间模式和日间模式的颜色为例，在values-night目录下新建color.xml文件。</p>
+<p>（1）新建values-night目录，如下：</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNzI3MjE1NDM4MzI5?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="新建values-night目录1"></p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNzI3MjE1NjA5Nzg1?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="新建values-night目录2"></p>
+<p>（2）在values-night目录下新建colors文件，如下：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNzI3MjIwMTUyMjM0?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="新建colors文件1"></p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNzI3MjIwMzAyNzg2?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="新建colors文件2"><br>接下来只需要在对应的colors文件下写不同的颜色值(夜间颜色值和白天颜色值)即可。至此关于实现夜间模式的配置已经基本完成。</p>
+<p>二、实现白天和夜间模式的切换<br>1.启动App时检测是否处于夜间模式，如果是则切换至夜间主题。这个需要在自己项目的Application中实现。可在自己项目的Application中添加以下代码：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-comment">/**</span><br><span class="hljs-comment">  * 初始化夜间模式</span><br><span class="hljs-comment">  */</span><br>   <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setNightMode</span><span class="hljs-params">()</span> </span>&#123;<br>       <span class="hljs-keyword">boolean</span> nightMode = UserInfoTools.isNightMode(<span class="hljs-keyword">this</span>);<br>       AppCompatDelegate.setDefaultNightMode(nightMode ?<br>               AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>这里需要介绍一下有关夜间模式的几个常量值。AppCompatDelegate.setDefaultNightMode(mode),其中mode有一下四个值：</p>
+<ul>
+<li>MODE_NIGHT_NO： 亮色(light)主题，不使用夜间模式</li>
+<li>MODE_NIGHT_YES：暗色(dark)主题，使用夜间模式</li>
+<li>MODE_NIGHT_AUTO：根据当前时间自动切换 亮色(light)/暗色(dark)主题（22：00-07：00时间段内自动切换为夜间模式）</li>
+<li>MODE_NIGHT_FOLLOW_SYSTEM(默认选项)：设置为跟随系统，通常为MODE_NIGHT_NO<br>2.接下来需要我们在设置页面点击ToggleButton时切换白天/夜间模式。<br>具体实现如下：<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs jboss-cli">private void <span class="hljs-keyword">set</span>NightMode<span class="hljs-params">()</span> &#123;<br>         <span class="hljs-string">//</span>  获取当前模式<br>        int currentNightMode = getResources<span class="hljs-params">()</span><span class="hljs-string">.getConfiguration</span><span class="hljs-params">()</span><span class="hljs-string">.uiMode</span> &amp; Configuration.UI_MODE_NIGHT_MASK;<br>        <span class="hljs-string">//</span>  将是否为夜间模式保存到SharedPreferences<br>        UserInfoTools.<span class="hljs-keyword">set</span>NightMode<span class="hljs-params">(this, <span class="hljs-attr">currentNightMode</span> == Configuration.UI_MODE_NIGHT_NO)</span>;<br>        <span class="hljs-string">//</span>  切换模式<br>        getDelegate<span class="hljs-params">()</span><span class="hljs-string">.setDefaultNightMode</span><span class="hljs-params">(<span class="hljs-attr">currentNightMode</span> == Configuration.UI_MODE_NIGHT_NO ?</span><br><span class="hljs-params">                AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO)</span>;<br>        UserInfoTools.<span class="hljs-keyword">set</span>ChangeNightMode<span class="hljs-params">(this,true)</span>;<br>        <span class="hljs-string">//</span>  重启Activity<br>        recreate<span class="hljs-params">()</span>;<br>    &#125;<br><br>private void <span class="hljs-keyword">set</span>Listener<span class="hljs-params">()</span> &#123;<br>        mToggleButton.<span class="hljs-keyword">set</span>OnClickListener<span class="hljs-params">((View v)</span> -&gt; &#123;<br>            <span class="hljs-keyword">set</span>NightMode<span class="hljs-params">()</span>;<br>        &#125;);<br>    &#125;<br></code></pre></td></tr></table></figure>
+注意，上面代码中设置白天/夜间模式的代码的最后调用了recreate()方法重启了当前Activity。但这样写切换模式时会有闪屏问题，体验比较差。具体优化将在下一节中实现。</li>
+</ul>
+<p>三 、实现夜间模式时遇到的问题及解决方案<br>利用谷歌官方提供的这个方案实现夜间模式的过程中遇到了不少的问题。且网上资料较少，大多文章讲解仅仅以一个简单的demo为例。但在用到实际项目中时会遇到很多的麻烦。这里主要总结了笔者曾经遇到过的难以解决的几个问题。<br>1.白天/夜间模式切换时闪屏问题<br>上一节中已经提到了在调用recreate()方法时会有闪屏问题。其实闪屏问题的解决比较简单。我们大可以不掉用recreate()方法，而是自己重启当前activity并为activity设置启动和退出动画即可！实现代码如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs groovy"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> setNightMode() &#123;<br>       <span class="hljs-comment">//  获取当前模式</span><br>       <span class="hljs-keyword">int</span> currentNightMode = getResources().getConfiguration().uiMode &amp; Configuration.UI_MODE_NIGHT_MASK;<br>       <span class="hljs-comment">//  将是否为夜间模式保存到SharedPreferences</span><br>       UserInfoTools.setNightMode(<span class="hljs-built_in">this</span>, currentNightMode == Configuration.UI_MODE_NIGHT_NO);<br>       <span class="hljs-comment">//  切换模式</span><br>       getDelegate().setDefaultNightMode(currentNightMode == Configuration.UI_MODE_NIGHT_NO ?<br>               AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);<br>       UserInfoTools.setChangeNightMode(<span class="hljs-built_in">this</span>,<span class="hljs-literal">true</span>);<br><br>       <span class="hljs-comment">//recreate();</span><br><br>       startActivity(<span class="hljs-keyword">new</span> Intent(<span class="hljs-built_in">this</span>,SettingActivity.<span class="hljs-keyword">class</span>));<br>       overridePendingTransition(R.anim.animo_alph_close, R.anim.animo_alph_close);<br>       finish();<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>如上代码，我们自行调用startActivity启动了设置页面并为其添加了一个透明渐变的启动动画。最后调用finish结束掉旧的设置页面。这样闪屏问题便迎刃而解。模式切换也变得流畅自然。<br> 2.切换夜间模式后返回MainActivity,MainActivity页面没有更新。解决这个问题可以在切换模式后从设置页面发送一个广播，然后在MainActivity中接收到这个广播后重启MainActivity即可。根据官方的推荐更换夜间模式后需要调用recreate()方法刷新页面。但是recreate()方法巨坑无比，调用recreate()方法引起了诸多问题。详见问题3、4、5。因此解决这个问题笔者并没有在MainActivity调用中调用recreate()方法。而是在SettingActivity中定义了一个boolean值来标记是否切换了夜间模式。然后重写了onKeyDown()方法。如果切换了夜间模式则在返回时发出一个广播结束掉MainActivity,然后调用startActivity()重启了MainActivity并添加了启动动画，让用户感觉是只是返回了主页面。其实思想跟解决问题1有些类似。还是结合代码来看吧。</p>
+<p>SettingActivity中的代码</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">@Override<br>   public boolean on<span class="hljs-constructor">KeyDown(<span class="hljs-params">int</span> <span class="hljs-params">keyCode</span>, KeyEvent <span class="hljs-params">event</span>)</span> &#123;<br>       <span class="hljs-keyword">if</span> (keyCode<span class="hljs-operator"> == </span>KeyEvent.KEYCODE_BACK<span class="hljs-operator"> &amp;&amp; </span>event.get<span class="hljs-constructor">Action()</span><span class="hljs-operator"> == </span>KeyEvent.ACTION_DOWN) &#123;<br>           go<span class="hljs-constructor">Back()</span>;<br>           return <span class="hljs-literal">true</span>;<br>       &#125;<br>       return super.on<span class="hljs-constructor">KeyDown(<span class="hljs-params">keyCode</span>, <span class="hljs-params">event</span>)</span>;<br>   &#125;<br><br>   <span class="hljs-keyword">private</span> void go<span class="hljs-constructor">Back()</span> &#123;<br>       <span class="hljs-keyword">if</span> (isChangeNightMode) &#123;  <span class="hljs-comment">//  如果改变了夜间模式，则重启MainActivity</span><br>           <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">EventBus</span>.</span></span>get<span class="hljs-constructor">Default()</span>.post(<span class="hljs-keyword">new</span> <span class="hljs-constructor">NightModeEvent()</span>);<br>           Intent intent = <span class="hljs-keyword">new</span> <span class="hljs-constructor">Intent(<span class="hljs-params">this</span>, MainActivity.<span class="hljs-params">class</span>)</span>;<br>           intent.put<span class="hljs-constructor">Extra(<span class="hljs-string">&quot;nightMode&quot;</span>, <span class="hljs-params">true</span>)</span>;<br>           start<span class="hljs-constructor">Activity(<span class="hljs-params">intent</span>)</span>;<br>           override<span class="hljs-constructor">PendingTransition(R.<span class="hljs-params">anim</span>.<span class="hljs-params">animo_alph_close</span>, R.<span class="hljs-params">anim</span>.<span class="hljs-params">activity_close</span>)</span>;<br>       &#125;<br>       finish<span class="hljs-literal">()</span>;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>MainActivity中的代码：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"> @Override<br>   public void on<span class="hljs-constructor">Create(Bundle <span class="hljs-params">savedInstanceState</span>)</span> &#123;<br>       super.on<span class="hljs-constructor">Create(<span class="hljs-params">savedInstanceState</span>)</span>;<br>       set<span class="hljs-constructor">ContentView(R.<span class="hljs-params">layout</span>.<span class="hljs-params">activity_main</span>)</span>;<br><br>       re<span class="hljs-constructor">StartActivity()</span><br>   &#125;<br><br><span class="hljs-comment">//  改变夜间模式后返回时重启Activity</span><br>   <span class="hljs-keyword">private</span> void re<span class="hljs-constructor">StartActivity()</span> &#123;<br>       Intent intent = get<span class="hljs-constructor">Intent()</span>;<br>       boolean nightMode = intent.get<span class="hljs-constructor">BooleanExtra(<span class="hljs-string">&quot;nightMode&quot;</span>, <span class="hljs-params">false</span>)</span>;<br>       <span class="hljs-keyword">if</span>(nightMode&amp;&amp;<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">UserInfoTools</span>.</span></span>get<span class="hljs-constructor">IsLogin(<span class="hljs-params">this</span>)</span>)&#123;<br>           <span class="hljs-comment">//  自动切换到“我的”页面</span><br>           mRbMe.perform<span class="hljs-constructor">Click()</span>;<br>       &#125;<br>   &#125;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment">    * 接收到夜间模式改变的事件后结束当前Activity</span><br><span class="hljs-comment">    * @param event</span><br><span class="hljs-comment">    */</span><br> @Subscribe<br>   public void set<span class="hljs-constructor">NightMode(NightModeEvent <span class="hljs-params">event</span>)</span> &#123;<br>       finish<span class="hljs-literal">()</span>;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>最后还有点问题需要说明，由问题1我们可以知道，改变模式后，我们重启了SettingActivity。因此在该类中定义的一个标记是否切换了夜间模式的boolean值并不能起到作用。解决办法是将这个值保存到SharedPreference中。然后重启SettingActivity后再取出该值。可以看代码，这点真心有点绕啊。。。<br>注意问题1中的setNightMode()方法中有一句代码 UserInfoTools.setChangeNightMode(this,true);将改变了夜间模式设置为了true并保存到了SharedPreferences中，然后在onCreate()中有以下代码来初始化isChangeNightMode的值。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">@Override<br>   public void on<span class="hljs-constructor">Create(Bundle <span class="hljs-params">savedInstanceState</span>)</span> &#123;<br>       super.on<span class="hljs-constructor">Create(<span class="hljs-params">savedInstanceState</span>)</span>;<br>       set<span class="hljs-constructor">ContentView(R.<span class="hljs-params">layout</span>.<span class="hljs-params">activity_main</span>)</span>;<br>                isChangeNightMode=<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">UserInfoTools</span>.</span></span>is<span class="hljs-constructor">ChangeNightMode(<span class="hljs-params">this</span>)</span>;<br>       <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">UserInfoTools</span>.</span></span>set<span class="hljs-constructor">ChangeNightMode(<span class="hljs-params">this</span>,<span class="hljs-params">false</span>)</span>;<br>   &#125;<br><br></code></pre></td></tr></table></figure>
+<p>3.设置白天/夜间模式后出现无故闪退问题<br>这个问题说来比较奇怪，原因是切换了夜间模式后在MainActivity中调用了recreate()方法。具体原因笔者也没有弄清楚，调试了好一阵子也没有找出个所以然来。后来果断放弃了在MainActivity中调用recreate()方法，而是换成了startActivity()重新启动了MainActivity。之后这个问题便不复存在了。</p>
+<p>4.点击ToggleButton切换模式后应用黑屏，随后挂掉。这个问题的最终原因还是因为recreate()方法引起的。如果你用了ToggleButton切换白天/夜间模式，并且为ToggleButton设置了setOnCheckChangedListener()方法，那么你将有很大概率碰到这个问题。引起这个问题的原因是因为调用了recreate()方法后Activity重新启动，但是新启动的Activity保存了之前Activity的状态。因此在重启时候重新设置了TouggleButton，继而调用了又setOnCheckChangedListener()方法，结果悲剧了。。。一个死循环产生了，程序不黑屏才怪。因此最简单的办法是放弃recreate()方法，改用问题1中的方法！（其实细心的小伙伴应该已经发现了，我的代码中仅仅是为ToggleButton设置了setOnClickListener()….机智如我啊）如果你有强迫症必须要使用setOnCheckChangedListener和recreate()方法那么也不是没有解决方案。可以定义一个boolean成员变量，然后在onCreate()方法中判断savedInstanceState是否为null，然后给这个boolean成员变量赋值，并在setOnCheckChangedListener()方法中根据这个boolean成员变量的值去调用设置夜间模式的方法即可。</p>
+<p>5.设置夜间模式后MainActivity调用recreate()方法，MainActivity中的”发现“页面没有加载出来。发现页面如下面图片所示，也就是一个Fragment中嵌套了一个ViewPager。调用recreate()后整个ViewPager消失了。。。没有加载出来！！！<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNzI3MjM0MTQ3Mzg0?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"><br>解决方案，放弃使用recreate()，改用问题1中的方法！</p>
+<p>万恶的recreate()方法！难道是我使用的姿势不对？</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Android/">Android</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%A4%9C%E9%97%B4%E6%A8%A1%E5%BC%8F/">夜间模式</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/09/10/12.Handler%20source%20code%20analysis/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">追根溯源--探究Handler的实现原理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2017/07/27/10.RxJava%20and%20Retrofit-refresh%20token%20(2)/">
+                        <span class="hidden-mobile">RxJava+Retrofit之token自动刷新（二）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

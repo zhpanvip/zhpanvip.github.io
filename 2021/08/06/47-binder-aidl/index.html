@@ -1,0 +1,566 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>不得不说的Android Binder机制与AIDL - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="不得不说的Android Binder机制与AIDL">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-08-06 00:48" pubdate>
+        2021年8月6日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.6k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      30
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">不得不说的Android Binder机制与AIDL</h1>
+            
+            <div class="markdown-body">
+              <p>说起Android的进程间通信，想必大家都会不约而同的想起Android中的Binder机制。而提起Binder，想必也有不少同学会想起初学Android时被Binder和AIDL支配的恐惧感。但是作为一个Android开发者，Binder是我们必须掌握的知识。因为它是构架整个Android大厦的钢筋和混凝土，连接了Android各个系统服务和上层应用。只有了解了Binder机制才能更加深入的理解Android开发和Android Framework。这也是为什么无论是《Android开发艺术探索》还是《深入理解Android内核涉及思想》这些进阶类书籍把进程间通信和Binder机制放到靠前章节的原因，它太重要了，重要到整个Android Framework都离不开Binder的身影。</p>
+<p>本篇文章我们暂且不去探讨Binder的底层实现，因为就目前而言，笔者掌握的程度也不足以去输出Binder实现原理的的内容。因此，为了不误导大家，这里就来写一写Binder的基础用法以及AIDL。虽然关于Binder和AIDL的基础用法网上的内容比比皆是。但是能把Binder和AIDL写的浅显易懂的文章并不多见。也就导致了很多人觉得Binder跟AIDL的使用都很难。</p>
+<p>本篇文章，我将通过我自己的学习思路来带大家认识Binder机制和AIDL。</p>
+<p>开始之前先给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote">AndroidNote</a>这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。</p>
+<h2 id="一、进程间通信"><a href="#一、进程间通信" class="headerlink" title="一、进程间通信"></a>一、进程间通信</h2><p>在操作系统中，每个进程都有一块独立的内存空间。为了保证程序的的安全性，操作系统都会有一套严格的安全机制来禁止进程间的非法访问。毕竟，如果你的APP能访问到别的APP的运行空间，或者别的APP可以轻而易举的访问到你APP的运行空间，想象一下你是不是崩溃的心都有了。所以，操作系统层面会对应用进程进行内存隔离，以保证APP的运行安全。但是，很多情况下进程间也是需要相互通信的，例如剪贴板的功能，可以从一个程序中复制信息到另一个程序。这就是进程间通信诞生的背景。</p>
+<blockquote>
+<p>广义的讲，进程间通信（Inter-process communication,简称IPC）是指运行在不同进程中的若干线程间的数据交换。</p>
+</blockquote>
+<p>操作系统中常见的进程间通信方式有共享内存、管道、UDS以及Binder等。关于这些进程间的通信方式本篇文章我们不做深究，了解即可。</p>
+<ul>
+<li><p><strong>共享内存（Shared Memory)</strong> 共享内存方式实现进程间通信依靠的是申请一块内存区域，让后将这块内存映射到进程空间中，这样两个进程都可以直接访问这块内存。在进行进程间通信时，两个进程可以利用这块内存空间进行数据交换。通过这样的方式，减少了数据的赋值操作，因此共享内存实现进程间通信在速度上有明显优势。</p>
+</li>
+<li><p><strong>管道（Pipe）</strong> 管道也是操作系统中常见的一种进程间通信方式，Windows系统进程间的通信依赖于此中方式实现。在进行进程间通信时，会在两个进程间建立一根拥有读（read）写(write)功能的管道,一个进程写数据，另一个进程可以读取数据，从而实现进程间通信问题。</p>
+</li>
+<li><p><strong>UDS（UNIX Domain Socket）</strong> UDS也被称为IPC Socket，但它有别于network 的Socket。UDS的内部实现不依赖于TCP/IP协议，而是基于本机的“安全可靠操作”实现。UDS这种进程间通信方式在Android中用到的也是比较多的。</p>
+</li>
+<li><p><strong>Binder</strong> Binder是Android中独有的一种进程间通信方式。它底层依靠mmap,只需要一次数据拷贝，把一块物理内存同时映射到内核和目标进程的用户空间。</p>
+</li>
+</ul>
+<p>本篇文章，我们重点就是了解如何使用Binder实现进程间通信。Binder仅仅从名字来看就给人一种很神秘的感觉，就因为这个名字可能就会吓走不少初学者。但其实Binder本身并没有很神秘，它仅仅是Android系统提供给开发者的一种进程间通信方式。</p>
+<p>而从上述几种进程间通信方式来看，无论是哪种进程间通信，都是需要一个进程提供数据，一个进程获取数据。因此，我们可以把提供数据的一端称为<strong>服务端</strong>，把获取数据的一端称为<strong>客户端</strong>。从这个角度来看Binder是不是就有点类似于HTTP协议了？所以，你完全可以把Binder当成是一种HTTP协议，客户端通过Binder来获取服务端的数据。认识到这一点，再看Binder的使用就会简单多了。</p>
+<h2 id="二、使用Binder实现进程间通信"><a href="#二、使用Binder实现进程间通信" class="headerlink" title="二、使用Binder实现进程间通信"></a>二、使用Binder实现进程间通信</h2><p>使用Binder完成进程间通信其实非常简单。我们举一个查询成绩的例子，服务端提供根据学生姓名查询学生成绩的接口，客户端连接服务端通过学生姓名来查询成绩，而客户端与服务端的媒介就是Binder。</p>
+<h3 id="1-服务端的实现"><a href="#1-服务端的实现" class="headerlink" title="1.服务端的实现"></a>1.服务端的实现</h3><p>服务端自然是要提供服务的，因此就需要我们开启一个Service等待客户端的连接。关于Android的Service这里就不用多说了吧，我们实现一个GradeService并继承Service，来提供成绩查询接口。代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GradeService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Service</span> </span>&#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> REQUEST_CODE=<span class="hljs-number">1000</span>;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Binder mBinder = <span class="hljs-keyword">new</span> Binder() &#123;<br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">onTransact</span><span class="hljs-params">(<span class="hljs-keyword">int</span> code, <span class="hljs-meta">@NonNull</span> Parcel data, <span class="hljs-meta">@Nullable</span> Parcel reply, <span class="hljs-keyword">int</span> flags)</span> <span class="hljs-keyword">throws</span> RemoteException </span>&#123;<br>            <span class="hljs-keyword">if</span> (code == REQUEST_CODE) &#123;<br>                String name = data.readString();<br>                <span class="hljs-comment">// 根据姓名查询学生成绩并将成绩写入到返回数据</span><br>                <span class="hljs-keyword">int</span> studentGrade = getStudentGrade(name);<br>                <span class="hljs-keyword">if</span> (reply != <span class="hljs-keyword">null</span>)<br>                    reply.writeInt(studentGrade);<br>                <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>            &#125;<br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">super</span>.onTransact(code, data, reply, flags);<br>        &#125;<br>        <span class="hljs-comment">// 根据姓名查询学生成绩</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span> </span>&#123;         <br>            <span class="hljs-keyword">return</span> StudentMap.getStudentGrade(name);<br>        &#125;<br>    &#125;;<br><br>    <span class="hljs-meta">@Nullable</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> IBinder <span class="hljs-title">onBind</span><span class="hljs-params">(Intent intent)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> mBinder;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>因为我们要实现的是跨进程通信，因此，我们将这个服务端的Service设置到远程进程中，在AndroidManifest文件中如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">service</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;com.zhpan.sample.binder.server.GradeService&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:process</span>=<span class="hljs-string">&quot;:server&quot;</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">intent-filter</span>&gt;</span><br>        <span class="hljs-tag">&lt;<span class="hljs-name">action</span> <span class="hljs-attr">android:name</span>=<span class="hljs-string">&quot;android.intent.action.server.gradeservice&quot;</span> /&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">intent-filter</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">service</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>就这样，一个远程的，提供成绩查询的服务就完成了。</p>
+<h3 id="2-客户端的实现"><a href="#2-客户端的实现" class="headerlink" title="2.客户端的实现"></a>2.客户端的实现</h3><p>客户端自然而然的是要连接服务端进程成绩查询。因此，我们在客户端的Activity中取绑定GradeService进行成绩查询。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BinderActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppCompatActivity</span> </span>&#123;<br>    <span class="hljs-comment">// 远程服务的Binder代理</span><br>    <span class="hljs-keyword">private</span> IBinder mRemoteBinder;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ServiceConnection mServiceConnection = <span class="hljs-keyword">new</span> ServiceConnection() &#123;<br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onServiceConnected</span><span class="hljs-params">(ComponentName componentName, IBinder iBinder)</span> </span>&#123;<br>            <span class="hljs-comment">// 获取远程服务的Binder代理</span><br>            mRemoteBinder = iBinder;<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onServiceDisconnected</span><span class="hljs-params">(ComponentName componentName)</span> </span>&#123;<br>            mRemoteBinder = <span class="hljs-keyword">null</span>;<br>        &#125;<br>    &#125;;<br><br><br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_binder);<br>        <span class="hljs-comment">// 绑定服务</span><br>        findViewById(R.id.btn_bind_service).setOnClickListener(view -&gt; bindGradeService());<br>        <span class="hljs-comment">// 查询学生成绩</span><br>        findViewById(R.id.btn_find_grade).setOnClickListener(view -&gt; getStudentGrade(<span class="hljs-string">&quot;Anna&quot;</span>));<br>    &#125;<br>    <span class="hljs-comment">// 绑定远程服务</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">bindGradeService</span><span class="hljs-params">()</span> </span>&#123;<br>        String action = <span class="hljs-string">&quot;android.intent.action.server.gradeservice&quot;</span>;<br>        Intent intent = <span class="hljs-keyword">new</span> Intent(action);<br>        intent.setPackage(getPackageName());<br>        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);<br>    &#125;<br>    <span class="hljs-comment">// 从远程服务查询学生成绩</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span> </span>&#123;<br>        Parcel data = Parcel.obtain();<br>        Parcel reply = Parcel.obtain();<br>        <span class="hljs-keyword">int</span> grade = <span class="hljs-number">0</span>;<br>        data.writeString(name);<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">if</span> (mRemoteBinder == <span class="hljs-keyword">null</span>) &#123;<br>                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalStateException(<span class="hljs-string">&quot;Need Bind Remote Server...&quot;</span>);<br>            &#125;<br>            mRemoteBinder.transact(REQUEST_CODE, data, reply, <span class="hljs-number">0</span>);<br>            grade = reply.readInt();<br>        &#125; <span class="hljs-keyword">catch</span> (RemoteException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>        <span class="hljs-keyword">return</span> grade;<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+
+<p>客户端的代码就是通过绑定远程服务，然后获取到服务的Binder代理，来查询学生成绩。可见，使用Binder实现进程间通信是非常简单的，可以说简单的有点出乎所料。那我们之前写的AIDL是什么呢？AIDL生成的那一堆是什么玩意儿？我们且往下看。</p>
+<h2 id="三、代理模式优化Binder使用"><a href="#三、代理模式优化Binder使用" class="headerlink" title="三、代理模式优化Binder使用"></a>三、代理模式优化Binder使用</h2><p>虽然上一章中的代码已经非常简单了，但是还是有可以优化的空间。我们可以通过设计模式来进行优化，让代码更加简洁。</p>
+<p>首先需要定义一个接口查询成绩的接口IGradeInterface，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IGradeInterface</span> </span>&#123;<br>    <span class="hljs-comment">// 查询成绩接口</span><br>    <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="1-服务端代码优化"><a href="#1-服务端代码优化" class="headerlink" title="1.服务端代码优化"></a>1.服务端代码优化</h3><p>接着，对服务端的代码进行优化。我们实现一个自定义的GradeBinder，并实现上述接口，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GradeBinder</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Binder</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IGradeInterface</span> </span>&#123;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> StudentMap.getStudentGrade(name);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">onTransact</span><span class="hljs-params">(<span class="hljs-keyword">int</span> code, <span class="hljs-meta">@NonNull</span> Parcel data, <span class="hljs-meta">@Nullable</span> Parcel reply, <span class="hljs-keyword">int</span> flags)</span> <span class="hljs-keyword">throws</span> RemoteException </span>&#123;<br>        <span class="hljs-keyword">if</span> (code == REQUEST_CODE) &#123;<br>            String name = data.readString();<br>            <span class="hljs-keyword">int</span> studentGrade = getStudentGrade(name);<br>            <span class="hljs-keyword">if</span> (reply != <span class="hljs-keyword">null</span>)<br>                reply.writeInt(studentGrade);<br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">super</span>.onTransact(code, data, reply, flags);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上述代码将查询成绩的相关逻辑从Service搬到了GradeBinder中。因此，此时Service中只需要在onBind的时候返回GradeBinder的实例即可。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GradeService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Service</span> </span>&#123;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> REQUEST_CODE=<span class="hljs-number">1000</span>;<br><br>    <span class="hljs-meta">@Nullable</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> IBinder <span class="hljs-title">onBind</span><span class="hljs-params">(Intent intent)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> GradeBinder();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="2-客户端代码优化"><a href="#2-客户端代码优化" class="headerlink" title="2.客户端代码优化"></a>2.客户端代码优化</h3><p>客户端优化的思路是在连接到远程服务时候实例化一个代理类，代理类持有Binder，让代理类行使Binder的权利。首先来看代理类的代码实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BinderProxy</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IGradeInterface</span> </span>&#123;<br>    <span class="hljs-comment">// 被代理的Binder</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> IBinder mBinder;<br>    <span class="hljs-comment">// 私有化构造方法</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-title">BinderProxy</span><span class="hljs-params">(IBinder binder)</span> </span>&#123;<br>        mBinder = binder;<br>    &#125;<br><br>    <span class="hljs-comment">// 通过Binde读取成绩</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span> </span>&#123;<br>        Parcel data = Parcel.obtain();<br>        Parcel reply = Parcel.obtain();<br>        <span class="hljs-keyword">int</span> grade = <span class="hljs-number">0</span>;<br>        data.writeString(name);<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">if</span> (mBinder == <span class="hljs-keyword">null</span>) &#123;<br>                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalStateException(<span class="hljs-string">&quot;Need Bind Remote Server...&quot;</span>);<br>            &#125;<br>            mBinder.transact(REQUEST_CODE, data, reply, <span class="hljs-number">0</span>);<br>            grade = reply.readInt();<br>        &#125; <span class="hljs-keyword">catch</span> (RemoteException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>        <span class="hljs-keyword">return</span> grade;<br>    &#125;<br>		<br>    <span class="hljs-comment">// 实例化Binder代理类的对象</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> IGradeInterface <span class="hljs-title">asInterface</span><span class="hljs-params">(IBinder iBinder)</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (iBinder == <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;<br>        &#125; <br>        <br>        <span class="hljs-keyword">if</span> (iBinder <span class="hljs-keyword">instanceof</span> IGradeInterface) &#123;<br>            LogUtils.e(<span class="hljs-string">&quot;当前进程&quot;</span>);<br>            <span class="hljs-comment">// 如果是同一个进程的请求，则直接返回Binder</span><br>            <span class="hljs-keyword">return</span> (IGradeInterface) iBinder;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            LogUtils.e(<span class="hljs-string">&quot;远程进程&quot;</span>);<br>            <span class="hljs-comment">// 如果是跨进程查询则返回Binder的代理对象</span><br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> BinderProxy(iBinder);<br>        &#125;<br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>BinderProxy类的构造方法被设置成了private。同时提供了一个asInterface方法中，这个方法通过判断Binder是不是IGradeInterface类型从而确定是不是跨进程的通信。如果不是跨进程通信，则返回当前这个Binder，否则就返回Binder的这个代理类。</p>
+<p>接下来客户端连接上远程服务的时候使用BinderProxy获取Binder或者BinderProxy实例。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BinderProxyActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseViewBindingActivity</span>&lt;<span class="hljs-title">ActivityBinderBinding</span>&gt; </span>&#123;<br>    <span class="hljs-comment">// 此处可能是BinderProxy也可能是GradeBinder</span><br>    <span class="hljs-keyword">private</span> IGradeInterface mBinderProxy;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ServiceConnection mServiceConnection = <span class="hljs-keyword">new</span> ServiceConnection() &#123;<br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onServiceConnected</span><span class="hljs-params">(ComponentName componentName, IBinder iBinder)</span> </span>&#123;<br>            <span class="hljs-comment">// 连接服务成功，根据是否跨进程获取BinderProxy或者GradeBinder实例</span><br>            mBinderProxy = BinderProxy.asInterface(iBinder);<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onServiceDisconnected</span><span class="hljs-params">(ComponentName componentName)</span> </span>&#123;<br>            mBinderProxy = <span class="hljs-keyword">null</span>;<br>        &#125;<br>    &#125;;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        binding.btnBindService.setOnClickListener(view -&gt; bindGradeService());<br>      	<span class="hljs-comment">// 查询学生成绩点击事件，通过mBinderProxy查询成绩</span><br>        binding.btnFindGrade.setOnClickListener(view -&gt; ToastUtils.showShort(<span class="hljs-string">&quot;Anna grade is &quot;</span> + mBinderProxy.getStudentGrade(<span class="hljs-string">&quot;Anna&quot;</span>)));<br>    &#125;<br><br>    <span class="hljs-comment">// 绑定服务</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">bindGradeService</span><span class="hljs-params">()</span> </span>&#123;<br>        String action = <span class="hljs-string">&quot;android.intent.action.server.gradeservice&quot;</span>;<br>        Intent intent = <span class="hljs-keyword">new</span> Intent(action);<br>        intent.setPackage(getPackageName());<br>        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);<br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到，此时的代码相比第一章的代码整洁了不少。但是，代码写起来似乎还没有第一章中的方便。主要是因为要我们增加一个IGradeInterface接口，还要自定义一个GradeBinder，同时，还需要写代理类的相关代码，感觉非常繁琐。那么有没有办法让代码简洁，写起来还不繁琐呢？答案是肯定的，使用AIDL就可以实现。</p>
+<h2 id="四、AIDL"><a href="#四、AIDL" class="headerlink" title="四、AIDL"></a>四、AIDL</h2><p>AIDL是Android Interface Description Languaged 简写。用于描写客户端/服务端通信接口的一种描述语言。提起AIDL相信很多人都会觉得头大，定义一个AIDL接口，生成了那么多不知所云的代码，看起来简直就是灾难。先别担心，如果你看懂了第三章的内容，那么其实你已经完全掌握了AIDL。没错，说白了AIDL生成的那一坨代码其实就是我们第三章中写的代码。即AIDL的原理其实就是使用了代理模式对Binder的使用进行了优化，使用AIDL保证了代码的整洁，同时也省去了自己编写繁琐的代理类相关代码。</p>
+<p>关于AIDL的使用就非常简单了。</p>
+<h3 id="1-创建AIDL接口"><a href="#1-创建AIDL接口" class="headerlink" title="1.创建AIDL接口"></a>1.创建AIDL接口</h3><p>首先，在要创建AIDL的目录上右键-&gt;New-&gt;AIDL-&gt;AIDl File 来创建一个AIDL文件，如下图所示：</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07778cc901ce4de3a0717e4ba65809c7~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="截屏2021-08-06 上午12.29.39.png"></p>
+<p>创建一个名为IGradeService的AIDL文件，并添加一个getStudentGrade的方法。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// IGradeService.aidl</span><br><span class="hljs-keyword">package</span> com.zhpan.sample.binder.aidl;<br><br><span class="hljs-comment">// Declare any non-default types here with import statements</span><br><br><span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IGradeService</span> </span>&#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Demonstrates some basic types that you can use as parameters</span><br><span class="hljs-comment">     * and return values in AIDL.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">basicTypes</span><span class="hljs-params">(<span class="hljs-keyword">int</span> anInt, <span class="hljs-keyword">long</span> aLong, <span class="hljs-keyword">boolean</span> aBoolean, <span class="hljs-keyword">float</span> aFloat,</span></span><br><span class="hljs-function"><span class="hljs-params">            <span class="hljs-keyword">double</span> aDouble, String aString)</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>接着Rebuild一下项目后IDE就会自动生成AIDL的代码了。</p>
+<h3 id="2-AIDL生成的代码"><a href="#2-AIDL生成的代码" class="headerlink" title="2.AIDL生成的代码"></a>2.AIDL生成的代码</h3><p>在项目的build目录下com.zhpan.sample.binder.aidl包中会看到自动生成的一个名为IGradeService的接口，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 这个接口相当于上一章中的IGradeInterface接口</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IGradeService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">android</span>.<span class="hljs-title">os</span>.<span class="hljs-title">IInterface</span> </span>&#123;<br>  <br>  ...<br>  <br>  <span class="hljs-comment">// Stub是一个Binder，相当于上一章中的GradeBinder</span><br>  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Stub</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">android</span>.<span class="hljs-title">os</span>.<span class="hljs-title">Binder</span></span><br><span class="hljs-class">      <span class="hljs-keyword">implements</span> <span class="hljs-title">com</span>.<span class="hljs-title">zhpan</span>.<span class="hljs-title">sample</span>.<span class="hljs-title">binder</span>.<span class="hljs-title">aidl</span>.<span class="hljs-title">IGradeService</span> </span>&#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> java.lang.String DESCRIPTOR = <span class="hljs-string">&quot;com.zhpan.sample.binder.aidl.IGradeService&quot;</span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Stub</span><span class="hljs-params">()</span> </span>&#123;<br>      <span class="hljs-keyword">this</span>.attachInterface(<span class="hljs-keyword">this</span>, DESCRIPTOR);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> IGradeService <span class="hljs-title">asInterface</span><span class="hljs-params">(android.os.IBinder obj)</span> </span>&#123;<br>      <br>      <span class="hljs-keyword">if</span> ((obj == <span class="hljs-keyword">null</span>)) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;<br>      &#125;<br>      android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);<br>      <span class="hljs-keyword">if</span> (((iin != <span class="hljs-keyword">null</span>) &amp;&amp; (iin <span class="hljs-keyword">instanceof</span> com.zhpan.sample.binder.aidl.IGradeService))) &#123;<br>        <span class="hljs-comment">// 如果是当前进程则直接返回当前Binder对象</span><br>        <span class="hljs-keyword">return</span> ((com.zhpan.sample.binder.aidl.IGradeService) iin);<br>      &#125;<br>      <span class="hljs-comment">// 跨进程则返回Binder的代理对象</span><br>      <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> com.zhpan.sample.binder.aidl.IGradeService.Stub.Proxy(obj);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span> <span class="hljs-keyword">public</span> android.os.<span class="hljs-function">IBinder <span class="hljs-title">asBinder</span><span class="hljs-params">()</span> </span>&#123;<br>      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">onTransact</span><span class="hljs-params">(<span class="hljs-keyword">int</span> code, android.os.Parcel data, android.os.Parcel reply, <span class="hljs-keyword">int</span> flags)</span></span><br><span class="hljs-function">        <span class="hljs-keyword">throws</span> android.os.RemoteException </span>&#123;<br>      java.lang.String descriptor = DESCRIPTOR;<br>      <span class="hljs-keyword">switch</span> (code) &#123;<br>        <span class="hljs-keyword">case</span> INTERFACE_TRANSACTION: &#123;<br>          reply.writeString(descriptor);<br>          <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>        &#125;<br>        <span class="hljs-keyword">case</span> TRANSACTION_basicTypes: &#123;<br>          data.enforceInterface(descriptor);<br>          <span class="hljs-keyword">int</span> _arg0;<br>          _arg0 = data.readInt();<br>          <span class="hljs-keyword">long</span> _arg1;<br>          _arg1 = data.readLong();<br>          <span class="hljs-keyword">boolean</span> _arg2;<br>          _arg2 = (<span class="hljs-number">0</span> != data.readInt());<br>          <span class="hljs-keyword">float</span> _arg3;<br>          _arg3 = data.readFloat();<br>          <span class="hljs-keyword">double</span> _arg4;<br>          _arg4 = data.readDouble();<br>          java.lang.String _arg5;<br>          _arg5 = data.readString();<br>          <span class="hljs-keyword">this</span>.basicTypes(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5);<br>          reply.writeNoException();<br>          <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>        &#125;<br>        <span class="hljs-keyword">case</span> TRANSACTION_getStudentGrade: &#123;<br>          data.enforceInterface(descriptor);<br>          java.lang.String _arg0;<br>          _arg0 = data.readString();<br>          <span class="hljs-keyword">int</span> _result = <span class="hljs-keyword">this</span>.getStudentGrade(_arg0);<br>          reply.writeNoException();<br>          reply.writeInt(_result);<br>          <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>        &#125;<br>        <span class="hljs-keyword">default</span>: &#123;<br>          <span class="hljs-keyword">return</span> <span class="hljs-keyword">super</span>.onTransact(code, data, reply, flags);<br>        &#125;<br>      &#125;<br>    &#125;<br>    <span class="hljs-comment">// Binder的代理类，相当于上一章中的BinderProxy</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Proxy</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">com</span>.<span class="hljs-title">zhpan</span>.<span class="hljs-title">sample</span>.<span class="hljs-title">binder</span>.<span class="hljs-title">aidl</span>.<span class="hljs-title">IGradeService</span> </span>&#123;<br>      <span class="hljs-keyword">private</span> android.os.IBinder mRemote;<br><br>      Proxy(android.os.IBinder remote) &#123;<br>        mRemote = remote;<br>      &#125;<br><br>      <span class="hljs-meta">@Override</span> <span class="hljs-keyword">public</span> android.os.<span class="hljs-function">IBinder <span class="hljs-title">asBinder</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> mRemote;<br>      &#125;<br><br>      <span class="hljs-keyword">public</span> java.lang.<span class="hljs-function">String <span class="hljs-title">getInterfaceDescriptor</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> DESCRIPTOR;<br>      &#125;<br><br>      <span class="hljs-meta">@Override</span> <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">basicTypes</span><span class="hljs-params">(<span class="hljs-keyword">int</span> anInt, <span class="hljs-keyword">long</span> aLong, <span class="hljs-keyword">boolean</span> aBoolean, <span class="hljs-keyword">float</span> aFloat,</span></span><br><span class="hljs-function"><span class="hljs-params">          <span class="hljs-keyword">double</span> aDouble, java.lang.String aString)</span> <span class="hljs-keyword">throws</span> android.os.RemoteException </span>&#123;<br>        android.os.Parcel _data = android.os.Parcel.obtain();<br>        android.os.Parcel _reply = android.os.Parcel.obtain();<br>        <span class="hljs-keyword">try</span> &#123;<br>          _data.writeInterfaceToken(DESCRIPTOR);<br>          _data.writeInt(anInt);<br>          _data.writeLong(aLong);<br>          _data.writeInt(((aBoolean) ? (<span class="hljs-number">1</span>) : (<span class="hljs-number">0</span>)));<br>          _data.writeFloat(aFloat);<br>          _data.writeDouble(aDouble);<br>          _data.writeString(aString);<br>          <span class="hljs-keyword">boolean</span> _status = mRemote.transact(Stub.TRANSACTION_basicTypes, _data, _reply, <span class="hljs-number">0</span>);<br>          <span class="hljs-keyword">if</span> (!_status &amp;&amp; getDefaultImpl() != <span class="hljs-keyword">null</span>) &#123;<br>            getDefaultImpl().basicTypes(anInt, aLong, aBoolean, aFloat, aDouble, aString);<br>            <span class="hljs-keyword">return</span>;<br>          &#125;<br>          _reply.readException();<br>        &#125; <span class="hljs-keyword">finally</span> &#123;<br>          _reply.recycle();<br>          _data.recycle();<br>        &#125;<br>      &#125;<br><br>      <span class="hljs-meta">@Override</span> <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(java.lang.String name)</span></span><br><span class="hljs-function">          <span class="hljs-keyword">throws</span> android.os.RemoteException </span>&#123;<br>        android.os.Parcel _data = android.os.Parcel.obtain();<br>        android.os.Parcel _reply = android.os.Parcel.obtain();<br>        <span class="hljs-keyword">int</span> _result;<br>        <span class="hljs-keyword">try</span> &#123;<br>          _data.writeInterfaceToken(DESCRIPTOR);<br>          _data.writeString(name);<br>          <span class="hljs-keyword">boolean</span> _status = mRemote.transact(Stub.TRANSACTION_getStudentGrade, _data, _reply, <span class="hljs-number">0</span>);<br>          <span class="hljs-keyword">if</span> (!_status &amp;&amp; getDefaultImpl() != <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-keyword">return</span> getDefaultImpl().getStudentGrade(name);<br>          &#125;<br>          _reply.readException();<br>          _result = _reply.readInt();<br>        &#125; <span class="hljs-keyword">finally</span> &#123;<br>          _reply.recycle();<br>          _data.recycle();<br>        &#125;<br>        <span class="hljs-keyword">return</span> _result;<br>      &#125;<br><br>      <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> com.zhpan.sample.binder.aidl.IGradeService sDefaultImpl;<br>    &#125;<br><br>    <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> TRANSACTION_basicTypes = (android.os.IBinder.FIRST_CALL_TRANSACTION + <span class="hljs-number">0</span>);<br>    <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> TRANSACTION_getStudentGrade = (android.os.IBinder.FIRST_CALL_TRANSACTION + <span class="hljs-number">1</span>);<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">setDefaultImpl</span><span class="hljs-params">(com.zhpan.sample.binder.aidl.IGradeService impl)</span> </span>&#123;<br>      <span class="hljs-keyword">if</span> (Stub.Proxy.sDefaultImpl == <span class="hljs-keyword">null</span> &amp;&amp; impl != <span class="hljs-keyword">null</span>) &#123;<br>        Stub.Proxy.sDefaultImpl = impl;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>      &#125;<br>      <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> com.zhpan.sample.binder.aidl.<span class="hljs-function">IGradeService <span class="hljs-title">getDefaultImpl</span><span class="hljs-params">()</span> </span>&#123;<br>      <span class="hljs-keyword">return</span> Stub.Proxy.sDefaultImpl;<br>    &#125;<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * Demonstrates some basic types that you can use as parameters</span><br><span class="hljs-comment">   * and return values in AIDL.</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">basicTypes</span><span class="hljs-params">(<span class="hljs-keyword">int</span> anInt, <span class="hljs-keyword">long</span> aLong, <span class="hljs-keyword">boolean</span> aBoolean, <span class="hljs-keyword">float</span> aFloat, <span class="hljs-keyword">double</span> aDouble,</span></span><br><span class="hljs-function"><span class="hljs-params">      java.lang.String aString)</span> <span class="hljs-keyword">throws</span> android.os.RemoteException</span>;<br><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(java.lang.String name)</span> <span class="hljs-keyword">throws</span> android.os.RemoteException</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>瞥一眼代码会发现IGradeService接口中有一个名为Stub的内部类，它继承了Binder，并实现了IGradeService接口，并且它的内部有一个asInterface的方法，这个方法与我们上一章BinderProxy中的asInterface一致，只是写的位置不同而已。另外在Stub的onTranscation方法的TRANSACTION_getStudentGrade条件中的代码与GradeBinder的onTranscation方法代码是一样的。</p>
+<p>接着，Stub类中还有一个名为Proxy的内部类。Proxy类与上一章的BinderProxy相对应。可以看到Proxy类的构造方法并没有修饰符，而BinderProxy的构造方法被声明成了private，都可以防止外部通过构造方法区实例化代理类的对象。Proxy的getStudentGrade方法与BinderProxy中的getStudentGrade一样，通过Binder去读取服务端的写入数据。</p>
+<h3 id="3-AIDL客户端"><a href="#3-AIDL客户端" class="headerlink" title="3.AIDL客户端"></a>3.AIDL客户端</h3><p>使用AIDL的客户端实现几乎与第三章中的代码一致。只不过是在连接到服务端后通过IGradeService.Stub下的asInterface方法来获取Binder或者Binder的代理对象。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AidlActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseViewBindingActivity</span>&lt;<span class="hljs-title">ActivityBinderBinding</span>&gt; </span>&#123;<br><br>    <span class="hljs-keyword">private</span> IGradeService mBinderProxy;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ServiceConnection mServiceConnection = <span class="hljs-keyword">new</span> ServiceConnection() &#123;<br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onServiceConnected</span><span class="hljs-params">(ComponentName componentName, IBinder iBinder)</span> </span>&#123;<br>            <span class="hljs-comment">// 连接服务后，根据是否跨进程获取Binder或者Binder的代理对象</span><br>            mBinderProxy = IGradeService.Stub.asInterface(iBinder);<br>        &#125;<br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onServiceDisconnected</span><span class="hljs-params">(ComponentName componentName)</span> </span>&#123;<br>            mBinderProxy = <span class="hljs-keyword">null</span>;<br>        &#125;<br>    &#125;;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        binding.btnBindService.setOnClickListener(view -&gt; bindGradeService());<br>      	<span class="hljs-comment">// 查询学生成绩</span><br>        binding.btnFindGrade.setOnClickListener(view -&gt; getStudentGrade(<span class="hljs-string">&quot;Anna&quot;</span>));<br>    &#125;<br>  <br>    <span class="hljs-comment">// 绑定服务</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">bindGradeService</span><span class="hljs-params">()</span> </span>&#123;<br>        String action = <span class="hljs-string">&quot;android.intent.action.server.aidl.gradeservice&quot;</span>;<br>        Intent intent = <span class="hljs-keyword">new</span> Intent(action);<br>        intent.setPackage(getPackageName());<br>        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);<br>    &#125;<br>  <br>    <span class="hljs-comment">// 查询成绩</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">getStudentGrade</span><span class="hljs-params">(String name)</span> </span>&#123;<br>        <span class="hljs-keyword">int</span> grade = <span class="hljs-number">0</span>;<br>        <span class="hljs-keyword">try</span> &#123;<br>            grade = mBinderProxy.getStudentGrade(name);<br>        &#125; <span class="hljs-keyword">catch</span> (RemoteException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>        ToastUtils.showShort(<span class="hljs-string">&quot;Anna grade is &quot;</span> + grade);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>到这里，关于AIDL的介绍就结束了。有没有惊奇的发现AIDL原来这么简单！</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>本篇文章主要带大家认识了进程间通信和Binder与AIDL的使用。通过本篇文章的学习可以发现Binder与AIDL其实是非常简单的。了解了Binder之后，我们就可以去更加深入的学习Android Framework层的知识了。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote">AndroidNote</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Android%E8%BF%9B%E9%98%B6/">Android进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Binder/">Binder</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/08/22/48-dynamic-proxy/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">浅析 Java 中的动态代理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/08/02/46-banner-3d/">
+                        <span class="hidden-mobile">用BVP一比一还原自如客APP裸眼3D效果（Android原生）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

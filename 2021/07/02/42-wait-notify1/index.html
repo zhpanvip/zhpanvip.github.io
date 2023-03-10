@@ -1,0 +1,572 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>深入理解Java线程的等待与唤醒机制（一） - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="深入理解Java线程的等待与唤醒机制（一）">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-02 00:36" pubdate>
+        2021年7月2日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.8k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      28
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">深入理解Java线程的等待与唤醒机制（一）</h1>
+            
+            <div class="markdown-body">
+              <p>多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁…等等一系列让人眼花缭乱的并发知识。</p>
+<p>多线程并发系列文章：</p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6967739352784830494">这一次，彻底搞懂Java内存模型与volatile关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6973571891915128846">这一次，彻底搞懂Java中的synchronized关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6975435256111300621">这一次，彻底搞懂Java中的ReentranLock实现原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6977993272538955806">这一次，彻底搞懂Java并发包中的Atomic原子类</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6980002998361522190">深入理解Java线程的等待与唤醒机制（一）</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6980655421497278495/">深入理解Java线程的等待与唤醒机制（二）</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6983213662383112206/">Java并发系列终结篇：彻底搞懂Java线程池的工作原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6986301941269659656">Java并发系列番外篇：ThreadLocal原理其实很简单</a></p>
+<p>本文是Java并发系列的第五篇文章，将深入分析Java的唤醒与等待机制。</p>
+<p>关于线程的等待与唤醒想必大家都不陌生，毕竟在初学Java基础时都是重点学习的内容。在前两篇分析synchronized与ReentranLock的文章中我们略过了线程的等待与唤醒相关内容，主要是因为想要深入的理解线程的等待与唤醒机制并不容易，因此将这一知识点单独写篇文章来分析。那么本篇文章我们将从synchronized与ReentranLock两个方面来深入分下线程的等待与唤醒。</p>
+<p>开始之前先给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote">AndroidNote</a>这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。</p>
+<h2 id="一、从synchronized锁看线程等待与唤醒"><a href="#一、从synchronized锁看线程等待与唤醒" class="headerlink" title="一、从synchronized锁看线程等待与唤醒"></a>一、从synchronized锁看线程等待与唤醒</h2><p>初学Java的时候想必大家都用synchronized实现过“生产者-消费者”模型的代码，其中用到了几个Object中的方法如wait()、notify()、notifyAll()，不知道当时的你是否有些困惑，线程等待与唤醒相关的方法为什么会定义在Object类中呢？</p>
+<p>什么？你连“生产者-消费者”模型都忘了是什么了？好吧，我们还是先来看下回顾一下“生产者-消费者”模型吧。</p>
+<h3 id="1-“生产者-消费者”模型"><a href="#1-“生产者-消费者”模型" class="headerlink" title="1.“生产者-消费者”模型"></a>1.“生产者-消费者”模型</h3><p>“生产者-消费者”模型是一个典型的线程协作通信的例子。在这一模型中有两类角色，即若干个生产者线程和若干个消费者线程。生产者线程负责提交用户请求，消费者线程负责处理生产者提交的请求。很多情况下，生产者与消费者不能够达到一定的平衡，即有时候生产者生产的速度过快，消费之来不及消费；而有时候可能是消费者过于旺盛，生产者来不及生产。在此情况下就需要一个生产者与消费者共享的内存缓存区来平衡二者的协作。生产者与消费者之间通过共享内存缓存区进行通信，从而平衡生产者与消费者线程，并将生产者和消费者解耦。如下图所示：</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/08aa1fce00cb43fb830907d484e6911e~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="1C2478F7-48B7-4ACA-A575-ABF8B71F40B9.png"></p>
+<p>当队列容器中没有商品的时候，就需要让消费者处于等待状态，而当容器满了之后就需要生产者处于等待状态。而消费者每消费一个商品，又会通知正在等待的生产者可以进行生产了；当生产则生产一个商品，也会通知正在等待的消费者可以消费了。</p>
+<h3 id="2-使用synchronized实现“生产者-消费者”模型"><a href="#2-使用synchronized实现“生产者-消费者”模型" class="headerlink" title="2.使用synchronized实现“生产者-消费者”模型"></a>2.使用synchronized实现“生产者-消费者”模型</h3><p>了解了“生产者-消费者”模型后，我们尝试使用synchronized关键字结合wait()与notifyAll()方法来实现一个”生产者-消费者“模型的例子。</p>
+<p>我们选一个比较经典的生产面包的例子来看，首先需要一个面包容器类，容器类中有放入面包和取出面包两个操作，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BreadContainer</span> </span>&#123;<br><br>    LinkedList&lt;Bread&gt; list = <span class="hljs-keyword">new</span> LinkedList&lt;&gt;();<br>    <span class="hljs-comment">// 容器容量</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> CAPACITY = <span class="hljs-number">10</span>;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 放入面包</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put</span><span class="hljs-params">(Bread bread)</span> </span>&#123;<br>        <span class="hljs-keyword">while</span> (list.size() == CAPACITY) &#123;<br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-comment">// 如果容器已满，则阻塞生产者线程</span><br>                wait();<br>            &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>                e.printStackTrace();<br>            &#125;<br>        &#125;<br>        list.add(bread);<br>        <span class="hljs-comment">// 面包生产成功后通知消费者线程</span><br>        notify();<br>        System.out.println(Thread.currentThread().getName() + <span class="hljs-string">&quot; product a bread&quot;</span> + bread.toString() + <span class="hljs-string">&quot; size = &quot;</span> + list.size());<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 取出面包</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> Bread <span class="hljs-title">take</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">while</span> (list.isEmpty()) &#123;<br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-comment">// 如果容器为空，则阻塞消费者线程</span><br>                wait();<br>            &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>                e.printStackTrace();<br>            &#125;<br>        &#125;<br>        Bread bread = list.removeFirst();<br>        <span class="hljs-comment">// 消费后通知生产者生产面包</span><br>        notify();<br>        System.out.println(<span class="hljs-string">&quot;Consumer &quot;</span> + Thread.currentThread().getName() + <span class="hljs-string">&quot; consume a bread&quot;</span> + bread.toString() + <span class="hljs-string">&quot; size = &quot;</span> + list.size());<br>        <span class="hljs-keyword">return</span> bread;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在上述代码的put方法会将生产好的面包放入到容器中。如果容器已经满了，那么需要阻塞生产者线程来停止生产，当生产者成功将面包放入容器后则需要尝试唤醒等待中的消费者线程进行消费。</p>
+<p>而take方法则是取出面包的操作，当容器为空，则阻塞消费者线程，让其进行等待，如果成功消费面包后则通知生产者开始生产。</p>
+<p>另外需要注意一下，这两个方法都使用了synchronized关键字，如果你看过<a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/14/39-synchronized/">这一次，彻底搞懂Java中的synchronized关键字</a>这篇文章的话应该知道此时synchronized加锁的对象就是这两个方法所在的实例对象，即BreadContainer对象，而在这两个方法中调用的wait()和notify()两个方法同样属于BreadContainer对象。记住这段话，这里留个Flag,我们后边分析。</p>
+<p>接下来生产者与消费者的实现就比较简单了，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 生产者</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Producer</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> BreadContainer container;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Producer</span><span class="hljs-params">()</span> </span>&#123;<br>        container = <span class="hljs-keyword">new</span> BreadContainer();<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> BreadContainer <span class="hljs-title">getContainer</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> container;<br>    &#125;<br>    <br>    <span class="hljs-comment">// 生产者生产面包</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">makeBread</span><span class="hljs-params">()</span> </span>&#123;<br>        container.put(<span class="hljs-keyword">new</span> Bread());<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// 消费者</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Consumer</span> </span>&#123;<br>    BreadContainer container;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Consumer</span><span class="hljs-params">(BreadContainer container)</span></span>&#123;<br>        <span class="hljs-keyword">this</span>.container = container;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">takeBread</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">for</span> (; ; ) &#123;<br>            Bread bread = container.take();<br>            bread.eat();<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>接下来在测试代码中，同时开启多个生产者线程与多个消费者线程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>&#123;<br><br>    <span class="hljs-comment">// 实例化生产者</span><br>    Producer producer = <span class="hljs-keyword">new</span> Producer();<br>    <span class="hljs-comment">// 实例化消费者</span><br>    Consumer consumer = <span class="hljs-keyword">new</span> Consumer(producer.getContainer());<br>    <span class="hljs-comment">// 开启生产者线程</span><br>    <span class="hljs-keyword">new</span> Thread(() -&gt; &#123;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">100000</span>; i++) &#123;<br>            producer.makeBread();<br>        &#125;<br>    &#125;).start();<br><br>    <span class="hljs-comment">// 消费者在主线程消费   </span><br>    consumer.takeBread();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>此时运行main方法，生成者与消费者线程就可以很好的协同工作了。</p>
+<p>注意，在main方法中我们实例化了一个BreadContainer对象，上边Flag处说的synchronized锁的对象即为这个container，调用的wait和notify方法也是container实例的方法。到这里不知道你是否会有疑问，究竟container的wait和notify方法对象成做了什么能让线程阻塞和唤醒呢？被阻塞的线程放到哪里去了？为什么要调用container对象中的wait和notify方法？如果换成调用其他对象的wait和notify是否可行呢？</p>
+<h2 id="二、wait-与notify底层实现原理"><a href="#二、wait-与notify底层实现原理" class="headerlink" title="二、wait()与notify底层实现原理"></a>二、wait()与notify底层实现原理</h2><p>在<a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/14/39-synchronized/">这一次，彻底搞懂Java中的synchronized关键字</a>中我们已经知道，使用synchronized关键字后，synchronized锁住的对象会关联一个monitor对象，当有一个线程获得synchronized锁后，monitor对象中的count就会被加1，并且会将这个线程的id存入到monitor的_ower中。此时，如果其他线程来尝试拿锁则会被放入到<code>_EntryList</code>队列中阻塞。</p>
+<p>还记得上一节中我们立的一个Flag了吗？synchronized锁的是container对象，而wait和notify也是container对象的方法，这么一看我们上一节中留下的问题就有些眉目了。是不是调用wait方法的时候线程也会被加入到一个等待队列，而等到notify或者notifyAll的时候再从等待队列中将线程唤醒呢？关于这个问题在<a target="_blank" rel="noopener" href="https://juejin.cn/post/6973571891915128846">这一次，彻底搞懂Java中的synchronized关键字</a>这篇文章中其实已经有解读了，就是调用wait方法的线程会被加入到一个<code>_WaitSet</code>集合中，并会将线程挂起。但是，这里要再次强调一下<code>_WaitSet</code>与<code>_EntryList</code>这两个集合。<code>_EntryList</code>集合中存放的是没有抢到锁，而被阻塞的线程，而_WaitSet集合中存放的是调用了wait方法后，处于等待状态的线程。**</p>
+<p>想要证明上述的结论，就需要我们来看下wait和notify/notifyAll到底做了什么。</p>
+<p>我们看下Object中wait、notify、notifyAll三个方法的实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Object</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">native</span> <span class="hljs-keyword">void</span> <span class="hljs-title">notify</span><span class="hljs-params">()</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">native</span> <span class="hljs-keyword">void</span> <span class="hljs-title">notifyAll</span><span class="hljs-params">()</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">void</span> <span class="hljs-title">wait</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> InterruptedException </span>&#123;<br>        wait(<span class="hljs-number">0L</span>);<br>    &#125; <br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">native</span> <span class="hljs-keyword">void</span> <span class="hljs-title">wait</span><span class="hljs-params">(<span class="hljs-keyword">long</span> timeoutMillis)</span> <span class="hljs-keyword">throws</span> InterruptedException</span>;    <br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>很可惜，这几个方法都是native方法，也就是说这几个方法都是在虚拟机中使用C/C++实现的。既然如此，不妨扒一扒虚拟机的代码来一探究竟，毕竟口说无凭。</p>
+<h3 id="1-虚拟机对wait的实现"><a href="#1-虚拟机对wait的实现" class="headerlink" title="1.虚拟机对wait的实现"></a>1.虚拟机对wait的实现</h3><p>承接上一节中”生产者-消费者“模型的代码来分析，当生产者线程往容器里边放面包的时候发现容器已经满了，则调用wait方法，那么此时这个线程就会释放锁并进入到阻塞状态。</p>
+<p>Object 中 wait 方法的实现是在 <a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/782f3b88b5ba/src/share/vm/runtime/objectMonitor.cpp">objectMonitor.cpp</a> 中的 <code>ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS)</code>函数中,ObjectMonitor::wait中的核心相关代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ObjectMonitor::wait</span><span class="hljs-params">(jlong <span class="hljs-built_in">millis</span>, <span class="hljs-keyword">bool</span> interruptible, TRAPS)</span> </span>&#123;<br>    <span class="hljs-comment">// ...省略其他代码</span><br>    <br>    <span class="hljs-comment">// 当前线程</span><br>    Thread * <span class="hljs-keyword">const</span> Self = THREAD ;<br>    <span class="hljs-comment">// 将线程封装成ObjectWaiter</span><br>    <span class="hljs-function">ObjectWaiter <span class="hljs-title">node</span><span class="hljs-params">(Self)</span></span>;<br>    <span class="hljs-comment">// 标记为Wait状态</span><br>    node.TState = ObjectWaiter::TS_WAIT ;<br>    Self-&gt;_ParkEvent-&gt;reset() ;<br><br>    Thread::SpinAcquire (&amp;_WaitSetLock, <span class="hljs-string">&quot;WaitSet - add&quot;</span>) ;<br>    <span class="hljs-comment">// 调用 AddWaiter 方法将线程加入到等待队列中</span><br>    AddWaiter (&amp;node) ;<br>    Thread::SpinRelease (&amp;_WaitSetLock) ;<br>    <br>    <span class="hljs-comment">// ...</span><br>    <br>    <span class="hljs-comment">// 释放 monitor 锁,并将自己挂起</span><br>    <span class="hljs-built_in">exit</span> (<span class="hljs-literal">true</span>, Self) ; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到，调用 wait 函数后，线程被封装成了一个 ObjectWaiter 对象，并通过AddWaiter 函数将线程加入到等待队列中,先来看下 AddWaiter 函数的代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ObjectMonitor::AddWaiter</span><span class="hljs-params">(ObjectWaiter* node)</span> </span>&#123;<br>    <span class="hljs-comment">// 如果 _WaitSet 还没有初始化，先初始化 _WaitSet</span><br>    <span class="hljs-keyword">if</span> (_WaitSet == <span class="hljs-literal">NULL</span>) &#123;<br>        <span class="hljs-comment">// 初始化 _WaitSet 的头结点,此时只有一个node元素</span><br>        _WaitSet = node;<br>        <span class="hljs-comment">// 可以看出ObjectWaiter是一个双向链表，这里将node的首尾相连，说明_WaitSet是一个循环链表</span><br>        node-&gt;_prev = node;<br>        node-&gt;_next = node;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// _WaitSet 的头结点</span><br>        ObjectWaiter* head = _WaitSet ;<br>        <span class="hljs-comment">// 环形链表头结点的prev就是尾结点</span><br>        ObjectWaiter* tail = head-&gt;_prev;<br>        assert(tail-&gt;_next == head, <span class="hljs-string">&quot;invariant check&quot;</span>);<br>        <span class="hljs-comment">// 将node插入到_WaitSet的尾结点中</span><br>        tail-&gt;_next = node;<br>        head-&gt;_prev = node;<br>        node-&gt;_next = head;<br>        node-&gt;_prev = tail;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>AddWaiter函数的实现其实比较简单，会初始化一个<code>_WaitSet</code>链表，并将node插入到<code>_WaitSet</code>的队尾，从代码中也可以看出这个 <code>_WaitSet</code> 链表是一个循环的双向链表。</p>
+<p>完成线程的插入队列操作后，继续调用 exit 函数来释放 monito r锁,并挂起自己。关于这个方法，后边还会涉及到，源码后边再看。</p>
+<h3 id="2-虚拟机对notify的实现"><a href="#2-虚拟机对notify的实现" class="headerlink" title="2.虚拟机对notify的实现"></a>2.虚拟机对notify的实现</h3><p>在生产者生产完面包后则会调用notifyAll来唤醒消费者线程。notifyAll 方法会唤醒所有线程，而 notify 只会唤醒一个线程。此处我们以notify为例来看<a target="_blank" rel="noopener" href="https://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/782f3b88b5ba/src/share/vm/runtime/objectMonitor.cpp">objectMonitor.cpp</a>中 notify 函数是如何唤醒线程的。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ObjectMonitor::notify</span><span class="hljs-params">(TRAPS)</span> </span>&#123;<br> <br>    <span class="hljs-keyword">int</span> Policy = Knob_MoveNotifyee ;<br>    <span class="hljs-comment">// DequeueWaiter是一个函数，会返回 _WaitSet 的头结点</span><br>    ObjectWaiter * iterator = DequeueWaiter() ;<br>    <span class="hljs-keyword">if</span> (iterator != <span class="hljs-literal">NULL</span>) &#123;<br>        <span class="hljs-comment">// 将阻塞队列赋值给 List</span><br>        ObjectWaiter * List = _EntryList ;<br><br>        <span class="hljs-comment">// 根据策略执行不同的逻辑，Policy默认值为2</span><br>        <span class="hljs-keyword">if</span> (Policy == <span class="hljs-number">0</span>) &#123;       <span class="hljs-comment">// prepend to EntryList</span><br>            <span class="hljs-comment">// ...</span><br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Policy == <span class="hljs-number">1</span>) &#123;      <span class="hljs-comment">// append to EntryList</span><br>            <span class="hljs-comment">// ...</span><br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Policy == <span class="hljs-number">2</span>) &#123;      <span class="hljs-comment">// prepend to cxq</span><br>            <span class="hljs-comment">// prepend to cxq</span><br>            <span class="hljs-keyword">if</span> (List == <span class="hljs-literal">NULL</span>) &#123;<br>                <span class="hljs-comment">// iterator 的前驱与后继节点置空</span><br>                iterator-&gt;_next = iterator-&gt;_prev = <span class="hljs-literal">NULL</span> ;<br>                <span class="hljs-comment">// _EntryList指向这个节点，说明节点已被加入阻塞队列，等待获取锁</span><br>                _EntryList = iterator ;<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                iterator-&gt;TState = ObjectWaiter::TS_CXQ ;<br>                <span class="hljs-keyword">for</span> (;;) &#123; <span class="hljs-comment">// 通过CAS将iterator插入到 _cxq 队列</span><br>                    ObjectWaiter * Front = _cxq ;<br>                    iterator-&gt;_next = Front ;<br>                    <span class="hljs-keyword">if</span> (Atomic::cmpxchg_ptr (iterator, &amp;_cxq, Front) == Front) &#123;<br>                        <span class="hljs-keyword">break</span> ;<br>                    &#125;<br>                &#125;<br>            &#125;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Policy == <span class="hljs-number">3</span>) &#123;      <span class="hljs-comment">// append to cxq</span><br>            <span class="hljs-comment">// ...</span><br>        &#125;<br>    &#125;<br>    <span class="hljs-comment">// ...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在 notify 函数中首先调用了DequeueWaiter 函数， DequeueWaiter 函数的作用是取出<code>_WaitSet</code>链表的头结点，代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function"><span class="hljs-keyword">inline</span> ObjectWaiter* <span class="hljs-title">ObjectMonitor::DequeueWaiter</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-comment">// dequeue the very first waiter</span><br>    ObjectWaiter* waiter = _WaitSet;<br>    <span class="hljs-keyword">if</span> (waiter) &#123;<br>        DequeueSpecificWaiter(waiter);<br>    &#125;<br>    <span class="hljs-keyword">return</span> waiter;<br>&#125;<br><span class="hljs-comment">// 将头结点 从队列中断开</span><br><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ObjectMonitor::DequeueSpecificWaiter</span><span class="hljs-params">(ObjectWaiter* node)</span> </span>&#123;<br>  <span class="hljs-comment">// ...</span><br>  <br>  ObjectWaiter* next = node-&gt;_next;<br>  <span class="hljs-keyword">if</span> (next == node) &#123;<br>    <span class="hljs-comment">// 此时，队列中只有一个元素，因此取出后，队列就是NULL了</span><br>    _WaitSet = <span class="hljs-literal">NULL</span>;<br>  &#125; <span class="hljs-keyword">else</span> &#123;<br>    ObjectWaiter* prev = node-&gt;_prev;<br>    <span class="hljs-comment">// 这一操作就是将 node 从队列移除，并重新连接队列</span><br>    next-&gt;_prev = prev;<br>    prev-&gt;_next = next;<br>    <span class="hljs-keyword">if</span> (_WaitSet == node) &#123;<br>      _WaitSet = next;<br>    &#125;<br>  &#125;<br>  <span class="hljs-comment">// 将 node 的前驱节点与后继节点置空</span><br>  node-&gt;_next = <span class="hljs-literal">NULL</span>;<br>  node-&gt;_prev = <span class="hljs-literal">NULL</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到，DequeueWaiter 函数中又调用了 DequeueSpecificWaiter 函数，在这个函数中，如果队列只有一个节点，则将<code>_WaitSet</code>置空，即取出头结点后，队列中没有元素了。如果有多个节点，那么 会将头结点从队列中取出，并重新拼接好 <code>_WaitSet</code> 队列。然后将取出的这个节点的前驱节点和后继节点置空。</p>
+<p>notify 函数接下来的代码判断如果 iterator 不为 NULL 说明存在等待状态的线程，需要将这个等待的线程转入阻塞线程的队列中去。接下来根据 Policy 来执行不同的逻辑，Policy 默认值为2，所以这里只关注默认情况情况。即当Policy为2时，接着将 <code>_EntryList</code>赋值给List，如果List等于NULL，说明此时没有阻塞状态的线程。那么就将 <code>_EntryList </code> 指向 iterator。标志着这个等待中的线程进入了阻塞状态，并且能够获取锁了，但此时线程还未被唤醒。如果List等于NULL，那么就通过CAS将等待状态的线程移入到了<code>_cxq</code> 队列，<code>_cxq</code>队列只是一个临时队列，在后边exit函数中最终还是会被移入<code>_EntryList</code>中。这里一定要注意区分<strong>阻塞状态</strong>与<strong>等待状态</strong>，以及<strong>等待队列</strong>和<strong>阻塞队列</strong>。</p>
+<h3 id="3-虚拟机的exist函数"><a href="#3-虚拟机的exist函数" class="headerlink" title="3.虚拟机的exist函数"></a>3.虚拟机的exist函数</h3><p>可见notify函数中只是对线程进行了队列转移，并没有被实际唤醒。而实际唤醒线程的操作就是在本章第1小节中已经提到的exist中实现的。只不过此时exist函数的调用时机是在虚拟机读取到 monitorexist 指令之后。看下简化后的 exit 函数代码，如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ObjectMonitor::exit</span><span class="hljs-params">(<span class="hljs-keyword">bool</span> not_suspended, TRAPS)</span> </span>&#123;<br>  <span class="hljs-comment">// ...</span><br>  <span class="hljs-comment">// 这里是一个死循环</span><br>  <span class="hljs-keyword">for</span> (;;) &#123;<br><br>        ObjectWaiter * w = <span class="hljs-literal">NULL</span> ;<br>        <span class="hljs-comment">// QMode默认值为0</span><br>        <span class="hljs-keyword">int</span> QMode = Knob_QMode ;<br>        <br>        <span class="hljs-keyword">if</span> (QMode == <span class="hljs-number">2</span> &amp;&amp; _cxq != <span class="hljs-literal">NULL</span>) &#123;<br>            <span class="hljs-comment">// ... 这里从_cxq队列取头结点并唤醒，无关省略。</span><br>            <span class="hljs-keyword">return</span> ;<br>        &#125;<br><br>        <span class="hljs-comment">// ...</span><br>        <br>        w = _EntryList  ;<br>        <span class="hljs-comment">// 先查看_EntryList是否为空</span><br>        <span class="hljs-keyword">if</span> (w != <span class="hljs-literal">NULL</span>) &#123;<br>            <span class="hljs-comment">// _EntryList不为空，通过ExitEpilog函数唤醒_EntryList队列的头结点</span><br>            ExitEpilog (Self, w) ;<br>            <span class="hljs-keyword">return</span> ;<br>        &#125;<br>        <span class="hljs-comment">// 到这里说明_EntryList为空，将则将 w 指向 _cxq</span><br>        w = _cxq ;<br>        <span class="hljs-comment">// _cxq 是 NULL 说明没有等待状态的线程需要唤醒，则继续执行循环</span><br>        <span class="hljs-keyword">if</span> (w == <span class="hljs-literal">NULL</span>) <span class="hljs-keyword">continue</span> ;<br><br>        <span class="hljs-comment">// ...</span><br><br>        <span class="hljs-comment">// 走到这说明有处于等待状态，需要唤醒的线程</span><br>    <br>        <span class="hljs-keyword">if</span> (QMode == <span class="hljs-number">1</span>) &#123;<br>            <span class="hljs-comment">// ...</span><br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-comment">// 如果走到此处说明_cxq队列不为空</span><br>            <span class="hljs-comment">// QMode == 0 or QMode == 2</span><br>            <span class="hljs-comment">// 此时_EntryList队列是空，将_EntryList指向_cxq队列</span><br>            _EntryList = w ;<br>            ObjectWaiter * q = <span class="hljs-literal">NULL</span> ;<br>            ObjectWaiter * p ;<br>            <span class="hljs-comment">// 将单向链表变成双向环链表</span><br>            <span class="hljs-keyword">for</span> (p = w ; p != <span class="hljs-literal">NULL</span> ; p = p-&gt;_next) &#123;<br>                guarantee (p-&gt;TState == ObjectWaiter::TS_CXQ, <span class="hljs-string">&quot;Invariant&quot;</span>) ;<br>                p-&gt;TState = ObjectWaiter::TS_ENTER ;<br>                p-&gt;_prev = q ;<br>                q = p ;<br>            &#125;<br>        &#125;<br><br>        <span class="hljs-keyword">if</span> (_succ != <span class="hljs-literal">NULL</span>) <span class="hljs-keyword">continue</span>;<br><br>        w = _EntryList  ;<br>        <span class="hljs-keyword">if</span> (w != <span class="hljs-literal">NULL</span>) &#123;<br>            guarantee (w-&gt;TState == ObjectWaiter::TS_ENTER, <span class="hljs-string">&quot;invariant&quot;</span>) ;<br>            <span class="hljs-comment">// 唤醒_EntryList的头结点</span><br>            ExitEpilog (Self, w) ;<br>            <span class="hljs-keyword">return</span> ;<br>        &#125;<br>    &#125;<br>    <br><span class="hljs-comment">// 释放锁并唤醒线程    </span><br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ObjectMonitor::ExitEpilog</span> <span class="hljs-params">(Thread * Self, ObjectWaiter * Wakee)</span> </span>&#123;<br>    assert (_owner == Self, <span class="hljs-string">&quot;invariant&quot;</span>) ;<br><br>    <span class="hljs-comment">// Exit protocol:</span><br>    <span class="hljs-comment">// 1. ST _succ = wakee</span><br>    <span class="hljs-comment">// 2. membar #loadstore|#storestore;</span><br>    <span class="hljs-comment">// 2. ST _owner = NULL</span><br>    <span class="hljs-comment">// 3. unpark(wakee)</span><br><br>    _succ = Knob_SuccEnabled ? Wakee-&gt;_thread : <span class="hljs-literal">NULL</span> ;<br>    ParkEvent * Trigger = Wakee-&gt;_event ;<br><br>    Wakee  = <span class="hljs-literal">NULL</span> ;<br><br>    <span class="hljs-comment">// 释放锁</span><br>    OrderAccess::release_store_ptr (&amp;_owner, <span class="hljs-literal">NULL</span>) ;<br>    OrderAccess::fence() ;                               <span class="hljs-comment">// ST _owner vs LD in unpark()</span><br>    <span class="hljs-comment">// 唤醒线程</span><br>    Trigger-&gt;unpark() ;<br><br>    <span class="hljs-comment">//...</span><br>&#125;    <br></code></pre></td></tr></table></figure>
+
+<p>exist函数的代码比较繁杂，这里做了简化，由于QMode默认值是0，因此只讨论这种情况。</p>
+<ul>
+<li><p>首先，如果 <code>_EntryList</code> 不为NULL，那么直接调用 ExitEpilog 函数从 <code>_EntryList</code>中取出头结点并唤醒线程；</p>
+</li>
+<li><p>如果 <code>_EntryList</code> 为NULL,但是 <code>_cxq</code> 队列不为 NULL，说明有等待状态的线程被notify了，但是还没真正的被唤醒，那么将  <code>_cxq</code>队列中的所有元素移入<code>_EntryList</code>队列中，并将其改造成一个双向链表。然后通过 ExitEpilog 唤醒<code>_EntryList</code>的头结点。</p>
+</li>
+</ul>
+<h2 id="三、小结"><a href="#三、小结" class="headerlink" title="三、小结"></a>三、小结</h2><p>本篇文章从一个简单的“生产者-消费者”模型着手，认识了Object中wait和notify/notifyAll方法，并且深入的分析了虚拟机底层对这两个方法的实现。Java代码中的 synchronized 关键字通过编译器编译成字节码的monitorenter/monitorexist指令，当虚拟机执行到相关指令后则会调用虚拟机底层相关的函数，进行拿锁和释放锁的操作。而由于锁对象Object关联了monitor对象，故可以调用这个Object对象中的 wait 和 notify/notifyAll 方法来阻塞和唤醒线程。而这两个方法亦是调用了虚拟机底层的相关函数，wait 函数会将线程封装成 WaitObject 并将其插入到等待队列中，而notify/notifyAll 则会将线程从等待队列中取出并转移到<code>_EntryList</code>队列或者转移到<code>_cxq</code>队列，等到持有锁的线程执行完毕并读取到 monitorexist 指令后调用了虚拟机的 exist 函数来释放锁并唤醒<code>_EntryList</code> 队列或者<code>_cxq</code>队列中的线程。</p>
+<p>synchronized 锁的这种等待与唤醒机制很显然有一个弊端。仍然以”生产者-消费者“模型为例，由于生产者线程和消费者线程都会被加入到同一个WaitSet队列中，通过 notifyAll 方法并不能精确的控制唤醒哪一类线程。而在<a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/">这一次，彻底搞懂Java中的ReentranLock实现原理</a>这篇文章中我们认识了ReentranLock，ReentranLock与 synchronized 相仿也有类似的等待与唤醒机制，并且能够精确的控制唤醒指定的线程。那么，ReentranLock是怎么实现的呢？我们下篇再议。</p>
+<h2 id="参考-amp-推荐阅读"><a href="#参考-amp-推荐阅读" class="headerlink" title="参考&amp;推荐阅读"></a>参考&amp;推荐阅读</h2><p><a target="_blank" rel="noopener" href="https://cgiirw.github.io/2018/10/17/Blocked03/">再谈阻塞(3)：cxq、EntryList与WaitSet</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/03/43-wait-notify2/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">深入理解Java线程的等待与唤醒机制（二）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/06/26/41-atomic-cas/">
+                        <span class="hidden-mobile">这一次，彻底搞懂Java并发包中的Atomic原子类</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

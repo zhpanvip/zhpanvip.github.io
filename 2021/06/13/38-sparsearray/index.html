@@ -1,0 +1,544 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>这一次，彻底搞懂SparseArray实现原理 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="这一次，彻底搞懂SparseArray实现原理">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-06-13 00:04" pubdate>
+        2021年6月13日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.8k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      18
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">这一次，彻底搞懂SparseArray实现原理</h1>
+            
+            <div class="markdown-body">
+              <p>最近在整理SparseArray这一知识点的时候，发现网上大多数SparseArray原理分析的文章都存在很多问题（可以说很多作者并没有读懂SparseArray的源码），也正因此，才有了这篇SparseArray原理的文章。我们知道，SparseArray与ArrayMap是Android中高效存储K-V的数据结构，也是是Android面试中的常客，弄懂它们的实现原理是很有必要的，本篇文章就以SparseArray的源码为例进行深入分析。</p>
+<h2 id="一、SparseArray的类结构"><a href="#一、SparseArray的类结构" class="headerlink" title="一、SparseArray的类结构"></a>一、SparseArray的类结构</h2><p>SparseArray可以翻译为<strong>稀疏数组</strong>，从字面上可以理解为松散不连续的数组。虽然叫做Array，但它却是存储K-V的一种数据结构。其中Key只能是int类型，而Value是Object类型。我们来看下它的类结构：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SparseArray</span>&lt;<span class="hljs-title">E</span>&gt; <span class="hljs-keyword">implements</span> <span class="hljs-title">Cloneable</span> </span>&#123;<br>    <span class="hljs-comment">// 用来标记此处的值已被删除</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Object DELETED = <span class="hljs-keyword">new</span> Object();<br>    <span class="hljs-comment">// 用来标记是否有元素被移除</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">boolean</span> mGarbage = <span class="hljs-keyword">false</span>;<br>    <span class="hljs-comment">// 用来存储key的集合</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span>[] mKeys;<br>    <span class="hljs-comment">// 用来存储value的集合</span><br>    <span class="hljs-keyword">private</span> Object[] mValues;<br>    <span class="hljs-comment">// 存入的元素个数</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span> mSize;<br><br>    <span class="hljs-comment">// 默认初始容量为10</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">SparseArray</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>(<span class="hljs-number">10</span>);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">SparseArray</span><span class="hljs-params">(<span class="hljs-keyword">int</span> initialCapacity)</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (initialCapacity == <span class="hljs-number">0</span>) &#123;<br>            mKeys = EmptyArray.INT;<br>            mValues = EmptyArray.OBJECT;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            mValues = ArrayUtils.newUnpaddedObjectArray(initialCapacity);<br>            mKeys = <span class="hljs-keyword">new</span> <span class="hljs-keyword">int</span>[mValues.length];<br>        &#125;<br>        mSize = <span class="hljs-number">0</span>;<br>    &#125;<br><br>    <span class="hljs-comment">// ...省略其他代码</span><br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到SparseArray仅仅实现了Cloneable接口并没有实现Map接口，并且SparseArray内部维护了一个int数组和一个Object数组。在无参构造方法中调用了有参构造，并将其初始容量设置为了10。</p>
+<h2 id="二、SparseArray的remove-方法"><a href="#二、SparseArray的remove-方法" class="headerlink" title="二、SparseArray的remove()方法"></a>二、SparseArray的remove()方法</h2><p>是不是觉得很奇怪？作为一个容器类，不先讲put方法怎么先将remove呢？这是因为remove方法的一些操作会影响到put的操作。只有先了解了remove才能更容易理解put方法。我们来看remove的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-comment">// SparseArray</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">remove</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key)</span> </span>&#123;<br>    delete(key);<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">delete</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);<br><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">if</span> (mValues[i] != DELETED) &#123;<br>            mValues[i] = DELETED;<br>            mGarbage = <span class="hljs-keyword">true</span>;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到remove方法直接调用了delete方法。而在delete方法中会先通过二分查找（二分查找代码后边分析）找到key所在的位置，然后将这一位置的value值置为DELETE，注意，这里还将mGarbage设置为了true来标记集合中存在删除元素的情况。想象一下，在删除多个元素后这个集合中是不是就可能会出现不连续的情况？大概这也是SparseArray名字的由来吧。</p>
+<h2 id="三、SparseArray的put-方法"><a href="#三、SparseArray的put-方法" class="headerlink" title="三、SparseArray的put()方法"></a>三、SparseArray的put()方法</h2><p>作为一个存储K-V类型的数据结构，put方法是key和value的入口。也是SparseArray中最重要的一个方法。先来看下put方法的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// SparseArray</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key, E value)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);<br><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123; <span class="hljs-comment">// 意味着之前mKeys中已经有对应的key存在了,第i个位置对应的就是key。</span><br>        mValues[i] = value; <span class="hljs-comment">// 直接更新value</span><br>    &#125; <span class="hljs-keyword">else</span> &#123; <span class="hljs-comment">// 返回负数说明未在mKeys中查找到key</span><br><br>        <span class="hljs-comment">// 取反得到待插入key的位置</span><br>        i = ~i;<br><br>	<span class="hljs-comment">// 如果插入位置小于size,并且这个位置的value刚好是被删除掉的，那么直接将key和value分别插入mKeys和mValues的第i个位置</span><br>        <span class="hljs-keyword">if</span> (i &lt; mSize &amp;&amp; mValues[i] == DELETED) &#123;<br>            mKeys[i] = key;<br>            mValues[i] = value;<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br>	<span class="hljs-comment">// mGarbage为true说明有元素被移除了，此时mKeys已经满了，但是mKeys内部有被标记为DELETE的元素</span><br>        <span class="hljs-keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;<br>            <span class="hljs-comment">// 调用gc方法移动mKeys和mValues中的元素，这个方法可以后边分析</span><br>            gc();<br><br>            <span class="hljs-comment">// 由于gc方法移动了数组，因此插入位置可能有变化，所以需要重新计算插入位置</span><br>            i = ~ContainerHelpers.binarySearch(mKeys, mSize, key);<br>        &#125;<br>	<span class="hljs-comment">// GrowingArrayUtils的insert方法将会将插入位置之后的所有数据向后移动一位，然后将key和value分别插入到mKeys和mValue对应的第i个位置，如果数组空间不足还会开启扩容，后边分析这个insert方法</span><br>        mKeys = GrowingArrayUtils.insert(mKeys, mSize, i, key);<br>        mValues = GrowingArrayUtils.insert(mValues, mSize, i, value);<br>        mSize++;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>虽然这个方法只有寥寥数行，但是想要完全理解却并非易事，即使写了很详细的注释也不容易读懂。我们不妨来详细分析一下。第一行代码通过二分查找得到了一个index。看下二分查找的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// ContainerHelpers</span><br><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">binarySearch</span><span class="hljs-params">(<span class="hljs-keyword">int</span>[] array, <span class="hljs-keyword">int</span> size, <span class="hljs-keyword">int</span> value)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> lo = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">int</span> hi = size - <span class="hljs-number">1</span>;<br><br>    <span class="hljs-keyword">while</span> (lo &lt;= hi) &#123;<br>        <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> mid = (lo + hi) &gt;&gt;&gt; <span class="hljs-number">1</span>;<br>        <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> midVal = array[mid];<br><br>        <span class="hljs-keyword">if</span> (midVal &lt; value) &#123;<br>            lo = mid + <span class="hljs-number">1</span>;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (midVal &gt; value) &#123;<br>            hi = mid - <span class="hljs-number">1</span>;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-keyword">return</span> mid;  <span class="hljs-comment">// value found</span><br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> ~lo;  <span class="hljs-comment">// value not present</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>关于二分查找相信大家都是比较熟悉的，这一算法用于在一组有序数组中查找某一元素所在位置的。如果数组中存在这一元素，则将这个元素对应的位置返回。如果不存在那么此时的lo就是这个元素的最佳存储位置。上述代码中将lo取反作为了返回值。因为lo一定是大于等于0的数，因此取反后的返回值必定小于等于0.明白了这一点，再来看put方法中的这个if…else是不是很容易理解了？</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-comment">// SparseArray</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put</span>(<span class="hljs-params"><span class="hljs-keyword">int</span> key, E <span class="hljs-keyword">value</span></span>)</span> &#123;<br><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        mValues[i] = <span class="hljs-keyword">value</span>; <span class="hljs-comment">// 直接更新value</span><br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        i = ~i;<br>        <span class="hljs-comment">// ... 省略其它代码</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>如果i&gt;=0,意味着当前的这个key已经存在于mKeys中了，那么此时put只需要将最新的value更新到mValues中即可。而如果i&lt;=0就意味着mKeys中之前没有对应的key。因此就需要将key和value分别插入到mKeys和mValues中。而插入的最佳位置就是对i取反。</p>
+<p>得到插入位置之后，如果这个位置是被标记为删除的元素，那么久可以直接将其覆盖掉了，因此有以下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key, E value)</span> </span>&#123;<br>    <span class="hljs-comment">// ...</span><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-comment">// ...</span><br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">// 如果i对应的位置是被删除掉的，可以直接将其覆盖</span><br>        <span class="hljs-keyword">if</span> (i &lt; mSize &amp;&amp; mValues[i] == DELETED) &#123;<br>            mKeys[i] = key;<br>            mValues[i] = value;<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br>        <span class="hljs-comment">// ...</span><br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>如果上边条件不满足，那么继续往下看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key, E value)</span> </span>&#123;<br>    <span class="hljs-comment">// ...</span><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-comment">// ...</span><br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>	<span class="hljs-comment">// mGarbage为true说明有元素被移除了，此时mKeys已经满了，但是mKeys内部有被标记为DELETE的元素</span><br>        <span class="hljs-keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;<br>            <span class="hljs-comment">// 调用gc方法移动mKeys和mValues中的元素，这个方法可以后边分析</span><br>            gc();<br><br>            <span class="hljs-comment">// 由于gc方法移动了数组，因此插入位置可能有变化，所以需要重新计算插入位置</span><br>            i = ~ContainerHelpers.binarySearch(mKeys, mSize, key);<br>        &#125;<br>        <span class="hljs-comment">// ...</span><br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上边我们已经知道，在remove元素的时候mGarbage会被置为true，这段代码意味着有被移除的元素，被移除的位置并不是要插入的位置，并且如果mKeys已经满了，那么就调用gc方法来移动元素填充被移除的位置。由于mKeys中元素位置发生了变化，因此key插入的位置也可能改变，因此需要再次调用二分法来查找key的插入位置。</p>
+<p>以上代码最终会确定key被插入的位置，接下来调用GrowingArrayUtils的insert方法来进行key的插入操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// SparseArray</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key, E value)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);<br><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-comment">// ...</span><br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>         <span class="hljs-comment">// ...</span><br><br>	<span class="hljs-comment">// GrowingArrayUtils的insert方法将会将插入位置之后的所有数据向后移动一位，然后将key和value分别插入到mKeys和mValue对应的第i个位置，如果数组空间不足还会开启扩容，后边分析这个insert方法</span><br>        mKeys = GrowingArrayUtils.insert(mKeys, mSize, i, key);<br>        mValues = GrowingArrayUtils.insert(mValues, mSize, i, value);<br>        mSize++;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>GrowingArrayUtils的insert方法代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// GrowingArrayUtils</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> &lt;T&gt; T[] insert(T[] array, <span class="hljs-keyword">int</span> currentSize, <span class="hljs-keyword">int</span> index, T element) &#123;<br>    <span class="hljs-keyword">assert</span> currentSize &lt;= array.length;<br>    <span class="hljs-comment">// 如果插入后数组size小于数组长度，能进行插入操作</span><br>    <span class="hljs-keyword">if</span> (currentSize + <span class="hljs-number">1</span> &lt;= array.length) &#123;<br>        <span class="hljs-comment">// 将index之后的所有元素向后移动一位</span><br>        System.arraycopy(array, index, array, index + <span class="hljs-number">1</span>, currentSize - index);<br>        <span class="hljs-comment">// 将key插入到index的位置</span><br>        array[index] = element;<br>        <span class="hljs-keyword">return</span> array;<br>    &#125;<br><br>    <span class="hljs-comment">// 来到这里说明数组已满，需需要进行扩容操作。newArray即为扩容后的数组</span><br>    T[] newArray = ArrayUtils.newUnpaddedArray((Class&lt;T&gt;)array.getClass().getComponentType(),<br>            growSize(currentSize));<br>    System.arraycopy(array, <span class="hljs-number">0</span>, newArray, <span class="hljs-number">0</span>, index);<br>    newArray[index] = element;<br>    System.arraycopy(array, index, newArray, index + <span class="hljs-number">1</span>, array.length - index);<br>    <span class="hljs-keyword">return</span> newArray;<br>&#125;<br><br><span class="hljs-comment">// 返回扩容后的size</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">growSize</span><span class="hljs-params">(<span class="hljs-keyword">int</span> currentSize)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> currentSize &lt;= <span class="hljs-number">4</span> ? <span class="hljs-number">8</span> : currentSize * <span class="hljs-number">2</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>insert方法的代码比较容易理解，如果数组容量足够，那么就将index之后的元素向后移动一位，然后将key插入index的位置。如果数组容量不足，那么则需要进行扩容，然后再进行插入操作。</p>
+<h2 id="四、SparseArray的gc-方法"><a href="#四、SparseArray的gc-方法" class="headerlink" title="四、SparseArray的gc()方法"></a>四、SparseArray的gc()方法</h2><p>这个方法其实很容易理解，我们知道Java虚拟机在内存不足时会进行GC操作，标记清除法在回收垃圾对象后为了避免内存碎片化，会将存活的对象向内存的一端移动。而SparseArray中的这个gc方法其实就是借鉴了垃圾收集整理碎片空间的思想。</p>
+<p>关于mGarbage这个参数上边已经有提到过了，这个变量会在删除元素的时候被置为true。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-comment">// SparseArray中所有移除元素的方法中都将mGarbage置为true</span><br><br><span class="hljs-function"><span class="hljs-keyword">public</span> E <span class="hljs-title">removeReturnOld</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);<br><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">if</span> (mValues[i] != DELETED) &#123;<br>            <span class="hljs-keyword">final</span> E old = (E) mValues[i];<br>            mValues[i] = DELETED;<br>            mGarbage = <span class="hljs-keyword">true</span>;<br>            <span class="hljs-keyword">return</span> old;<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">delete</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);<br><br>    <span class="hljs-keyword">if</span> (i &gt;= <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">if</span> (mValues[i] != DELETED) &#123;<br>            mValues[i] = DELETED;<br>            mGarbage = <span class="hljs-keyword">true</span>;<br>        &#125;<br>    &#125;<br>&#125;<br><br><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">removeAt</span><span class="hljs-params">(<span class="hljs-keyword">int</span> index)</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (index &gt;= mSize &amp;&amp; UtilConfig.sThrowExceptionForUpperArrayOutOfBounds) &#123;<br>        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> ArrayIndexOutOfBoundsException(index);<br>    &#125;<br>    <span class="hljs-keyword">if</span> (mValues[index] != DELETED) &#123;<br>        mValues[index] = DELETED;<br>        mGarbage = <span class="hljs-keyword">true</span>;<br>    &#125;<br>&#125;<br><br><br></code></pre></td></tr></table></figure>
+
+
+<p>而SparseArray中所有插入和查找元素的方法中都会判断如果mGarbage为true，并且mSize &gt;= mKeys.length时调用gc,以append方法为例，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">append</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key, E value)</span> </span>&#123;<br><br>    <span class="hljs-keyword">if</span> (mGarbage &amp;&amp; mSize &gt;= mKeys.length) &#123;<br>        gc();<br>    &#125;<br><br>   <span class="hljs-comment">// ... 省略无关代码</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>源码中调用gc方法的地方多达8处，都是与添加和查找元素相关的方法。例如put()、keyAt()、setValueAt()等方法中。gc的实现其实比较简单，就是将删除位置后的所有数据向前移动一下，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">gc</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-comment">// Log.e(&quot;SparseArray&quot;, &quot;gc start with &quot; + mSize);</span><br><br>    <span class="hljs-keyword">int</span> n = mSize;<br>    <span class="hljs-keyword">int</span> o = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">int</span>[] keys = mKeys;<br>    Object[] values = mValues;<br><br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; n; i++) &#123;<br>        Object val = values[i];<br><br>        <span class="hljs-keyword">if</span> (val != DELETED) &#123;<br>            <span class="hljs-keyword">if</span> (i != o) &#123;<br>                keys[o] = keys[i];<br>                values[o] = val;<br>                values[i] = <span class="hljs-keyword">null</span>;<br>            &#125;<br><br>            o++;<br>        &#125;<br>    &#125;<br><br>    mGarbage = <span class="hljs-keyword">false</span>;<br>    mSize = o;<br><br>    <span class="hljs-comment">// Log.e(&quot;SparseArray&quot;, &quot;gc end with &quot; + mSize);</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h2 id="五、SparseArray的get-方法"><a href="#五、SparseArray的get-方法" class="headerlink" title="五、SparseArray的get()方法"></a>五、SparseArray的get()方法</h2><p>这个方法就比较简单了，因为put的时候是维持了一个有序数组，因此通过二分查找可以直接确定key在数组中的位置。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-function"><span class="hljs-keyword">public</span> E <span class="hljs-title">get</span><span class="hljs-params">(<span class="hljs-keyword">int</span> key, E valueIfKeyNotFound)</span> </span>&#123;<br>    <span class="hljs-keyword">int</span> i = ContainerHelpers.binarySearch(mKeys, mSize, key);<br><br>    <span class="hljs-keyword">if</span> (i &lt; <span class="hljs-number">0</span> || mValues[i] == DELETED) &#123;<br>        <span class="hljs-keyword">return</span> valueIfKeyNotFound;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-keyword">return</span> (E) mValues[i];<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h2><p>可见SparseArray是一个使用起来很简单的数据结构，但是它的原理理解起来似乎却没那么容易。这也是网上大部分文章对应SparseArray的解析都是含糊不清的原因。相信通过本篇文章的学习一定对SparseArray的实现有了新的认识！</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Android/">Android</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E9%9B%86%E5%90%88/">集合</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/14/39-synchronized/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">这一次，彻底搞懂Java中的synchronized关键字</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/05/30/37-jmm-volatile/">
+                        <span class="hidden-mobile">这一次，彻底搞懂Java内存模型与volatile关键字</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

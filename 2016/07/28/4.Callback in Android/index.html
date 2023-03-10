@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>由浅入深理解Android中的回调机制 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="由浅入深理解Android中的回调机制">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2016-07-28 14:08" pubdate>
+        2016年7月28日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.1k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      13
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">由浅入深理解Android中的回调机制</h1>
+            
+            <div class="markdown-body">
+              <p>什么是接口回调？来先看看接口回调的定义吧：可以把使用某一接口的类创建的对象的引用赋给该接口声明的接口变量，那么该接口变量就可以调用被类实现的接口的方法。什么意思？反正我是没看懂，哈哈（#黑线），这么官方的话还是不要看的好，不如看一个具体的例子。<br>话说有一天，奥巴马下达命令，让美国空军派轰炸机前去轰炸恐怖分子基地，并要求空军完成任务后通报轰炸详情。下达完命令后呢，奥巴马不会坐那干等空军电报吧，再说奥黑忙着呢，整天想着怎么阴俄罗斯和中国呢..于是下达完命令奥巴马就去干其他事情了。两个小时后空军发来电报：恐怖分子基地已摧毁。<br>嗯，就酱紫！上边的例子就是一个典型的接口回调！（奥巴马命令空军去空炸基地，空军轰炸完后向奥巴马报告即接口回调）接下来用java代码来实现上边的描述。<br>首先定义一个回调接口，该接口中有一个report()的回调方法，空军完成任务后会通过调用此方法发送电报。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Created by zhpan on 2016/7/27.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-symbol">ReportCallback</span> &#123;	<span class="hljs-comment">//回调接口</span><br>	<span class="hljs-keyword">public</span> <span class="hljs-built_in">void</span> report(String result); <span class="hljs-comment">//回调方法</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>定义一个奥巴马类，让他实现ReportCallback接口，并重写report()方法,注意，Obama类中持有空军Plane的引用,在此类中可通过调用plane.boom(this)命令空军去执行任务，boom()方法的参数为this，相当于new Obama()作为参数，即将自身传了进去。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Created by zhpan on 2016/7/27.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Obama</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">ReportCallback</span> </span>&#123;<br><br>	<span class="hljs-keyword">private</span> Plane plane=<span class="hljs-keyword">new</span> Plane();<br><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Obama</span><span class="hljs-params">()</span> </span>&#123;<br>		<span class="hljs-keyword">super</span>();<br>	&#125;<br><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Obama</span><span class="hljs-params">(Plane plane)</span> </span>&#123;<br>		<span class="hljs-keyword">super</span>();<br>		<span class="hljs-keyword">this</span>.plane = plane;<br>	&#125;<br>	<span class="hljs-comment">//命令轰炸机轰炸恐怖分子基地的方法</span><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">command</span><span class="hljs-params">()</span></span>&#123;<br>		plane.boom(<span class="hljs-keyword">this</span>);<br>	&#125;<br><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">report</span><span class="hljs-params">(String result)</span> </span>&#123;<br>		System.out.println(<span class="hljs-string">&quot;任务详情：&quot;</span>+result);<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>下边是空军类，Obama类中调用此处的boom()方法（空军接到任务）。此类中持有了一个ReportCallback的引用cb,cb其实是由Obama向上转型而来，因为在Obama类中调用boom()方法时参数为this，用cb调用report()实际上是通过接口调用到了接口ReportCallback的子类Obama类中的report()方法。</p>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs angelscript"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Created by zhpan on 2016/7/27.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-symbol">Plane</span> &#123;<br>	<span class="hljs-keyword">public</span> <span class="hljs-built_in">void</span> boom(ReportCallback cb)&#123;<br>		<span class="hljs-comment">//空军执行了五次轰炸任务</span><br>		<span class="hljs-keyword">for</span>(<span class="hljs-built_in">int</span> i=<span class="hljs-number">0</span>;i&lt;<span class="hljs-number">5</span>;i++)&#123;<br>			<span class="hljs-comment">//一个耗时操作</span><br>			<span class="hljs-keyword">try</span> &#123;<br>				System.<span class="hljs-keyword">out</span>.println(<span class="hljs-string">&quot;执行轰炸任务&quot;</span>);<br>				Thread.sleep(<span class="hljs-number">1000</span>);<br>			&#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>				e.printStackTrace();<br>			&#125;<br>		&#125;<br>		<span class="hljs-comment">//轰炸结束后通过report()方法发送了电报给奥黑</span><br>		cb.report(<span class="hljs-string">&quot;基地已摧毁&quot;</span>);<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>测试类，Obama调用command方法。</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test</span> &#123;</span><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">String</span>[] args)</span> </span>&#123;<br><br>		Obama obama=<span class="hljs-keyword">new</span> Obama();<br>		<span class="hljs-comment">//	奥巴马下达命令</span><br>		obama.command();<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>测试结果如下：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwNzI3MTUzMzU1ODM5" srcset="/img/loading.gif" alt="这里写图片描述"><br>经过上边的例子，我们应该对接口回调有了一个初步的认识。那么在Android中都哪些地方用到了回调机制呢？其实，接口回调在Android中用的相当广泛，Android中的一些事件处理方法，比如：onKeyDown、onKeyLongPress、onTouchEvent等还有View的监听事件都是通过回调实现的。<br>下面我们以Button为例来分析Android中的回调机制。当用户点击Button时，会触发Button的onClick()方法，onClick()就是一个回调方法。结合View的源码来看：</p>
+<p>在View中定义了一个OnClickListener 的接口，接口中有一个onClick的抽象方法，可类比上边例子中的ReportCallback 接口。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-comment">/**</span><br><span class="hljs-comment">    * Interface definition for a callback to be invoked when a view is clicked.</span><br><span class="hljs-comment">    */</span><br>   <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">OnClickListener</span> </span>&#123;<br>       <span class="hljs-comment">/**</span><br><span class="hljs-comment">        * Called when a view has been clicked.</span><br><span class="hljs-comment">        *</span><br><span class="hljs-comment">        * <span class="hljs-doctag">@param</span> v The view that was clicked.</span><br><span class="hljs-comment">        */</span><br>       <span class="hljs-keyword">void</span> onClick(View v);<br>   &#125;<br></code></pre></td></tr></table></figure>
+
+<p>同时View中还持有一个OnClickListener 接口的引用mOnClickListener，mOnClickListener对应了上边例子Plane 类中boom（ReportCallback cb）方法的参数cb,另外View中还定义了setOnClickListener()方法，该方法的参数是OnClickListener接口，方法体中将该参数赋值给了mOnClickListener。</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs php">    <span class="hljs-comment">/**</span><br><span class="hljs-comment">      * Listener used to dispatch click events.</span><br><span class="hljs-comment">      * This field should be made private,</span><br><span class="hljs-comment">      *  so it is hidden from the SDK.</span><br><span class="hljs-comment">      * &#123;<span class="hljs-doctag">@hide</span>&#125;</span><br><span class="hljs-comment">      */</span><br>     <span class="hljs-keyword">public</span> OnClickListener mOnClickListener;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment">  * Register a callback to be invoked when this view is</span><br><span class="hljs-comment">  * clicked. If this view is not</span><br><span class="hljs-comment">  * clickable, it becomes clickable.</span><br><span class="hljs-comment">  *</span><br><span class="hljs-comment">  * <span class="hljs-doctag">@param</span> l The callback that will run</span><br><span class="hljs-comment">  *</span><br><span class="hljs-comment">  * <span class="hljs-doctag">@see</span> #setClickable(boolean)</span><br><span class="hljs-comment">  */</span><br> <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> setOnClickListener(@Nullable OnClickListener l) &#123;<br>     <span class="hljs-keyword">if</span> (!isClickable()) &#123;<br>         setClickable(<span class="hljs-literal">true</span>);<br>     &#125;<br>     getListenerInfo().mOnClickListener = l;<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>最后在performClick()方法中通过li.mOnClickListener.onClick(this);调用了onClick()方法，可类比Plane 类中cb调用report()方法。</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs applescript"><br>/**<br> * Call this view&#x27;s OnClickListener, <span class="hljs-keyword">if</span> <span class="hljs-keyword">it</span> <span class="hljs-keyword">is</span> defined.<br> * Performs all normalactions associated <span class="hljs-keyword">with</span><br> * clicking: reporting accessibility event, playing<br> * a sound, etc.<br> *<br> * @<span class="hljs-literal">return</span> True there was an assigned OnClickListener<br> * <span class="hljs-keyword">that</span> was called, <span class="hljs-literal">false</span><br> *         otherwise <span class="hljs-keyword">is</span> returned.<br> */<br>public <span class="hljs-built_in">boolean</span> performClick() &#123;<br>    final <span class="hljs-built_in">boolean</span> <span class="hljs-literal">result</span>;<br>    final ListenerInfo li = mListenerInfo;<br>    <span class="hljs-keyword">if</span> (li != null &amp;&amp; li.mOnClickListener != null) &#123;<br>        playSoundEffect(SoundEffectConstants.CLICK);<br>        li.mOnClickListener.onClick(this);<br>        <span class="hljs-literal">result</span> = <span class="hljs-literal">true</span>;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-literal">result</span> = <span class="hljs-literal">false</span>;<br>    &#125;<br>    sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED);<br><span class="hljs-built_in">    return</span> <span class="hljs-literal">result</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这是Android中回调机制的一个典型应用场景，通过上边对Android源码的分析相信大家对回调机制又有了更深一步的了解。在此基础上接下来我们不妨自己动手写一个回调。Come on!</p>
+<p>我们以一个简易的购物车添加商品为例来实现一个自己的接口回调！先来看效果图吧<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwNzI4MTQwNzE1MTkx" srcset="/img/loading.gif" alt="这里写图片描述"><br>上图中商品列表其实是一个ListView，由于只是演示接口回调的应用，所以只在ListView中填充了一条数据。而最下边的结算一栏是在ListView的外部，那么当商品数量改变时结算总价必然会跟随变化，也就是下边的结算会随着点击加号或者减号而变化。<br>做过item的子控件的点击事件的小伙伴应该清楚，item中子控件的点击事件是在Adapter中完成的，那么在ListView中点击子控件控件如何将得到的结果显示到ListView外部呢？即商品数量改变了，如何将总价格更新到ListView外部的结算出？其实就可以用接口回调来完成。接下来看实现思路。<br>1.首先我们可以定义一个接口OnNumChangeListener，接口里边包含两个抽象方法，分别负责增加和减少商品数量。代码如下：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title">OnNumChangeListener</span> &#123;<br>    <span class="hljs-comment">//  增加商品数量的回调方法</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onAddNumListener</span>(<span class="hljs-params"><span class="hljs-keyword">int</span> price,ViewHolder holder</span>)</span>;<br>    <span class="hljs-comment">//减少商品数量的回调方法</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onSubNumListener</span>(<span class="hljs-params"><span class="hljs-keyword">int</span> price,ViewHolder holder</span>)</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>2.在MyAdapter中添加setOnNumChangeListener方法，并在“+”、“-”按钮点击的时候分别调用OnNumChangeListener接口中的两个方法。代码如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Created by zhpan on 2016/7/28.</span><br><span class="hljs-comment"> * item中的数据并没有在getView()方法中添加，而是是在item布局文件中添加的。</span><br><span class="hljs-comment"> */</span><br>public <span class="hljs-keyword">class</span> MyAdapter extends BaseAdapter &#123;<br>    Context mContext;<br>    OnNumChangeListener mOnNumChangeListener ;<br><br>	public void set<span class="hljs-constructor">OnNumChangeListener(OnNumChangeListener <span class="hljs-params">onNumChangeListener</span> )</span>&#123;<br>		this.mOnNumChangeListener = onNumChangeListener<br>	&#125;<br><br>    @Override<br>    public View get<span class="hljs-constructor">View(<span class="hljs-params">int</span> <span class="hljs-params">position</span>, View <span class="hljs-params">convertView</span>, ViewGroup <span class="hljs-params">parent</span>)</span> &#123;<br>        convertView=<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">View</span>.</span></span>inflate(mContext,<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span>layout.item,null);<br>        final ViewHolder holder=<span class="hljs-keyword">new</span> <span class="hljs-constructor">ViewHolder()</span>;<br>        holder.add = (TextView) convertView.find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">tv_item_add</span>)</span>;<br>        holder.sub = (TextView) convertView.find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">tv_item_sub</span>)</span>;<br>        holder.num = (TextView) convertView.find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">tv_item_num</span>)</span>;<br>        <span class="hljs-comment">//  “+”的监听事件</span><br>        holder.add.set<span class="hljs-constructor">OnClickListener(<span class="hljs-params">new</span> View.OnClickListener()</span> &#123;<br>            @Override<br>            public void on<span class="hljs-constructor">Click(View <span class="hljs-params">view</span>)</span> &#123;<br>                <span class="hljs-comment">//  回调方法</span><br>                mOnNumChangeListener .on<span class="hljs-constructor">AddNumListener(10, <span class="hljs-params">holder</span>)</span>;<br>            &#125;<br>        &#125;);<br>        <span class="hljs-comment">//  “-”的监听事件</span><br>        holder.sub.set<span class="hljs-constructor">OnClickListener(<span class="hljs-params">new</span> View.OnClickListener()</span> &#123;<br>            @Override<br>            public void on<span class="hljs-constructor">Click(View <span class="hljs-params">view</span>)</span> &#123;<br>                <span class="hljs-comment">//  回调方法</span><br>                mOnNumChangeListener .on<span class="hljs-constructor">SubNumListener(10,<span class="hljs-params">holder</span>)</span>;<br>            &#125;<br>        &#125;);<br>        return convertView;<br>    &#125;<br><br><span class="hljs-operator">	... </span><span class="hljs-comment">//  省略MyAdapter中无关代码</span><br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<p>3.接下来在MainActivity中为Adapter设置OnNumChangeListener接口 并重写接口中的两个方法。代码如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">adapter.set<span class="hljs-constructor">OnNumChangeListener(<span class="hljs-params">new</span> MyAdapter.OnNumChangeListener()</span>&#123;<br>			<span class="hljs-comment">/**</span><br><span class="hljs-comment">		     * 在此实现增加商品数量，并更新总价格</span><br><span class="hljs-comment">		     */</span><br>		    @Override<br>		    public void on<span class="hljs-constructor">AddNumListener(<span class="hljs-params">int</span> <span class="hljs-params">price</span>,ViewHolder <span class="hljs-params">holder</span>)</span> &#123;<br>		        String numStr = holder.num.get<span class="hljs-constructor">Text()</span>.<span class="hljs-keyword">to</span><span class="hljs-constructor">String()</span>;<br>		        <span class="hljs-built_in">int</span> num=<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Integer</span>.</span></span>parse<span class="hljs-constructor">Int(<span class="hljs-params">numStr</span>)</span>;<br>		        num++;<br>		        holder.num.set<span class="hljs-constructor">Text(<span class="hljs-params">num</span>+<span class="hljs-string">&quot;&quot;</span>)</span>;<br>		        <span class="hljs-built_in">int</span> totalPrice=price*num;<br>		        mTextView.set<span class="hljs-constructor">Text(<span class="hljs-string">&quot;结算：￥&quot;</span>+<span class="hljs-params">totalPrice</span>)</span>;<br><br>		    &#125;<br>		    <span class="hljs-comment">/**</span><br><span class="hljs-comment">		     * 在此实现减少商品数量，并更新总价格</span><br><span class="hljs-comment">		     */</span><br>		    @Override<br>		    public void on<span class="hljs-constructor">SubNumListener(<span class="hljs-params">int</span> <span class="hljs-params">price</span>,ViewHolder <span class="hljs-params">holder</span>)</span> &#123;<br>		        String numStr = holder.num.get<span class="hljs-constructor">Text()</span>.<span class="hljs-keyword">to</span><span class="hljs-constructor">String()</span>;<br>		        <span class="hljs-built_in">int</span> num=<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Integer</span>.</span></span>parse<span class="hljs-constructor">Int(<span class="hljs-params">numStr</span>)</span>;<br>		        <span class="hljs-keyword">if</span>(num&gt;<span class="hljs-number">1</span>)&#123;<br>		            num--;<br>		            holder.num.set<span class="hljs-constructor">Text(<span class="hljs-params">num</span>+<span class="hljs-string">&quot;&quot;</span>)</span>;<br>		            <span class="hljs-built_in">int</span> totalPrice=price*num;<br>		            mTextView.set<span class="hljs-constructor">Text(<span class="hljs-string">&quot;结算：￥&quot;</span>+<span class="hljs-params">totalPrice</span>)</span>;<br>		        &#125;<span class="hljs-keyword">else</span>&#123;<br>		            <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Toast</span>.</span></span>make<span class="hljs-constructor">Text(MainActivity.<span class="hljs-params">this</span>, <span class="hljs-string">&quot;不能再减少了&quot;</span>, Toast.LENGTH_SHORT)</span>.show<span class="hljs-literal">()</span>;<br>		        &#125;<br>		    &#125;<br><br>		&#125;);<br></code></pre></td></tr></table></figure>
+<p>这样一个简单的接口回调就完成了，相信经过这本篇文章的学习，大家一定能够掌握接口回调的使用，如果没有明白也没关系，可以参考下面源码。</p>
+<p><a target="_blank" rel="noopener" href="http://download.csdn.net/detail/qq_20521573/9588810">源码下载</a></p>
+<h3 id="好库推荐"><a href="#好库推荐" class="headerlink" title="好库推荐"></a>好库推荐</h3><p>给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>。这是一个基于ViewPager实现的具有强大功能的无限轮播库。通过<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>可以实现腾讯视频、QQ音乐、酷狗音乐、支付宝、天猫、淘宝、优酷视频、喜马拉雅、网易云音乐、哔哩哔哩等APP的Banner样式以及指示器样式。</p>
+<p>欢迎大家到github关注<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>！</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E5%9F%BA%E7%A1%80/">Java基础</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/callback/">callback</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2016/09/25/5.RecyclerView%20adn%20ListView%20nested%20Checkbox/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2016/07/26/3.Java%20design%20patterns(3)/">
+                        <span class="hidden-mobile">浅析Java设计模式（三）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2016-09-25 22:58" pubdate>
+        2016年9月25日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      9
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">RecyclerView/ListView嵌套CheckBox选中状态错乱解决方案</h1>
+            
+            <div class="markdown-body">
+              <p>在讨论这个问题之前应该先了解ListView的复用机制<br>ListView复用的原理：ListView中的每一个Item显示都需要Adapter调用一次getView的方法，这个方法会传入一个convertView的参数，返回的View就是这个Item显示的View。如果当Item的数量足够大，再为每一个Item都创建一个View对象，必将占用很多内存，创建View对象（mInflater.inflate(R.layout.lv_item, null);从xml中生成View，这是属于IO操作）也是耗时操作，所以必将影响性能。<br>Android提供了一个叫做Recycler(反复循环器)的构件，就是当ListView的Item从上方滚出屏幕视角之外，对应Item的View会被缓存到Recycler中，相应的会从下方生成一个Item，而此时调用的getView中的convertView参数就是滚出屏幕的Item的View，所以说如果能重用这个convertView，就会大大改善性能。<br>如果一个屏幕最多显示7个Item，当Item1滑出屏幕，此时Item1 的View被添加进Recycler中，相应的在下部要产生一个Item8，这时调用getView方法，convertView参数就是Item1 的View。 其原理图如下：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMjI4MTY1MjMwNjAx?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"><br>ListView的复用虽然大大提升了性能，但是却也带来很多问题。比如在加载图片时，由于下边的item复用了上边的item，造成下边item刚加载出来时显示的还是上边被复用的item的图片，等到这个新的item加载图片完毕时才会正常显示，这就是convert view复用造成listview图片加载错乱的问题。<br>与上边问题相似，在listview的item中存在CheckBox时也会由于复用convert view导致CheckBox的选中状态错乱，本片内容将解决由于复用导致CheckBox选中状态错乱的问题。<br>先看下存在问题的效果图<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwOTI1MDA0MDU2OTA0?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"></p>
+<p>上图中只选中了北京市和天津市，当下滑ListView时发现下边的河南省和山东省也被选中了，再往下滑四川省和台湾省也被选中。其实可以发现一个规律，每一屏都会有两个条目被选中，其实这两个被选中的条目就是因为复用了第一屏的两个被选中的条目所导致的。<br>先看下ListView没有优化前的代码：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs routeros">public class MainActivity extends AppCompatActivity &#123;<br>    private ListView mListView;<br>    private List&lt;String&gt; mStringList;<br>    @Override<br>    protected void onCreate(Bundle savedInstanceState) &#123;<br>        super.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_main);<br>        <span class="hljs-attribute">mStringList</span>=new ArrayList&lt;&gt;();<br>        mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;北京市&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;天津市&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;上海市&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;重庆市&quot;</span>);<br>        mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;河北省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;山西省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;辽宁省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;河南省&quot;</span>);<br>        mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;山东省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;湖北省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;湖南省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;江西省&quot;</span>);<br>        mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;福建省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;陕西省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;四川省&quot;</span>);mStringList.<span class="hljs-builtin-name">add</span>(<span class="hljs-string">&quot;台湾省&quot;</span>);<br>        mListView= (ListView) findViewById(R.id.lv_main);<br>        MyAdapter <span class="hljs-attribute">adapter</span>=new MyAdapter(this,mStringList);<br>        mListView.setAdapter(adapter);<br><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>MainActivity中的代码为ListView适配数据和适配Adapter，不作过多解释。</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Created by zhpan on 2016/9/24.</span><br><span class="hljs-comment"> */</span><br><br>public <span class="hljs-keyword">class</span> MyAdapter extends BaseAdapter &#123;<br><br>    List&lt;String&gt; mStringList;<br>    Context mContext;<br><br>    public <span class="hljs-constructor">MyAdapter(Context <span class="hljs-params">context</span>, List&lt;String&gt; <span class="hljs-params">stringList</span>)</span> &#123;<br>        mStringList = stringList;<br>        mContext=context;<br>    &#125;<br><br>    @Override<br>    public long get<span class="hljs-constructor">ItemId(<span class="hljs-params">int</span> <span class="hljs-params">position</span>)</span> &#123;<br>        return <span class="hljs-number">0</span>;<br>    &#125;<br><br>    @Override<br>    public View get<span class="hljs-constructor">View(<span class="hljs-params">final</span> <span class="hljs-params">int</span> <span class="hljs-params">position</span>, View <span class="hljs-params">convertView</span>, ViewGroup <span class="hljs-params">parent</span>)</span> &#123;<br>        MyViewHolder holder;<br>        <span class="hljs-keyword">if</span>(convertView==null)&#123;<br>            convertView=<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">View</span>.</span></span>inflate(mContext,<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">R</span>.</span></span>layout.item,null);<br>            holder=<span class="hljs-keyword">new</span> <span class="hljs-constructor">MyViewHolder()</span>;<br>            holder.mTextView= (TextView) convertView.find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">tv_item</span>)</span>;<br>            holder.mCheckBox= (CheckBox) convertView.find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">cb_item</span>)</span>;<br>            convertView.set<span class="hljs-constructor">Tag(<span class="hljs-params">holder</span>)</span>;<br>        &#125;<span class="hljs-keyword">else</span> &#123;<br>            holder= (MyViewHolder) convertView.get<span class="hljs-constructor">Tag()</span>;<br>        &#125;<br><br>        holder.mTextView.set<span class="hljs-constructor">Text(<span class="hljs-params">mStringList</span>.<span class="hljs-params">get</span>(<span class="hljs-params">position</span>)</span>);<br><br>        return convertView;<br>    &#125;<br><br>    @Override<br>    public <span class="hljs-built_in">int</span> get<span class="hljs-constructor">Count()</span> &#123;<br>        return mStringList.size<span class="hljs-literal">()</span>;<br>    &#125;<br><br>    @Override<br>    public Object get<span class="hljs-constructor">Item(<span class="hljs-params">int</span> <span class="hljs-params">position</span>)</span> &#123;<br>        return null;<br>    &#125;<br><br>    public static <span class="hljs-keyword">class</span>  MyViewHolder &#123;<br>        TextView mTextView;<br>        CheckBox mCheckBox;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>在Adapter中只是复用了convertView,没有对CheckBox做任何处理，那么这样写的代码是存在上图中的CheckBox选中状态错乱问题的。为了解决这个问题我们需要对CheckBox的选中状态做下保存，可以在Adapter中声明一个Map集合用来保存被选中的CheckBox。修改后代码如下：</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Created by zhpan on 2016/9/24.</span><br><span class="hljs-comment"> */</span><br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyAdapter</span> <span class="hljs-title">extends</span> <span class="hljs-title">BaseAdapter</span> &#123;</span><br><br>    List&lt;<span class="hljs-keyword">String</span>&gt; mStringList;<br>    Context mContext;<br>    <span class="hljs-keyword">private</span> Map&lt;Integer,Boolean&gt; <span class="hljs-built_in">map</span>=<span class="hljs-keyword">new</span> HashMap&lt;&gt;();<span class="hljs-comment">// 存放已被选中的CheckBox</span><br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">MyAdapter</span><span class="hljs-params">(Context context, List&lt;<span class="hljs-keyword">String</span>&gt; stringList)</span> </span>&#123;<br>        mStringList = stringList;<br>        mContext=context;<br>    &#125;<br><br>    @Override<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">long</span> <span class="hljs-title">getItemId</span><span class="hljs-params">(<span class="hljs-keyword">int</span> <span class="hljs-built_in">position</span>)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>    &#125;<br><br>    @Override<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> View <span class="hljs-title">getView</span><span class="hljs-params">(<span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> <span class="hljs-built_in">position</span>, View convertView, ViewGroup parent)</span> </span>&#123;<br>        MyViewHolder holder;<br>        <span class="hljs-keyword">if</span>(convertView==null)&#123;<br>            convertView=View.inflate(mContext,R.layout.item,null);<br>            holder=<span class="hljs-keyword">new</span> MyViewHolder();<br>            holder.mTextView= (TextView) convertView.findViewById(R.id.tv_item);<br>            holder.mCheckBox= (CheckBox) convertView.findViewById(R.id.cb_item);<br>            convertView.setTag(holder);<br>        &#125;<span class="hljs-keyword">else</span> &#123;<br>            holder= (MyViewHolder) convertView.getTag();<br>        &#125;<br><br>        holder.mTextView.setText(mStringList.<span class="hljs-built_in">get</span>(<span class="hljs-built_in">position</span>));<br>        holder.mCheckBox.setOnCheckedChangeListener(<span class="hljs-keyword">new</span> CompoundButton.OnCheckedChangeListener() &#123;<br>            @Override<br>            <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> onCheckedChanged(CompoundButton buttonView, <span class="hljs-keyword">boolean</span> isChecked) &#123;<br>                <span class="hljs-keyword">if</span>(isChecked==<span class="hljs-literal">true</span>)&#123;<br>                    <span class="hljs-built_in">map</span>.<span class="hljs-built_in">put</span>(<span class="hljs-built_in">position</span>,<span class="hljs-literal">true</span>);<br>                &#125;<span class="hljs-keyword">else</span> &#123;<br>                    <span class="hljs-built_in">map</span>.<span class="hljs-built_in">remove</span>(<span class="hljs-built_in">position</span>);<br>                &#125;<br>            &#125;<br>        &#125;);<br><br>        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">map</span>!=null&amp;&amp;<span class="hljs-built_in">map</span>.containsKey(<span class="hljs-built_in">position</span>))&#123;<br>            holder.mCheckBox.setChecked(<span class="hljs-literal">true</span>);<br>        &#125;<span class="hljs-keyword">else</span> &#123;<br>            holder.mCheckBox.setChecked(<span class="hljs-literal">false</span>);<br>        &#125;<br><br>        <span class="hljs-keyword">return</span> convertView;<br>    &#125;<br><br>    @Override<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getCount</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> mStringList.<span class="hljs-built_in">size</span>();<br>    &#125;<br><br>    @Override<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">getItem</span><span class="hljs-params">(<span class="hljs-keyword">int</span> <span class="hljs-built_in">position</span>)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> null;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span>  <span class="hljs-title">MyViewHolder</span> &#123;</span><br>        TextView mTextView;<br>        CheckBox mCheckBox;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>针对这个问题我们子Adapter中加入了一个Map集合，其中Map的key用来存储条被选中的checkbox的position，value用来存储checkbox被选中。代码中还添加了checkbox的监听事件，在监听事件中判断点击的checkbox是否被选中，如果被选中了则将position添加到集合，并设置状态未true，否则就将该checkbox从集合中移除。然后通过if语句判断集合中是否存在该checkbox，如果存在则证明是被选中的,遂将该checkbox设置为选中状态setChecked(true)，否则证明checkbox没有选中则设置setChecked(false)。这样就解决了checkbox选中状态错乱的问题。<br>看下优化后的效果图<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTYwOTI1MDEwNTIzODUx?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"></p>
+<p>可以看到优化后CheckBox的选中状态不会再出现错乱问题了。</p>
+<p><a target="_blank" rel="noopener" href="http://download.csdn.net/detail/qq_20521573/9639225">源码下载</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Android/">Android</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/RecyclerView/">RecyclerView</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ListView/">ListView</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2016/12/15/6.Hightlight%20search%20key/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Android搜索关键字高亮显示及开发中遇到的坑</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2016/07/28/4.Callback%20in%20Android/">
+                        <span class="hidden-mobile">由浅入深理解Android中的回调机制</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

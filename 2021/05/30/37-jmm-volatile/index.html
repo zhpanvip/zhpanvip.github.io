@@ -1,0 +1,571 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>这一次，彻底搞懂Java内存模型与volatile关键字 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="这一次，彻底搞懂Java内存模型与volatile关键字">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-05-30 00:07" pubdate>
+        2021年5月30日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      21
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">这一次，彻底搞懂Java内存模型与volatile关键字</h1>
+            
+            <div class="markdown-body">
+              <p>多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁…等等一系列让人眼花缭乱的并发知识。</p>
+<p>多线程并发系列文章：</p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/">这一次，彻底搞懂Java内存模型与volatile关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/14/39-synchronized/">这一次，彻底搞懂Java中的synchronized关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/">这一次，彻底搞懂Java中的ReentranLock实现原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/">这一次，彻底搞懂Java并发包中的Atomic原子类</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/">深入理解Java线程的等待与唤醒机制（一）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/03/43-wait-notify2/">深入理解Java线程的等待与唤醒机制（二）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/">Java并发系列终结篇：彻底搞懂Java线程池的工作原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/">Java并发系列番外篇：ThreadLocal原理其实很简单</a></p>
+<p>本文是Java并发系列的第一篇文章，将详细的讲解Java内存模型与volatile关键字的作用。</p>
+<h2 id="一、Java内存模型"><a href="#一、Java内存模型" class="headerlink" title="一、Java内存模型"></a>一、Java内存模型</h2><p>提到Java内存模型，很多同学首先想到的是Java的内存区域划分。在这里首先声明本节内容并非讲解Java内存区域。但是，了解Java的内存区域，对于理解Java的内存模型会有一定的帮助。如果你想了解Java内存区域，可以参考我之前写的一篇文章<a target="_blank" rel="noopener" href="https://juejin.cn/post/6868340872698658830">深入JVM–Java运行时内存区域详解</a></p>
+<p>Java内存模型英文为<strong>Java Memory Model</strong>，简称为JMM。JMM本身是一个抽象概念，并非真实存在于Java虚拟机中。它的目的仅仅是定义了程序中各种变量（指实例变量、静态字段和构成数组对象的元素，但不包括局部变量和方法参数，因为局部变量和方法参数是线程私有的，不会被线程共享）的访问规范，即关注在虚拟机中把变量存储到内存和从内存中取出变量值这样的底层细节。而在虚拟机中的运算单元就是线程，因此<strong>可以理解为JMM定义的就是线程访问共享变量的方式。</strong> 当然，这么解释JMM可能仍然很抽象和难以理解。关于JMM我们不妨先放一放，先来了解一下计算机的缓存一致性问题，了解缓存一致性问题将更有利于我们认识Java内存模型。</p>
+<h3 id="1-缓存一致性"><a href="#1-缓存一致性" class="headerlink" title="1.缓存一致性"></a>1.缓存一致性</h3><p>我们知道，一个简单的计算机可以抽象为<strong>CPU</strong>、<strong>内存</strong>以及I/O设备，其中，CPU负责数据的处理与运算，内存则可以理解为存储CPU运算后的数据。CPU在运行时，会首先从内存中取出运算指令，然后解码并确定其类型和操作数，最后执行该指令。在指令执行完毕后，CPU会将计算所得数据写入内存。</p>
+<p>然而，在计算机系统中存在一个CPU的运算速度与内存读写速度不匹配的问题，即CPU的运算速度远比内存的读写速度快。由于读写速度缓慢，严重拖累了计算机的运行效率。为了解决这一问题，现代计算机系统在CPU与内存之间加入了一层或多层<strong>高速缓存</strong>，而高速缓存的读写速度与CPU的运算速度几乎相当。在加入高速缓存后，CPU在执行指令前，需要先将要运算的数据从内存读取（即复制）到高速缓存中，接着CPU对数据进行处理，然后再将运算后的数据写入到高速缓存，最后再从缓存同步回内存中。</p>
+<p>可以看到，基于高速缓存的存储交互很好的解决了单CPU与内存读写速度之间的矛盾。但在多CPU的计算机中却引来了新的问题。由于人们对计算机性能的追求，单CPU已经很难维持“摩尔定律”。目前市面上绝大部分都是多CPU的计算机。在多CPU的系统中，每个处理器都有自己的高速缓存，而它们又共享同一个主内存，如下图。当多个处理器的运算任务都涉及到同一块主内存区域时，将可能导致各自缓存数据不一致的问题。例如，处理器1与处理器2都从主内存读取了同一个数据分别存储到自己的高速缓存区域，然后，两个处理器都对这一数据进行了修改。那么再同步回主内存的时候应该以哪条数据为准呢？这一问题就是<strong>缓存一致性问题</strong></p>
+<p>为了解决缓存一致性问题，设计者们为CPU制定了一个读写协议，并要求各个CPU在读写缓存时都要遵循这一协议。这类协议有MSI、MESI、MOSI等，被称为<strong>缓存一致性协议</strong>。只要CPU的读写遵循了缓存一致性协议就能很好的解决缓存一致性问题了。关于协议的具体实现，不是本篇文章的内容，这里不再赘述。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/28a5340c92ca49d7a9534c6d7d2d0386~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="0AC13792-79A8-420E-AD8D-F447E9AEC514.png"></p>
+<h3 id="2-Java内存模型（JMM）"><a href="#2-Java内存模型（JMM）" class="headerlink" title="2.Java内存模型（JMM）"></a>2.Java内存模型（JMM）</h3><p>在了解了缓存一致性问题后，我们继续回到jMM。在本章开篇，我们为JMM下了一个比较抽象的定义。并且提到JMM可以简单的理解为线程访问共享变量的方式。可见JMM是Java并发编程的底层基础，想要深入了解并发编程，就需要先理解JMM。那么本节内容，我们就来具体的谈一谈JMM。</p>
+<p><strong>JMM规定所有变量都存储在主内存中，每条线程还有自己的工作内存。线程的工作内存中保存了被线程使用的变量的主内存副本，线程对变量的所有操作都必须在工作内存中进行，而不能直接读写主内存中的数据。不同线程之间也无法直接访问对方的工作内存中的变量，线程间变量值的传递需要通过主内存来完成。</strong> 也就是说Java线程之间的通信采用的是共享内存。</p>
+<p>看到这里是不是觉得似曾相识？没错，这里其实跟上一节<strong>缓存一致性</strong>中讲到的多CPU共享主内存是类似的。只不过在虚拟机中不是CPU，而是线程。每条线程都有自己的工作空间，而共享变量存储在共享内存中。线程在运行时会首先将共享内存中的数据读取到自己的工作内存，即在线程的工作内存中复制了一个共享变量的副本，然后对其进行计算，计算完成后线程会将自己工作内存中的这个共享变量副本同步回主内存。线程、工作内存、与主内存的关系如下图所示：<br><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/366a7954b2da4a15aa21a4ee5ed6bf40~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="FFC84BBD-0C24-42FE-A38C-99A40F967F72.png"></p>
+<p>到这里，大家对于Java的内存模型应该都有了一个深入的了解。但是，很多同学还是会疑惑Java内存模型和Java的内存区域到底有什么关系？在<a target="_blank" rel="noopener" href="https://juejin.cn/post/6868340872698658830">深入JVM–Java运行时内存区域详解</a>这一篇文章中有讲到虚拟机的内存被分为了程序计数器、Java堆、方法区以及虚拟机栈等几个内存区域，而在这几个内存区域中，虚拟机栈是线程所独有的。到这里，我想有些读者心里应该已经有了答案。其实，Java内存模型与Java内存区域并不是同一个层次对内存的划分，可以说两者并没有什么关系。但是它们之间也存在着比较明显的对应关系，即主内存对应Java堆中的实例数据部分，而工作内存则对应虚拟机栈中的一些区域。</p>
+<p>到这里我们已经理清楚了Java内存模型的概念，但是似乎还少了点东西。我们知道多CPU的计算机的存在缓存一致性问题。那么对于Java内存模型来说，多个线程之间是不是也会存在一样的类似问题呢？那对于这一问题，Java又是怎么解决的呢？</p>
+<h2 id="二、volatile关键字"><a href="#二、volatile关键字" class="headerlink" title="二、volatile关键字"></a>二、volatile关键字</h2><p>上一章中我们认识了Java内存模型，并且提出了Java内存模型中也会存在缓存一致性问题。而解决Java内存模型的缓存一致性问题靠的就是本章的主角–volatitle关键字。volatitle关键字是面试中的常客，虽然它的使用却很简单，但真正理解volatile关键字的人并不多。因为要理解volatile关键字，首先要搞懂Java的内存模型。本章内容，就在上章内容的基础上来认识volatile关键字。</p>
+<p>在认识volatile之前，我们先来了解一下Java并发编程的三大性质即：是原子性、可见性以及有序性。</p>
+<ul>
+<li>原子性 原子在化学中反应上是不可在分割的粒子。因此原子性指的是一个不可以被分割的操作，即这个操作在执行过程中不能被中断，要么全部不执行，要么全部执行。且一旦开始执行，不会被其他线程打断。</li>
+<li>可见性 指的是一个线程修改了共享变量后，另外线程能立即感知这个变量被修改。</li>
+<li>有序性 指程序按照代码的先后顺序执行。有时候为了优化性能，编译器会对字节码指令进行重排序。但是能保证重排序后的执行结果与重排序之前是一致的。</li>
+</ul>
+<p>volatitle经常被用到并发编程的场景中。它的作用有两个，即：</p>
+<ul>
+<li>保证可见性；</li>
+<li>保证有序性。</li>
+</ul>
+<p>但是，要注意volatile关键字并不能保证原子性。接下来我们对volatile的两个作用进行详细分析。</p>
+<h3 id="1-volatile保证可见性"><a href="#1-volatile保证可见性" class="headerlink" title="1.volatile保证可见性"></a>1.volatile保证可见性</h3><p>在第一章中我们已经知道，由于每个线程都有自己的工作空间，导致多线程的场景下会出现缓存不一致性的问题。即，当两个线程共用一个共享变量时，如果其中一个线程修改了这个共享变量的值。但是由于另外一个线程在自己的工作内存中已经保留了一份该共享变量的副本，因此它无法感知该变量的值已经被修改。</p>
+<p>看下面的一个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">VolatileDemo</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">boolean</span> ready;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyThread</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Thread</span> </span>&#123;<br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;<br>            System.out.println(<span class="hljs-string">&quot;MyThread is running...&quot;</span>);<br>            <span class="hljs-keyword">while</span> (!ready) ; <span class="hljs-comment">// 如果ready为false，则死循环</span><br>            System.out.println(<span class="hljs-string">&quot;MyThread is end&quot;</span>);<br>        &#125;<br>    &#125;<br><br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> InterruptedException </span>&#123;<br>        <span class="hljs-keyword">new</span> MyThread().start();<br>        Thread.sleep(<span class="hljs-number">1000</span>);<br>        ready = <span class="hljs-keyword">true</span>;<br>        System.out.println(<span class="hljs-string">&quot;ready = &quot;</span> + ready);<br>        Thread.sleep(<span class="hljs-number">5000</span>);<br>        System.out.println(<span class="hljs-string">&quot;main thread is end.&quot;</span>);<br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+<p>代码中定义了一个boolean类型的成员变量ready,其默认值为false。在MyThread线程中判断如果ready为false时则进行死循环。接下来在main方法中开启MyThread线程，并在睡眠1s后将ready修改为true。正常情况下ready修改为true后MyThread线程中的死循环则会停止，并打印“MyThread is end”。但是来看下运行效果跟我们猜想是否一致，打印日志如下：</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs applescript">MyThread <span class="hljs-keyword">is</span> <span class="hljs-built_in">running</span>...<br>ready = <span class="hljs-literal">true</span><br>main thread <span class="hljs-keyword">is</span> <span class="hljs-keyword">end</span>.<br></code></pre></td></tr></table></figure>
+<p>可以看见当ready被修改为true后，MyThread线程依然未结束。通过这一例子也证实了MyThread线程中的ready副本并没有得到及时的更新。</p>
+<p>那么接下来我们将成员变量ready使用volatile关键字修饰后，再运行看打印日志：</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs applescript">MyThread <span class="hljs-keyword">is</span> <span class="hljs-built_in">running</span>...<br>MyThread <span class="hljs-keyword">is</span> <span class="hljs-keyword">end</span><br>ready = <span class="hljs-literal">true</span><br>main thread <span class="hljs-keyword">is</span> <span class="hljs-keyword">end</span>.<br></code></pre></td></tr></table></figure>
+
+<p>可见，当在主线程中修改了ready为true后，MyThread线程立即感知了ready的变化，并结束了死循环。从这个例子中也可以看见volatile确实能有效的保证多个线程共享变量的可见性。</p>
+<h3 id="2-volatile保证有序性"><a href="#2-volatile保证有序性" class="headerlink" title="2.volatile保证有序性"></a>2.volatile保证有序性</h3><p>我们知道，编译器为了优化程序性能，可能会在编译时对字节码指令进行重排序。重排序后的指令在单线程中运行时没有问题的，但是如果在多线程中，重排序后的代码则可能会出现问题。因此，一般在多线程并发情况下我们都应该禁止指令重排序的优化。而volatile关键字就可以禁止编译器对字节码进行重排序。volatile保证有序性在我们平时开发中有一个很常见的例子，即双重锁校验的单例模式下需要使用volatile关键字来禁止指令重排序。我们来看下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DoubleCheckLock</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">volatile</span> <span class="hljs-keyword">static</span> DoubleCheckLock instance;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-title">DoubleCheckLock</span><span class="hljs-params">()</span></span>&#123;&#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> DoubleCheckLock <span class="hljs-title">getInstance</span><span class="hljs-params">()</span></span>&#123;<br><br>        <span class="hljs-comment">//第一次检测</span><br>        <span class="hljs-keyword">if</span> (instance==<span class="hljs-keyword">null</span>)&#123;<br>            <span class="hljs-comment">//同步</span><br>            <span class="hljs-keyword">synchronized</span> (DoubleCheckLock.class)&#123;<br>                <span class="hljs-keyword">if</span> (instance == <span class="hljs-keyword">null</span>)&#123;<br>                    <span class="hljs-comment">//多线程环境下可能会出现问题的地方</span><br>                    instance = <span class="hljs-keyword">new</span> DoubleCheckLock();<br>                &#125;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">return</span> instance;<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>如果上述代码中没有给instance加上volatile关键字会怎么呢？我们不妨来分析一下，首先我们应该清楚instance = new DoubleCheckLock();这一操作并不是一个原子操作，实例化对象的字节指令可以分为三步，如下：</p>
+<ul>
+<li>1.分配对象内存：memory = allocate();</li>
+<li>2.初始化对象：instance(memory);</li>
+<li>3.instance指向刚分配的内存地址：instance = memory;</li>
+</ul>
+<p>而由于编译器的指令重排序，以上指令可能会出现以下顺序：</p>
+<ul>
+<li>1.分配对象内存：memory = allocate();</li>
+<li>2.instance指向刚分配的内存地址：instance = memory;</li>
+<li>3.初始化对象：instance(memory);</li>
+</ul>
+<p>以优化后的字节码指令来看双重锁校验的代码是否有问题呢？不难发现，如果线程1第一次调用单例方法，在该线程的时间片轮转结束后执行到了优化后的第二个指令，即instance被赋值，但是还未被分配初始化对象。此时，线程2抢到了CPU时间片，同时调用了getInstance方法，第一次校验就发现instance不为null，遂将其返回。在得到这个单例后调用单例的方法，此时必定出现空指针异常。</p>
+<p>因此，可见指令重排序在多线程并发的情况下是会出现问题的。此时，我们便可以通过volatile关键字来禁止编译器的优化，从而避免空指针的出现。</p>
+<h3 id="3-volatile不能保证原子性"><a href="#3-volatile不能保证原子性" class="headerlink" title="3.volatile不能保证原子性"></a>3.volatile不能保证原子性</h3><p>对于原子操作，volatile关键字是无能为力的。如果需要保证原子操作，则需要使用synchronized关键字、Lock锁<br>或者Autom相关类来确保操作的原子性。关于这些内容本篇文章不再赘述，将会在后续文章中详细分析。</p>
+<h2 id="参考-amp-推荐阅读"><a href="#参考-amp-推荐阅读" class="headerlink" title="参考&amp;推荐阅读"></a>参考&amp;推荐阅读</h2><p>《深入理解Java虚拟机》第3版，作者周志明</p>
+<p>《现代操作系统》作者Andrews.Tanenbaum/Herber Bos</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/javazejian/article/details/72772461">全面理解Java内存模型(JMM)及volatile关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/eff666/article/details/66479636">Java内存模型</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+                    
+                      <a class="hover-with-bg" href="/tags/JMM/">JMM</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/13/38-sparsearray/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">这一次，彻底搞懂SparseArray实现原理</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/01/16/java-generics/">
+                        <span class="hidden-mobile">详解Java中的泛型（Generics）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

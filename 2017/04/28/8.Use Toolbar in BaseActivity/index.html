@@ -1,0 +1,512 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>BaseActivity中封装通用的Toolbar - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="BaseActivity中封装通用的Toolbar">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2017-04-28 23:35" pubdate>
+        2017年4月28日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      11
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">BaseActivity中封装通用的Toolbar</h1>
+            
+            <div class="markdown-body">
+              <p>之前写过一篇关于如何使用Toolbar的文章，最近在搭建新项目时对Toolbar做了封装。封装的预期目标是只在BaseActivity中引入Toolbar，然后子Activity通过继承BaseActivity就能显示Toolbar。接下来就看看如何实现这样的功能。<br>因为我们使用toolbar作为titlebar，因此首先需要去掉Actionbar。在style文件下修改默认Theme的parent为Theme.AppCompat.Light.NoActionBar便可以去掉默认的Actionbar，如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">style</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;AppTheme&quot;</span> <span class="hljs-attr">parent</span>=<span class="hljs-string">&quot;Theme.AppCompat.Light.NoActionBar&quot;</span>&gt;</span><br><span class="xml">    <span class="hljs-comment">&lt;!-- Customize your theme here. --&gt;</span></span><br><span class="xml">    <span class="hljs-tag">&lt;<span class="hljs-name">item</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;colorPrimary&quot;</span>&gt;</span>@color/colorPrimary<span class="hljs-tag">&lt;/<span class="hljs-name">item</span>&gt;</span></span><br><span class="xml">    <span class="hljs-tag">&lt;<span class="hljs-name">item</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;colorPrimaryDark&quot;</span>&gt;</span>@color/colorPrimaryDark<span class="hljs-tag">&lt;/<span class="hljs-name">item</span>&gt;</span></span><br><span class="xml">    <span class="hljs-tag">&lt;<span class="hljs-name">item</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;colorAccent&quot;</span>&gt;</span>@color/colorAccent<span class="hljs-tag">&lt;/<span class="hljs-name">item</span>&gt;</span></span><br><span class="hljs-tag">&lt;/<span class="hljs-name">style</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>然后定义一个toolbar_layout的xml文件，在toolbar中加入俩个TextView作为标题和子标题，如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">android.support.v7.widget.Toolbar</span></span><br><span class="hljs-tag">    <span class="hljs-attr">xmlns:android</span>=<span class="hljs-string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/toolbar&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;wrap_content&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:background</span>=<span class="hljs-string">&quot;@color/colorPrimary&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:minHeight</span>=<span class="hljs-string">&quot;?attr/actionBarSize&quot;</span>&gt;</span><br>    <span class="hljs-comment">&lt;!--自定义toolbar的title 和subtitle --&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">TextView</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/tv_right&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">style</span>=<span class="hljs-string">&quot;@style/TextAppearance.AppCompat.Widget.ActionBar.Subtitle&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;wrap_content&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;wrap_content&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:maxLines</span>=<span class="hljs-string">&quot;1&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:textColor</span>=<span class="hljs-string">&quot;@color/white&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:text</span>=<span class="hljs-string">&quot;right&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:paddingRight</span>=<span class="hljs-string">&quot;10dp&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_gravity</span>=<span class="hljs-string">&quot;right&quot;</span> /&gt;</span><br><br>    <span class="hljs-tag">&lt;<span class="hljs-name">TextView</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/tv_title&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">style</span>=<span class="hljs-string">&quot;@style/TextAppearance.AppCompat.Widget.ActionBar.Title&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;wrap_content&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;wrap_content&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:lines</span>=<span class="hljs-string">&quot;1&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:ellipsize</span>=<span class="hljs-string">&quot;end&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:text</span>=<span class="hljs-string">&quot;title&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:scrollHorizontally</span>=<span class="hljs-string">&quot;true&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:textColor</span>=<span class="hljs-string">&quot;@color/white&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_gravity</span>=<span class="hljs-string">&quot;center&quot;</span> /&gt;</span><br><br><span class="hljs-tag">&lt;/<span class="hljs-name">android.support.v7.widget.Toolbar</span>&gt;</span><br></code></pre></td></tr></table></figure>
+<p>接着在BaseActivity的布局文件中include进toolbar_layout，如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">LinearLayout</span> <span class="hljs-attr">xmlns:android</span>=<span class="hljs-string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;wrap_content&quot;</span>&gt;</span><br><br>    <span class="hljs-tag">&lt;<span class="hljs-name">include</span> <span class="hljs-attr">layout</span>=<span class="hljs-string">&quot;@layout/toolbar_layout&quot;</span>/&gt;</span><br><br><span class="hljs-tag">&lt;/<span class="hljs-name">LinearLayout</span>&gt;</span><br><br></code></pre></td></tr></table></figure>
+<p>这样BaseActivity中就可以正常显示出Toolbar了。那么如何实现子Activity继承BaseActivity而显示toolbar呢？其实我们可以在BaseActivity中做文章。<br>首先在BaseActivity中声明一个LinearLayout,然后把BaseActivity的布局文件添加到该LinearLayout中。我们知道子Activity通过setContentView()方法来关联布局文件，因此我们可以在BaseActivity中去重写setContentView()方法，在重写的setContentView中把子类的布局文件也添加到事先声明的LinearLayout中，接下来应该解决如何将这个LinearLayout与Activity关联。查阅相关资料可以知道，可以通过 findViewById(android.R.id.content)拿到window的ViewGroup然后将刚才声明的LinearLayout添加到这个ViewGroup中，这样就可以在子Activity中显示出BaseActivity中的Toolbar了。（具体原因可以查阅android.R.id.content和 DecorView）代码如下：</p>
+<figure class="highlight smali"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs smali">public<span class="hljs-keyword"> abstract</span> class BaseActivity extends AppCompatActivity&#123;<br>     //the container of this activity layout<span class="hljs-built_in"> and </span>sub-activity layout<br>   <span class="hljs-keyword"> private</span> <span class="hljs-class">LinearLayout parentLinearLayout;</span><br>    <br>    @Override<br>   <span class="hljs-keyword"> public</span> void onCreate(Bundle savedInstanceState) &#123;<br>        super.onCreate(savedInstanceState);<br>        initContentView(R.layout.activity_base);<br>        setContentView(getLayoutId());<br>        initToolBar();<br>        init();<br>    &#125;<br>//  overwrite the function in<span class="hljs-built_in"> sub-activity </span>and<span class="hljs-built_in"> return </span>the layout id of<span class="hljs-built_in"> sub-activity </span>  <br><span class="hljs-keyword"> protected</span><span class="hljs-keyword"> abstract</span><span class="hljs-built_in"> int </span>getLayoutId();<br> <br><span class="hljs-keyword"> private</span> void initContentView(@LayoutRes<span class="hljs-built_in"> int </span>layoutResID) &#123;<br>        ViewGroup viewGroup = (ViewGroup) findViewById(android.R.id.content);<br>        viewGroup.removeAllViews();<br>        parentLinearLayout =<span class="hljs-built_in"> new </span>LinearLayout(this);<br>        parentLinearLayout.setOrientation(<span class="hljs-class">LinearLayout.VERTICAL);</span><br>		// <span class="hljs-built_in"> add </span>parentLinearLayout in viewGroup<br>        viewGroup.addView(parent<span class="hljs-class">LinearLayout);</span><br>        // <span class="hljs-built_in"> add </span>the layout of BaseActivity in parentLinearLayout<br>        LayoutInflater.from(this).inflate(layoutResID, parent<span class="hljs-class">LinearLayout, true);</span><br>    &#125;<br>   /**<br>     * @param layoutResID  layout id of sub-activity<br>     */<br>    @Override<br>   <span class="hljs-keyword"> public</span> void setContentView(@LayoutRes<span class="hljs-built_in"> int </span>layoutResID) &#123;<br>        //  added the<span class="hljs-built_in"> sub-activity </span>layout id in parentLinearLayout<br>        LayoutInflater.from(this).inflate(layoutResID, parent<span class="hljs-class">LinearLayout, true);</span><br><br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>上述代码通过initContentView()方法将BaseActivity中的布局文件添加到了声明的parentLinearLayout中，通过setContentView()方法将子Activity的布局也添加到了parentLinearLayout中，然后又将parentLinearLayout添加到了viewGroup中实现了Activity与布局文件的关联。至此我们完成了第一步，使子Activity可以显示出BaseActivity中的Toolbar布局。<br>接下来，我们需要在BaseActivity中对Toolbar进行封装，使其能够更加方便的在子Activity中使用。比如添加toolbar回退键的监听，添加是否显示回退键的方法等。完整的BaseActivity如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">public abstract <span class="hljs-keyword">class</span> BaseActivity extends AppCompatActivity&#123;<br>    <span class="hljs-comment">//the container of this activity layout and sub-activity layout </span><br>    <span class="hljs-keyword">private</span> LinearLayout parentLinearLayout;<br>    <span class="hljs-keyword">private</span> TextView mTvTitle;<br>    <span class="hljs-keyword">private</span> TextView mTvRight;<br>    <span class="hljs-keyword">private</span> Toolbar mToolbar;<br>    @Override<br>    public void on<span class="hljs-constructor">Create(Bundle <span class="hljs-params">savedInstanceState</span>)</span> &#123;<br>        super.on<span class="hljs-constructor">Create(<span class="hljs-params">savedInstanceState</span>)</span>;<br>        init<span class="hljs-constructor">ContentView(R.<span class="hljs-params">layout</span>.<span class="hljs-params">activity_base</span>)</span>;<br>	      <br>        set<span class="hljs-constructor">ContentView(<span class="hljs-params">getLayoutId</span>()</span>);<br>        init<span class="hljs-constructor">ToolBar()</span>;<br>        set<span class="hljs-constructor">BackIcon()</span>;<br>        init<span class="hljs-literal">()</span>;<br>    &#125;<br><span class="hljs-comment">//  overwrite the function in sub-activity and return the layout id of sub-activity </span><br> protected abstract <span class="hljs-built_in">int</span> get<span class="hljs-constructor">LayoutId()</span>;<br><br> <span class="hljs-keyword">private</span> void init<span class="hljs-constructor">ContentView(@LayoutRes <span class="hljs-params">int</span> <span class="hljs-params">layoutResID</span>)</span> &#123;<br>        ViewGroup viewGroup = (ViewGroup) find<span class="hljs-constructor">ViewById(<span class="hljs-params">android</span>.R.<span class="hljs-params">id</span>.<span class="hljs-params">content</span>)</span>;<br>        viewGroup.remove<span class="hljs-constructor">AllViews()</span>;<br>        parentLinearLayout = <span class="hljs-keyword">new</span> <span class="hljs-constructor">LinearLayout(<span class="hljs-params">this</span>)</span>;<br>        parentLinearLayout.set<span class="hljs-constructor">Orientation(LinearLayout.VERTICAL)</span>;<br>        viewGroup.add<span class="hljs-constructor">View(<span class="hljs-params">parentLinearLayout</span>)</span>;<br>        <span class="hljs-comment">//  add the layout of BaseActivity in parentLinearLayout</span><br>        <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">LayoutInflater</span>.</span></span>from(this).inflate(layoutResID, parentLinearLayout, <span class="hljs-literal">true</span>);<br>    &#125;<br>   <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * @param layoutResID  the layout id of sub Activity</span><br><span class="hljs-comment">     */</span><br>    @Override<br>    public void set<span class="hljs-constructor">ContentView(@LayoutRes <span class="hljs-params">int</span> <span class="hljs-params">layoutResID</span>)</span> &#123;<br>        <span class="hljs-comment">//  added the sub-activity layout id in parentLinearLayout</span><br>        <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">LayoutInflater</span>.</span></span>from(this).inflate(layoutResID, parentLinearLayout, <span class="hljs-literal">true</span>);<br><br>    &#125;<br><br><span class="hljs-keyword">private</span> void set<span class="hljs-constructor">BackIcon()</span>&#123;<br>        <span class="hljs-keyword">if</span> (null != get<span class="hljs-constructor">Toolbar()</span><span class="hljs-operator"> &amp;&amp; </span>is<span class="hljs-constructor">ShowBacking()</span>) &#123;<br>            get<span class="hljs-constructor">Toolbar()</span>.set<span class="hljs-constructor">NavigationIcon(R.<span class="hljs-params">drawable</span>.<span class="hljs-params">icon_back</span>)</span>;<br>            get<span class="hljs-constructor">Toolbar()</span>.set<span class="hljs-constructor">NavigationOnClickListener((<span class="hljs-params">v</span>)</span> -&gt; on<span class="hljs-constructor">BackPressed()</span>);<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * @return TextView in center</span><br><span class="hljs-comment">     */</span><br>    public TextView get<span class="hljs-constructor">ToolbarTitle()</span> &#123;<br>        return mTvTitle;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * @return TextView on the right</span><br><span class="hljs-comment">     */</span><br>    public TextView get<span class="hljs-constructor">SubTitle()</span> &#123;<br>        return mTvRight;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * set Title</span><br><span class="hljs-comment">     * @param title</span><br><span class="hljs-comment">     */</span><br>    public void set<span class="hljs-constructor">ToolBarTitle(CharSequence <span class="hljs-params">title</span>)</span> &#123;<br>        <span class="hljs-keyword">if</span> (mTvTitle != null) &#123;<br>            mTvTitle.set<span class="hljs-constructor">Text(<span class="hljs-params">title</span>)</span>;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            get<span class="hljs-constructor">Toolbar()</span>.set<span class="hljs-constructor">Title(<span class="hljs-params">title</span>)</span>;<br>            set<span class="hljs-constructor">SupportActionBar(<span class="hljs-params">getToolbar</span>()</span>);<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * the toolbar of this Activity</span><br><span class="hljs-comment">     * @return support.v7.widget.Toolbar.</span><br><span class="hljs-comment">     */</span><br>    public Toolbar get<span class="hljs-constructor">Toolbar()</span> &#123;<br>        return (Toolbar) find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">toolbar</span>)</span>;<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * is show back icon,default is none。</span><br><span class="hljs-comment">     * you can override the function in subclass and return to true show the back icon</span><br><span class="hljs-comment">     * @return</span><br><span class="hljs-comment">     */</span><br>    protected boolean is<span class="hljs-constructor">ShowBacking()</span> &#123;<br>        return <span class="hljs-literal">true</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>最后我们可以在子Activity中去使用toolbar了。<br>我们让MainActivity继承BaseActivity,并在布局文件中添加一个button，切布局文件中没有添加标题栏，布局文件的代码就不再贴出了。然后 重写isShowBacing()方法，使其返回false，隐藏MainActivity的回退键。<br>代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseActivity</span> </span>&#123;<br>    <span class="hljs-meta">@BindView(R.id.btn)</span><br>    Button mBtn1;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">int</span> <span class="hljs-title">getLayoutId</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> R.layout.activity_main;<br>    &#125;<br>	<br>	 <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">isShowBacking</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>    &#125;<br><br><span class="hljs-meta">@OnClick(&#123;R.id.btn&#125;)</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Onclick</span><span class="hljs-params">(View view)</span></span>&#123;<br>        <span class="hljs-keyword">switch</span> (view.getId())&#123;<br>            <span class="hljs-keyword">case</span> R.id.btn:<br>                startActivity(<span class="hljs-keyword">new</span> Intent(<span class="hljs-keyword">this</span>,TestActivity.class));<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>创建TestActivity并继承BaseActivity，TestActivity的布局文件中不添加任何view。然后在TestActivity中给toolbar设置内容，如下：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs scala">public <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseActivity</span> </span>&#123;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">protected</span> int getLayoutId() &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-type">R</span>.layout.activity_test;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">protected</span> void init() &#123;<br>        getToolbarTitle().setText(<span class="hljs-string">&quot;中间标题&quot;</span>);<br>        getSubTitle().setText(<span class="hljs-string">&quot;右边标题&quot;</span>);<br>        <span class="hljs-type">Toolbar</span> toolbar = getToolbar();<br>        toolbar.setLogo(<span class="hljs-type">R</span>.mipmap.ic_launcher);<br>        toolbar.setNavigationIcon(<span class="hljs-type">R</span>.drawable.back_white);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>效果如下图所示</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTcwNDI5MTk1MzUxMDk5?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Android/">Android</a>
+                    
+                  </div>
+                
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2017/04/30/9.RxJava-Retrofit(1)/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">RxJava+Retrofit完美封装（一）</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2017/03/16/7.Custom%20View--LineChartView/">
+                        <span class="hidden-mobile">自定义View之颜色渐变折线图</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

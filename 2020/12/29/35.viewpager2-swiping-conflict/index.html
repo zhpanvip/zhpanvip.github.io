@@ -1,0 +1,541 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>这可能是ViewPager2滑动冲突最全处理方案 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="这可能是ViewPager2滑动冲突最全处理方案">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-12-29 19:30" pubdate>
+        2020年12月29日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.9k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      18
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">这可能是ViewPager2滑动冲突最全处理方案</h1>
+            
+            <div class="markdown-body">
+              <p>自去年12月份ViewPager2正式版发布以后，ViewPager2已经逐渐开始替代旧版本的ViewPager。许多开发者也已经在项目中使用了ViewPager2。相比ViewPager，ViewPager2的功能不可谓不强大，我在之前写过的一篇文章<a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2019/12/14/24.Know%20about%20ViewPager2/">《学不动也要学！深入了解ViewPager2 》</a>中对ViewPager2的使用做过详细的讲解。但是，由于当时没有太多实战，所以并没有发现ViewPager2的嵌套使用存在严重的滑动冲突。直到今年三月份用ViewPager2重构<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>的时候才发现这个问题。因此，在BVP 3.0版本中额外对ViewPager2做了滑动冲突处理，效果还算差强人意。另外，曾在论坛上看到过不少ViewPager2滑动冲突的求助帖子，甚至还有同学因为搜索ViewPager2滑动冲突而找到了<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>的Github主页。既然如此，不如写篇文章将BVP处理滑动冲突的经验分享给大家，没准还能涨知 <strong>(fěn)</strong> 识 **(sī)**，嘿嘿嘿。<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ed8add25f5694c7f97ad7fec8ded4f5d~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
+<h2 id="一、为什么ViewPager没有滑动冲突？"><a href="#一、为什么ViewPager没有滑动冲突？" class="headerlink" title="一、为什么ViewPager没有滑动冲突？"></a>一、为什么ViewPager没有滑动冲突？</h2><p>不知道你是否有这个疑问，在ViewPager时代，ViewPager嵌套ViewPager并没有出现过滑动冲突。可是为什么在ViewPager的升级版ViewPager2中却出现了滑动冲突呢？想要搞清楚这个问题就需要我们深入到ViewPager和ViewPager2的内部分析一下它们的源码了。</p>
+<p>我们知道，滑动冲突是需要在onInterceptTouchEvent方法中进行处理的，根据自身条件来决定是否要拦截事件。在ViewPager的源码中看到以下代码(方便阅读，代码做了删减)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">onInterceptTouchEvent</span><span class="hljs-params">(MotionEvent ev)</span> </span>&#123;<br><br>        <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> action = ev.getAction() &amp; MotionEvent.ACTION_MASK;<br>        <span class="hljs-keyword">if</span> (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) &#123;<br>        	<span class="hljs-comment">// 在事件取消或者抬起手指后重置状态</span><br>            resetTouch();<br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>        &#125;<br><br><br>        <span class="hljs-keyword">switch</span> (action) &#123;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_MOVE: &#123;<br>                <span class="hljs-comment">// 这里判断在水平方向上的滑动距离大于竖直方向的2倍，则认为是有效的切换页面的滑动</span><br>                <span class="hljs-keyword">if</span> (xDiff &gt; mTouchSlop &amp;&amp; xDiff * <span class="hljs-number">0.5f</span> &gt; yDiff) &#123; <br>                    mIsBeingDragged = <span class="hljs-keyword">true</span>;<br>                    <span class="hljs-comment">// 禁止Parent View拦截事件，即事件要能够传递到ViewPager</span><br>                    requestParentDisallowInterceptTouchEvent(<span class="hljs-keyword">true</span>);<br>                    setScrollState(SCROLL_STATE_DRAGGING);<br>                &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (yDiff &gt; mTouchSlop) &#123;<br>                    mIsUnableToDrag = <span class="hljs-keyword">true</span>;<br>                &#125;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br><br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_DOWN: &#123;     <br>                <span class="hljs-keyword">if</span> (mScrollState == SCROLL_STATE_SETTLING<br>                        &amp;&amp; Math.abs(mScroller.getFinalX() - mScroller.getCurrX()) &gt; mCloseEnough) &#123;<br>               		<span class="hljs-comment">// 在Down事件中禁止Parent View拦截事件，是为了事件序列能够传递到ViewPager</span><br>                    requestParentDisallowInterceptTouchEvent(<span class="hljs-keyword">true</span>);<br>                    setScrollState(SCROLL_STATE_DRAGGING);<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    completeScroll(<span class="hljs-keyword">false</span>);<br>                    mIsBeingDragged = <span class="hljs-keyword">false</span>;<br>                &#125;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br><br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_POINTER_UP:<br>                onSecondaryPointerUp(ev);<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br>        <span class="hljs-keyword">return</span> mIsBeingDragged;<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到在ACTION_DOWN与ACTION_MOVE中根据一些判断条件调用了requestParentDisallowInterceptTouchEvent(true)方法来禁止Parent View拦截事件，也就是说ViewPager已经帮我们处理了滑动冲突，所以我们只管用即可，无需担心滑动冲突问题。</p>
+<p>现在，我们转到ViewPager2中，翻阅源码发现只有在RecyclerView 的实现类中有onInterceptTouchEvent的相关方法，而且这句代码仅仅是处理禁用了用户输入的逻辑！</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RecyclerViewImpl</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">RecyclerView</span> </span>&#123;<br><br>        .... <span class="hljs-comment">// 省略部分代码</span><br><br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">onInterceptTouchEvent</span><span class="hljs-params">(MotionEvent ev)</span> </span>&#123;<br>            <span class="hljs-keyword">return</span> isUserInputEnabled() &amp;&amp; <span class="hljs-keyword">super</span>.onInterceptTouchEvent(ev);<br>        &#125;<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>也就是说ViewPager2其实并没有帮我们处理滑动冲突！这是为什么呢？难道是ViewPager2的开发者们把这件事忘了？这里我敢保证肯定不是这样子的。其实，只要我们看一看ViewPager2的结构大概就能知道了。ViewPager2被声明了final，意味着我们不能像继承ViewPager一样来修改ViewPager2。如果官方在ViewPager2内部自行处理了滑动冲突，那么如果有特殊的需求，需要根据我们自己的情况来处理ViewPager2的滑动，那么官方写的处理滑动冲突的代码是不是会影响到我们自己的需求？所以我觉得也正因为这样，干脆不做任何处理，全权交给了开发者自行解决。</p>
+<h2 id="二、滑动冲突的处理方案"><a href="#二、滑动冲突的处理方案" class="headerlink" title="二、滑动冲突的处理方案"></a>二、滑动冲突的处理方案</h2><p>既然官方不给我们处理，那就需要我们自己动手了。在开始之前我们先来了解以下处理滑动冲突的两种方案。既然出现滑动冲突，那么一定是由于两个布局相互嵌套引起的 。既然是两个布局，那么我们就可以分为两个方向来处理。即所谓的<strong>外部拦截法</strong>和<strong>内部拦截法</strong>。</p>
+<h3 id="1-外部拦截法"><a href="#1-外部拦截法" class="headerlink" title="1.外部拦截法"></a>1.外部拦截法</h3><p>所谓的“外部拦截法“中的外部是指出现滑动冲突的这两个布局的外层。我们知道，一个事件序列是由Parent View先获取到的，如果Parent View不拦截事件那么才会交由子View去处理。既然是外层先获知事件，那外层View根据自身情况来决定是否要拦截事件不就行了吗？因此外部拦截法的实现是非常简单的，大概思路如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">onInterceptTouchEvent</span><span class="hljs-params">(MotionEvent event)</span> </span>&#123;<br>        <span class="hljs-keyword">boolean</span> intercepted = <span class="hljs-keyword">false</span>;<br>        <span class="hljs-keyword">int</span> x = (<span class="hljs-keyword">int</span>) event.getX();<br>        <span class="hljs-keyword">int</span> y = (<span class="hljs-keyword">int</span>) event.getY();<br>        <span class="hljs-keyword">switch</span> (event.getAction()) &#123;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_DOWN: &#123;<br>                intercepted = <span class="hljs-keyword">false</span>;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_MOVE: &#123;<br>                <span class="hljs-keyword">if</span> (needIntercept) &#123; <span class="hljs-comment">// 这里根据需求判断是否需要拦截</span><br>                    intercepted = <span class="hljs-keyword">true</span>;<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    intercepted = <span class="hljs-keyword">false</span>;<br>                &#125;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_UP: &#123;<br>                intercepted = <span class="hljs-keyword">false</span>;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>            <span class="hljs-keyword">default</span>:<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br>        mLastXIntercept = x;<br>        mLastYIntercept = y;<br>        <span class="hljs-keyword">return</span> intercepted;<br>    &#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="2-内部拦截法"><a href="#2-内部拦截法" class="headerlink" title="2.内部拦截法"></a>2.内部拦截法</h3><p>所谓的”内部拦截法“指的是对内部的View做文章，让内部View决定是不是拦截事件。但是现在就有问题了，你怎么知道外部的View是不是要拦截事件啊？？如果外部View把事件拦截了，内部的View岂不是连西北风都喝不到了？别着急，Google官方当然有考虑到这种情况。在ViewGroup中有一个叫requestDisallowInterceptTouchEvent的方法，这个方法接受一个boolean值，意思是是否要禁止ViewGroup拦截当前事件。如果是true的话那么该ViewGroup则无法对事件进行拦截。有了这个方法那我们就可以让内部View大显神通了。来看下内部拦截法的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">dispatchTouchEvent</span><span class="hljs-params">(MotionEvent event)</span> </span>&#123;<br>        <span class="hljs-keyword">int</span> x = (<span class="hljs-keyword">int</span>) event.getX();<br>        <span class="hljs-keyword">int</span> y = (<span class="hljs-keyword">int</span>) event.getY();<br><br>        <span class="hljs-keyword">switch</span> (event.getAction()) &#123;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_DOWN: &#123;<br>            	<span class="hljs-comment">// 禁止parent拦截down事件</span><br>                parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">true</span>);<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_MOVE: &#123;<br>                <span class="hljs-keyword">int</span> deltaX = x - mLastX;<br>                <span class="hljs-keyword">int</span> deltaY = y - mLastY;<br>                <span class="hljs-keyword">if</span> (disallowParentInterceptTouchEvent) &#123; <span class="hljs-comment">// 根据需求条件来决定是否让Parent View拦截事件。</span><br>                    parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">false</span>);<br>                &#125;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>            <span class="hljs-keyword">case</span> MotionEvent.ACTION_UP: &#123;<br>                <span class="hljs-keyword">break</span>;<br>            &#125;<br>            <span class="hljs-keyword">default</span>:<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br><br>        mLastX = x;<br>        mLastY = y;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">super</span>.dispatchTouchEvent(event);<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>这么处理之后，两个嵌套View就可以和谐工作了。</p>
+<p>下面是来自外部View和内部View的对话。</p>
+<p>外部View：”我想拦截事件！“</p>
+<p>内部View：”不，你不想。这事件我要定了，耶稣都留不住他。“<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eb27a9559c3649268b737624c91035f4~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="开发不容易，P图靠自己"></p>
+<h2 id="三、处理ViewPager2的滑动冲突"><a href="#三、处理ViewPager2的滑动冲突" class="headerlink" title="三、处理ViewPager2的滑动冲突"></a>三、处理ViewPager2的滑动冲突</h2><p>上一章讲了滑动冲突处理的两种方案，那么本章我们就来解决ViewPager2的滑动冲突。首先，应该确定一下存在在哪些需要拦截和不需要拦截的边界条件。在写这篇文章之前，我Google搜索了一下ViewPager2的滑动冲突处理方案，关于这方面的文章还不算少，不过大部分的文章对于ViewPager2的滑动冲突处理考虑的都不够完善。</p>
+<p>下面我们详细来分析一下：</p>
+<ul>
+<li>如果设置了userInputEnable=false,那么ViewPager2不应该拦截任何事件；</li>
+<li>如果只有一个Item，那么ViewPager2也不应该拦截事件；</li>
+<li>如果是多个Item，且当前是第一个页面，那么只能拦截向左的滑动事件，向右的滑动事件就不应该由ViewPager2拦截了；</li>
+<li>如果是多个Item，且当前是最后一个页面，那么只能拦截向右的滑动事件，向左的滑动事件不应该由当前的ViewPager2拦截；</li>
+<li>如果是多个Item，且是中间页面，那么无论向左还是向右的事件都应该由ViewPager2拦截；</li>
+<li>最后，由于ViewPager2是支持竖直滑动的，那么竖直滑动也应该考虑以上条件。</li>
+</ul>
+<p>分析完了边界条件之后，我们看下应该使用哪种方案来处理滑动冲突？很明显，这里应该使用内部拦截法处理。但是，由于ViewPager2被设置成了final，我们无法通过继承的方式来处理，因此就需要我们在ViewPager2外部加一层自定义的Layout。这层Layout其实相当于夹在了内层View和外层View的中间，其实就是这层Layout就变成了内层。好了，废话不多说了，直接贴代码了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><code class="hljs java">class ViewPager2Container @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : RelativeLayout(context, attrs, defStyleAttr) &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> mViewPager2: ViewPager2? = <span class="hljs-keyword">null</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> disallowParentInterceptDownEvent = <span class="hljs-keyword">true</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> startX = <span class="hljs-number">0</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> startY = <span class="hljs-number">0</span><br><br>    <span class="hljs-function">override fun <span class="hljs-title">onFinishInflate</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onFinishInflate()<br>        <span class="hljs-keyword">for</span> (i in <span class="hljs-number">0</span> until childCount) &#123;<br>            val childView = getChildAt(i)<br>            <span class="hljs-keyword">if</span> (childView is ViewPager2) &#123;<br>                mViewPager2 = childView<br>                <span class="hljs-keyword">break</span><br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (mViewPager2 == <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-keyword">throw</span> IllegalStateException(<span class="hljs-string">&quot;The root child of ViewPager2Container must contains a ViewPager2&quot;</span>)<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-function">override fun <span class="hljs-title">onInterceptTouchEvent</span><span class="hljs-params">(ev: MotionEvent)</span>: Boolean </span>&#123;<br>        val doNotNeedIntercept = (!mViewPager2!!.isUserInputEnabled<br>                || (mViewPager2?.adapter != <span class="hljs-keyword">null</span><br>                &amp;&amp; mViewPager2?.adapter!!.itemCount &lt;= <span class="hljs-number">1</span>))<br>        <span class="hljs-keyword">if</span> (doNotNeedIntercept) &#123;<br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">super</span>.onInterceptTouchEvent(ev)<br>        &#125;<br>        when (ev.action) &#123;<br>            MotionEvent.ACTION_DOWN -&gt; &#123;<br>                startX = ev.x.toInt()<br>                startY = ev.y.toInt()<br>                parent.requestDisallowInterceptTouchEvent(!disallowParentInterceptDownEvent)<br>            &#125;<br>            MotionEvent.ACTION_MOVE -&gt; &#123;<br>                val endX = ev.x.toInt()<br>                val endY = ev.y.toInt()<br>                val disX = abs(endX - startX)<br>                val disY = abs(endY - startY)<br>                <span class="hljs-keyword">if</span> (mViewPager2!!.orientation == ViewPager2.ORIENTATION_VERTICAL) &#123;<br>                    onVerticalActionMove(endY, disX, disY)<br>                &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (mViewPager2!!.orientation == ViewPager2.ORIENTATION_HORIZONTAL) &#123;<br>                    onHorizontalActionMove(endX, disX, disY)<br>                &#125;<br>            &#125;<br>            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -&gt; parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">false</span>)<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">super</span>.onInterceptTouchEvent(ev)<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> fun <span class="hljs-title">onHorizontalActionMove</span><span class="hljs-params">(endX: Int, disX: Int, disY: Int)</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (mViewPager2?.adapter == <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-keyword">return</span><br>        &#125;<br>        <span class="hljs-keyword">if</span> (disX &gt; disY) &#123;<br>            val currentItem = mViewPager2?.currentItem<br>            val itemCount = mViewPager2?.adapter!!.itemCount<br>            <span class="hljs-keyword">if</span> (currentItem == <span class="hljs-number">0</span> &amp;&amp; endX - startX &gt; <span class="hljs-number">0</span>) &#123;<br>                parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">false</span>)<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                parent.requestDisallowInterceptTouchEvent(currentItem != itemCount - <span class="hljs-number">1</span><br>                        || endX - startX &gt;= <span class="hljs-number">0</span>)<br>            &#125;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (disY &gt; disX) &#123;<br>            parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">false</span>)<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> fun <span class="hljs-title">onVerticalActionMove</span><span class="hljs-params">(endY: Int, disX: Int, disY: Int)</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (mViewPager2?.adapter == <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-keyword">return</span><br>        &#125;<br>        val currentItem = mViewPager2?.currentItem<br>        val itemCount = mViewPager2?.adapter!!.itemCount<br>        <span class="hljs-keyword">if</span> (disY &gt; disX) &#123;<br>            <span class="hljs-keyword">if</span> (currentItem == <span class="hljs-number">0</span> &amp;&amp; endY - startY &gt; <span class="hljs-number">0</span>) &#123;<br>                parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">false</span>)<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                parent.requestDisallowInterceptTouchEvent(currentItem != itemCount - <span class="hljs-number">1</span><br>                        || endY - startY &gt;= <span class="hljs-number">0</span>)<br>            &#125;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (disX &gt; disY) &#123;<br>            parent.requestDisallowInterceptTouchEvent(<span class="hljs-keyword">false</span>)<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 设置是否允许在当前View的&#123;<span class="hljs-doctag">@link</span> MotionEvent#ACTION_DOWN&#125;事件中禁止父View对事件的拦截，该方法</span><br><span class="hljs-comment">     * 用于解决CoordinatorLayout+CollapsingToolbarLayout在嵌套ViewPager2Container时引起的滑动冲突问题。</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * 设置是否允许在ViewPager2Container的&#123;<span class="hljs-doctag">@link</span> MotionEvent#ACTION_DOWN&#125;事件中禁止父View对事件的拦截，该方法</span><br><span class="hljs-comment">     * 用于解决CoordinatorLayout+CollapsingToolbarLayout在嵌套ViewPager2Container时引起的滑动冲突问题。</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * <span class="hljs-doctag">@param</span> disallowParentInterceptDownEvent 是否允许ViewPager2Container在&#123;<span class="hljs-doctag">@link</span> MotionEvent#ACTION_DOWN&#125;事件中禁止父View拦截事件，默认值为false</span><br><span class="hljs-comment">     *                          true 不允许ViewPager2Container在&#123;<span class="hljs-doctag">@link</span> MotionEvent#ACTION_DOWN&#125;时间中禁止父View的时间拦截，</span><br><span class="hljs-comment">     *                          设置disallowIntercept为true可以解决CoordinatorLayout+CollapsingToolbarLayout的滑动冲突</span><br><span class="hljs-comment">     *                          false 允许ViewPager2Container在&#123;<span class="hljs-doctag">@link</span> MotionEvent#ACTION_DOWN&#125;时间中禁止父View的时间拦截，</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function">fun <span class="hljs-title">disallowParentInterceptDownEvent</span><span class="hljs-params">(disallowParentInterceptDownEvent: Boolean)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.disallowParentInterceptDownEvent = disallowParentInterceptDownEvent<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上边代码限于篇幅我就不做过多解释了，注意一下在onFinishInflate中我们通过循环，遍历了ViewPager2Container的所有子View，如果没有找到ViewPager2就抛出异常。另外，disallowParentInterceptDownEvent方法注释写的比较详细就不多说了。</p>
+<p>使用方法也很简单，直接用ViewPager2Container包裹ViewPager2即可：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java">&lt;com.zhpan.sample.viewpager2.ViewPager2Container<br>        android:layout_width=<span class="hljs-string">&quot;match_parent&quot;</span><br>        android:layout_height=<span class="hljs-string">&quot;match_parent&quot;</span><br>        app:layout_constraintBottom_toBottomOf=<span class="hljs-string">&quot;parent&quot;</span><br>        app:layout_constraintLeft_toLeftOf=<span class="hljs-string">&quot;parent&quot;</span><br>        app:layout_constraintRight_toRightOf=<span class="hljs-string">&quot;parent&quot;</span><br>        app:layout_constraintTop_toTopOf=<span class="hljs-string">&quot;parent&quot;</span>&gt;<br>        <br>        &lt;androidx.viewpager2.widget.ViewPager2<br>            android:id=<span class="hljs-string">&quot;@+id/view_pager2&quot;</span><br>            android:layout_width=<span class="hljs-string">&quot;match_parent&quot;</span><br>            android:layout_height=<span class="hljs-string">&quot;match_parent&quot;</span> /&gt;<br><br>        &lt;com.zhpan.indicator.IndicatorView<br>            android:id=<span class="hljs-string">&quot;@+id/indicatorView&quot;</span><br>            android:layout_centerHorizontal=<span class="hljs-string">&quot;true&quot;</span><br>            android:layout_alignParentBottom=<span class="hljs-string">&quot;true&quot;</span><br>            android:layout_margin=<span class="hljs-string">&quot;@dimen/dp_20&quot;</span><br>            android:layout_width=<span class="hljs-string">&quot;wrap_content&quot;</span><br>            android:layout_height=<span class="hljs-string">&quot;wrap_content&quot;</span>/&gt;<br><br>    &lt;/com.zhpan.sample.viewpager2.ViewPager2Container&gt;<br></code></pre></td></tr></table></figure>
+<p>这是关于ViewPager2滑动出冲突的处理方案，当然，由于<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>支持循环轮播，所以BannerViewPager的滑动冲突处理相对会更麻烦些。如果有兴趣的同学可以点击查看<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>的源码。</p>
+<p>同时，<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidSample/blob/master/app/src/main/java/com/zhpan/sample/viewpager2/ViewPager2Container.kt">ViewPager2Container </a>的源码我也放到了Github，需要用到的可以自取。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Android/">Android</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/BVP/">BVP</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ViewPager2/">ViewPager2</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%BB%91%E5%8A%A8%E5%86%B2%E7%AA%81/">滑动冲突</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/01/14/36-java-reflection/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">深入理解Java的反射机制</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/12/27/34.bvp-v3-4-usage/">
+                        <span class="hidden-mobile">跟ViewHolder说再见！实现一个无限轮播图究竟有多简单？</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

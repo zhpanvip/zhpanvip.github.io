@@ -1,0 +1,646 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>Java并发系列终结篇：彻底搞懂Java线程池的工作原理 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Java并发系列终结篇：彻底搞懂Java线程池的工作原理">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-07-10 13:19" pubdate>
+        2021年7月10日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      7.5k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      43
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Java并发系列终结篇：彻底搞懂Java线程池的工作原理</h1>
+            
+            <div class="markdown-body">
+              <p>多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁…等等一系列让人眼花缭乱的并发知识。</p>
+<p>多线程并发系列文章：</p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/">这一次，彻底搞懂Java内存模型与volatile关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/14/39-synchronized/">这一次，彻底搞懂Java中的synchronized关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/">这一次，彻底搞懂Java中的ReentrantLock实现原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/">这一次，彻底搞懂Java并发包中的Atomic原子类</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/">深入理解Java线程的等待与唤醒机制（一）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/03/43-wait-notify2/">深入理解Java线程的等待与唤醒机制（二）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/">Java并发系列终结篇：彻底搞懂Java线程池的工作原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/">Java并发系列番外篇：ThreadLocal原理其实很简单</a></p>
+<p>本篇文章是多线程并发系列的最后一篇，将深入分析Java中线程池的工作原理。个人认为线程池是Java并发中比较难已理解的一块知识，因为线程池内部实现使用到了大量的像ReentrantLock、AQS、AtomicInteger、CAS以及“生产者-消费者”模型等并发相关的知识，基本上涵盖了并发系列前几篇文章的大部分知识点。这也是为什么把线程池放到最后来写的原因。本篇文章权当是一个并发系列的综合练习，刚好巩固实践一下前面知识点的运用。</p>
+<p>开始之前先给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote">AndroidNote</a>这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。</p>
+<h2 id="一、线程池基础知识"><a href="#一、线程池基础知识" class="headerlink" title="一、线程池基础知识"></a>一、线程池基础知识</h2><p>在Java语言中，虽然创建并启动一个线程非常方便，但是由于创建线程需要占用一定的操作系统资源，在高并发的情况下，频繁的创建和销毁线程会大量消耗CPU和内存资源，对程序性能造成很大的影响。为了避免这一问题，Java给我们提供了线程池。</p>
+<p>线程池是一种基于池化技术思想来管理线程的工具。在线程池中维护了多个线程，由线程池统一的管理调配线程来执行任务。通过线程复用，减少了频繁创建和销毁线程的开销。</p>
+<p>本章内容我们先来了解一下线程池的一些基础知识，学习如何使用线程池以及了解线程池的生命周期。</p>
+<h3 id="1-线程池的使用"><a href="#1-线程池的使用" class="headerlink" title="1.线程池的使用"></a>1.线程池的使用</h3><p>线程池的使用和创建可以说非常的简单，这得益于JDK提供给我们良好封装的API。线程池的实现被封装到了ThreadPoolExecutor中，我们可以通过ThreadPoolExecutor的构造方法来实例化出一个线程池，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 实例化一个线程池</span><br>ThreadPoolExecutor executor = <span class="hljs-keyword">new</span> ThreadPoolExecutor(<span class="hljs-number">3</span>, <span class="hljs-number">10</span>, <span class="hljs-number">60</span>,<br>        TimeUnit.SECONDS, <span class="hljs-keyword">new</span> ArrayBlockingQueue&lt;&gt;(<span class="hljs-number">20</span>));<br><span class="hljs-comment">// 使用线程池执行一个任务        </span><br>executor.execute(() -&gt; &#123;<br>    <span class="hljs-comment">// Do something</span><br>&#125;);<br><span class="hljs-comment">// 关闭线程池,会阻止新任务提交，但不影响已提交的任务</span><br>executor.shutdown();<br><span class="hljs-comment">// 关闭线程池，阻止新任务提交，并且中断当前正在运行的线程</span><br>executor.showdownNow();<br></code></pre></td></tr></table></figure>
+<p>创建好线程池后直接调用execute方法并传入一个Runnable参数即可将任务交给线程池执行，通过shutdown/shutdownNow方法可以关闭线程池。</p>
+<p>ThreadPoolExecutor的构造方法中参数众多，对于初学者而言在没有了解各个参数的作用的情况下很难去配置合适的线程池。因此Java还为我们提供了一个线程池工具类Executors来快捷的创建线程池。Executors提供了很多简便的创建线程池的方法，举两个例子，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 实例化一个单线程的线程池</span><br>ExecutorService singleExecutor = Executors.newSingleThreadExecutor();<br><span class="hljs-comment">// 创建固定线程个数的线程池</span><br>ExecutorService fixedExecutor = Executors.newFixedThreadPool(<span class="hljs-number">10</span>);<br><span class="hljs-comment">// 创建一个可重用固定线程数的线程池</span><br>ExecutorService executorService2 = Executors.newCachedThreadPool();<br></code></pre></td></tr></table></figure>
+<p>但是，通常来说在实际开发中并不推荐直接使用Executors来创建线程池，而是需要根据项目实际情况配置适合自己项目的线程池，关于如何配置合适的线程池这是后话，需要我们理解线程池的各个参数以及线程池的工作原理之后才能有答案。</p>
+<h3 id="2-线程池的生命周期"><a href="#2-线程池的生命周期" class="headerlink" title="2.线程池的生命周期"></a>2.线程池的生命周期</h3><p>线程池从诞生到死亡，中间会经历RUNNING、SHUTDOWN、STOP、TIDYING、TERMINATED五个生命周期状态。</p>
+<ul>
+<li><p><strong>RUNNING</strong> 表示线程池处于运行状态，能够接受新提交的任务且能对已添加的任务进行处理。RUNNING状态是线程池的初始化状态，线程池一旦被创建就处于RUNNING状态。</p>
+</li>
+<li><p><strong>SHUTDOWN</strong> 线程处于关闭状态，不接受新任务，但可以处理已添加的任务。RUNNING状态的线程池调用shutdown后会进入SHUTDOWN状态。</p>
+</li>
+<li><p><strong>STOP</strong> 线程池处于停止状态，不接收任务，不处理已添加的任务，且会中断正在执行任务的线程。RUNNING状态的线程池调用了shutdownNow后会进入STOP状态。</p>
+</li>
+<li><p><strong>TIDYING</strong> 当所有任务已终止，且任务数量为0时，线程池会进入TIDYING。当线程池处于SHUTDOWN状态时，阻塞队列中的任务被执行完了，且线程池中没有正在执行的任务了，状态会由SHUTDOWN变为TIDYING。当线程处于STOP状态时，线程池中没有正在执行的任务时则会由STOP变为TIDYING。</p>
+</li>
+<li><p><strong>TERMINATED</strong> 线程终止状态。处于TIDYING状态的线程执行terminated()后进入TERMINATED状态。</p>
+</li>
+</ul>
+<p>根据上述线程池生命周期状态的描述，可以画出如下所示的线程池生命周期状态流程示意图。</p>
+<p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5d8c1f1d6d344862a9ba46eeb3fd101a~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="threadpoollifecycle.png"></p>
+<h2 id="二、线程池的工作机制"><a href="#二、线程池的工作机制" class="headerlink" title="二、线程池的工作机制"></a>二、线程池的工作机制</h2><h3 id="1-ThreadPoolExecutor中的参数"><a href="#1-ThreadPoolExecutor中的参数" class="headerlink" title="1.ThreadPoolExecutor中的参数"></a>1.ThreadPoolExecutor中的参数</h3><p>上一小节中，我们使用ThreadPoolExecutor的构造方法来创建了一个线程池。其实在ThreadPoolExecutor中有多个构造方法，但是最终都调用到了下边代码中的这一个构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ThreadPoolExecutor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AbstractExecutorService</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ThreadPoolExecutor</span><span class="hljs-params">(<span class="hljs-keyword">int</span> corePoolSize,</span></span><br><span class="hljs-function"><span class="hljs-params">                              <span class="hljs-keyword">int</span> maximumPoolSize,</span></span><br><span class="hljs-function"><span class="hljs-params">                              <span class="hljs-keyword">long</span> keepAliveTime,</span></span><br><span class="hljs-function"><span class="hljs-params">                              TimeUnit unit,</span></span><br><span class="hljs-function"><span class="hljs-params">                              BlockingQueue&lt;Runnable&gt; workQueue,</span></span><br><span class="hljs-function"><span class="hljs-params">                              ThreadFactory threadFactory,</span></span><br><span class="hljs-function"><span class="hljs-params">                              RejectedExecutionHandler handler)</span> </span>&#123;<br>        <span class="hljs-comment">// ...省略校验相关代码</span><br>        <br>        <span class="hljs-keyword">this</span>.corePoolSize = corePoolSize;<br>        <span class="hljs-keyword">this</span>.maximumPoolSize = maximumPoolSize;<br>        <span class="hljs-keyword">this</span>.workQueue = workQueue;<br>        <span class="hljs-keyword">this</span>.keepAliveTime = unit.toNanos(keepAliveTime);<br>        <span class="hljs-keyword">this</span>.threadFactory = threadFactory;<br>        <span class="hljs-keyword">this</span>.handler = handler;<br>    &#125;<br>    <br>    <span class="hljs-comment">// ...    </span><br><br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>这个构造方法中有7个参数之多，我们逐个来看每个参数所代表的含义：</p>
+<ul>
+<li><p><strong>corePoolSize</strong> 表示线程池的核心线程数。当有任务提交到线程池时，如果线程池中的线程数小于corePoolSize,那么则直接创建新的线程来执行任务。</p>
+</li>
+<li><p><strong>workQueue</strong> 任务队列，它是一个阻塞队列，用于存储来不及执行的任务的队列。当有任务提交到线程池的时候，如果线程池中的线程数大于等于corePoolSize，那么这个任务则会先被放到这个队列中，等待执行。</p>
+</li>
+<li><p><strong>maximumPoolSize</strong> 表示线程池支持的最大线程数量。当一个任务提交到线程池时，线程池中的线程数大于corePoolSize,并且workQueue已满，那么则会创建新的线程执行任务，但是线程数要小于等于maximumPoolSize。</p>
+</li>
+<li><p><strong>keepAliveTime</strong> 非核心线程空闲时保持存活的时间。非核心线程即workQueue满了之后，再提交任务时创建的线程，因为这些线程不是核心线程，所以它空闲时间超过keepAliveTime后则会被回收。</p>
+</li>
+<li><p><strong>unit</strong> 非核心线程空闲时保持存活的时间的单位</p>
+</li>
+<li><p><strong>threadFactory</strong> 创建线程的工厂，可以在这里统一处理创建线程的属性</p>
+</li>
+<li><p><strong>handler</strong> 拒绝策略，当线程池中的线程达到maximumPoolSize线程数后且workQueue已满的情况下，再向线程池提交任务则执行对应的拒绝策略</p>
+</li>
+</ul>
+<h3 id="2-线程池工作流程"><a href="#2-线程池工作流程" class="headerlink" title="2.线程池工作流程"></a>2.线程池工作流程</h3><p>线程池提交任务是从execute方法开始的，我们可以从execute方法来分析线程池的工作流程。</p>
+<p>（1）当execute方法提交一个任务时，如果线程池中线程数小于corePoolSize,那么不管线程池中是否有空闲的线程，都会创建一个新的线程来执行任务。</p>
+<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/5c039cb2ce0e45d896a4dfc3a9b1fb16~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool1.png"></p>
+<p>（2）当execute方法提交一个任务时，线程池中的线程数已经达到了corePoolSize,且此时没有空闲的线程，那么则会将任务存储到workQueue中。</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fe5b20e71cb44dee9785bc9b97a984c2~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool2.png"><br>（3）如果execute提交任务时线程池中的线程数已经到达了corePoolSize,并且workQueue已满，那么则会创建新的线程来执行任务，但总线程数应该小于maximumPoolSize。<br><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c851dfaae2aa42509ff6e6f5692677b1~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool3.png"></p>
+<p>（4）如果线程池中的线程执行完了当前的任务，则会尝试从workQueue中取出第一个任务来执行。如果workQueue为空则会阻塞线程。</p>
+<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ae71487680d442018ec986298a4aa6a4~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool4.png"></p>
+<p>（5）如果execute提交任务时，线程池中的线程数达到了maximumPoolSize，且workQueue已满，此时会执行拒绝策略来拒绝接受任务。</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/54aa9d3b5ddc46d1a368e23228324fdd~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool5.png"></p>
+<p>（6）如果线程池中的线程数超过了corePoolSize，那么空闲时间超过keepAliveTime的线程会被销毁，但程池中线程个数会保持为corePoolSize。</p>
+<p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/62a1b6b1198c4a8ebcabe3da1904cb80~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool6.png"></p>
+<p>（7）如果线程池存在空闲的线程，并且设置了allowCoreThreadTimeOut为true。那么空闲时间超过keepAliveTime的线程都会被销毁。</p>
+<p><img src="https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/98a5abfc71f34183a9ff7aecd5d40b42~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="thread_pool7.png"></p>
+<h3 id="3-线程池的拒绝策略"><a href="#3-线程池的拒绝策略" class="headerlink" title="3.线程池的拒绝策略"></a>3.线程池的拒绝策略</h3><p>如果线程池中的线程数达到了maximumPoolSize，并且workQueue队列存储满的情况下，线程池会执行对应的拒绝策略。在JDK中提供了RejectedExecutionHandler接口来执行拒绝操作。实现RejectedExecutionHandler的类有四个，对应了四种拒绝策略。分别如下：</p>
+<ul>
+<li><p><strong>DiscardPolicy</strong> 当提交任务到线程池中被拒绝时，线程池会丢弃这个被拒绝的任务</p>
+</li>
+<li><p><strong>DiscardOldestPolicy</strong> 当提交任务到线程池中被拒绝时，线程池会丢弃等待队列中最老的任务。</p>
+</li>
+<li><p><strong>CallerRunsPolicy</strong> 当提交任务到线程池中被拒绝时，会在线程池当前正在运行的Thread线程中处理被拒绝额任务。即哪个线程提交的任务哪个线程去执行。</p>
+</li>
+<li><p><strong>AbortPolicy</strong> 当提交任务到线程池中被拒绝时，直接抛出RejectedExecutionException异常。</p>
+</li>
+</ul>
+<h2 id="三、线程池源码分析"><a href="#三、线程池源码分析" class="headerlink" title="三、线程池源码分析"></a>三、线程池源码分析</h2><p>从上一章对线程池的工作流程解读来看，线程池的原理似乎并没有很难。但是开篇时我说过想要读懂线程池的源码并不容，主要原因是线程池内部运用到了大量并发相关知识，另外还与线程池中用到的位运算有关。</p>
+<h3 id="1-线程池中的位运算（了解内容）"><a href="#1-线程池中的位运算（了解内容）" class="headerlink" title="1.线程池中的位运算（了解内容）"></a>1.线程池中的位运算（了解内容）</h3><p>在向线程池提交任务时有两个比较中要的参数会决定任务的去向，这两个参数分别是线程池的状态和线程池中的线程数。在ThreadPoolExecutor内部使用了一个AtomicInteger类型的整数ctl来表示这两个参数，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ThreadPoolExecutor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AbstractExecutorService</span> </span>&#123;<br>    <span class="hljs-comment">// Integer.SIZE = 32.所以 COUNT_BITS= 29</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> COUNT_BITS = Integer.SIZE - <span class="hljs-number">3</span>;<br>    <span class="hljs-comment">// 00011111 11111111 11111111 11111111 这个值可以表示线程池的最大线程容量</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> COUNT_MASK = (<span class="hljs-number">1</span> &lt;&lt; COUNT_BITS) - <span class="hljs-number">1</span>;<br>    <span class="hljs-comment">// 将-1左移29位得到RUNNING状态的值</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> RUNNING    = -<span class="hljs-number">1</span> &lt;&lt; COUNT_BITS;    <br>    <span class="hljs-comment">// 线程池运行状态和线程数</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> AtomicInteger ctl = <span class="hljs-keyword">new</span> AtomicInteger(ctlOf(RUNNING, <span class="hljs-number">0</span>));<br>    <br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">ctlOf</span><span class="hljs-params">(<span class="hljs-keyword">int</span> rs, <span class="hljs-keyword">int</span> wc)</span> </span>&#123; <span class="hljs-keyword">return</span> rs | wc; &#125;<br>    <br>    <span class="hljs-comment">// ...</span><br>&#125;    <br></code></pre></td></tr></table></figure>
+<p>因为涉及多线程的操作，这里为了保证原子性，ctl参数使用了AtomicInteger类型，并且通过ctlOf方法来计算出了ctl的初始值。如果你不了解位运算大概很难理解上述代码的用意。</p>
+<p>我们知道，int类型在Java中占用4byte的内存,一个byte占用8bit,所以Java中的int类型共占用32bit。对于这个32bit，我们可以进行高低位的拆分。做Android开发的同学应该都了解View测量流程中的MeasureSpec参数，这个参数将32bit的int拆分成了高2位和低30位，分别表示View的测量模式和测量值。而这里的ctl与MeasureSpec类似，ctl将32位的int拆分成了高3位和低29位，分别表示线程池的运行状态和线程池中的线程个数。</p>
+<p>下面我们通过位运算来验证一下ctl是如何工作的，当然，如果你不理解这个位运算的过程对理解线程池的源码影响并不大，所以对以下验证内容不感兴趣的同学可以直接略过。</p>
+<p>可以看到上述代码中RUNNING的值为-1左移29位，我们知道在计算机中<strong>负数是以其绝对值的补码来表示的，而补码是由反码加1得到。</strong>因此-1在计算机中存储形式为1的反码+1</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-number">1</span>的原码：<span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000001</span><br>                                            +<br><span class="hljs-number">1</span>的反码：<span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111110</span><br>       ---------------------------------------<br>-<span class="hljs-number">1</span>存储： <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span><br><br></code></pre></td></tr></table></figure>
+
+<p>接下来对-1左移29位可以得到RUNNING的值为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-comment">// 高三位表示线程状态，即高三位为111表示RUNNING</span><br><span class="hljs-number">11100000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><br></code></pre></td></tr></table></figure>
+<p>而AtomicInteger初始线程数量是0，因此ctlOf方法中的“|”运算如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Java">RUNNING：  <span class="hljs-number">11100000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><br>                                               |<br>线程数为<span class="hljs-number">0</span>:  <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><br>          ---------------------------------------<br>得到ctl：   <span class="hljs-number">11100000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><br><br></code></pre></td></tr></table></figure>
+
+<p>通过RUNNING|0(线程数)即可得到ctl的初始值。同时还可以通过以下方法将ctl拆解成运行状态和线程数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 00011111 11111111 11111111 11111111</span><br><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> COUNT_MASK = (<span class="hljs-number">1</span> &lt;&lt; COUNT_BITS) - <span class="hljs-number">1</span>;<br><span class="hljs-comment">// 获取线程池运行状态</span><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">runStateOf</span><span class="hljs-params">(<span class="hljs-keyword">int</span> c)</span>     </span>&#123; <span class="hljs-keyword">return</span> c &amp; ~COUNT_MASK; &#125;<br><span class="hljs-comment">// 获取线程池中的线程数</span><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">workerCountOf</span><span class="hljs-params">(<span class="hljs-keyword">int</span> c)</span>  </span>&#123; <span class="hljs-keyword">return</span> c &amp; COUNT_MASK; &#125;<br></code></pre></td></tr></table></figure>
+<p>假设此时线程池为RUNNING状态，且线程数为0，验证一下runStateOf是如何得到线程池的运行状态的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs java">COUNT_MASK:  <span class="hljs-number">00011111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span><br>                                                 <br>~COUNT_MASK: <span class="hljs-number">11100000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><br>                                                  &amp;<br>ctl:         <span class="hljs-number">11100000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><br>            ----------------------------------------<br>RUNNING:     <span class="hljs-number">11100000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span>            <br><br></code></pre></td></tr></table></figure>
+<p>如果不理解上边的验证流程没有关系，只要知道通过runStateOf方法可以得到线程池的运行状态，通过workerCountOf可以得到线程池中的线程数即可。</p>
+<p>接下来我们进入线程池的源码的源码分析环节。</p>
+<h3 id="2-ThreadPoolExecutor的execute"><a href="#2-ThreadPoolExecutor的execute" class="headerlink" title="2.ThreadPoolExecutor的execute"></a>2.ThreadPoolExecutor的execute</h3><p>向线程池提交任务的方法是execute方法，execute方法是ThreadPoolExecutor的核心方法，以此方法为入口来进行剖析，execute方法的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Runnable command)</span> </span>&#123;<br>     <span class="hljs-keyword">if</span> (command == <span class="hljs-keyword">null</span>)<br>         <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NullPointerException();<br>     <span class="hljs-comment">// 获取ctl的值</span><br>     <span class="hljs-keyword">int</span> c = ctl.get();<br>     <span class="hljs-comment">// 1.线程数小于corePoolSize</span><br>     <span class="hljs-keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;<br>         <span class="hljs-comment">// 线程池中线程数小于核心线程数，则尝试创建核心线程执行任务</span><br>         <span class="hljs-keyword">if</span> (addWorker(command, <span class="hljs-keyword">true</span>))<br>             <span class="hljs-keyword">return</span>;<br>         c = ctl.get();<br>     &#125;<br>     <span class="hljs-comment">// 2.到此处说明线程池中线程数大于核心线程数或者创建线程失败</span><br>     <span class="hljs-keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;<br>         <span class="hljs-comment">// 如果线程是运行状态并且可以使用offer将任务加入阻塞队列未满，</span><br>         <span class="hljs-comment">// offer是非阻塞操作。</span><br>         <span class="hljs-keyword">int</span> recheck = ctl.get();<br>         <span class="hljs-comment">// 重新检查线程池状态，因为上次检测后线程池状态可能发生改变，</span><br>         <span class="hljs-comment">// 如果非运行状态就移除任务并执行拒绝策略</span><br>         <span class="hljs-keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))<br>             reject(command);<br>         <span class="hljs-comment">// 如果是运行状态，并且线程数是0，则创建线程</span><br>         <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (workerCountOf(recheck) == <span class="hljs-number">0</span>)<br>             <span class="hljs-comment">// 线程数是0，则创建非核心线程，且不指定首次执行任务，这里的第二个参数其实没有实际意义</span><br>             addWorker(<span class="hljs-keyword">null</span>, <span class="hljs-keyword">false</span>);<br>     &#125;<br>     <span class="hljs-comment">// 3.阻塞队列已满，创建非核心线程执行任务</span><br>     <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!addWorker(command, <span class="hljs-keyword">false</span>))<br>         <span class="hljs-comment">// 如果失败，则执行拒绝策略</span><br>         reject(command);<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>execute方法中的逻辑可以分为三部分：</p>
+<ul>
+<li><p>1.如果线程池中的线程数小于核心线程，则直接调用addWorker方法创建新线程来执行任务。</p>
+</li>
+<li><p>2.如果线程池中的线程数大于核心线程数，则将任务添加到阻塞队列中，接着再次检验线程池的运行状态，因为上次检测过之后线程池状态有可能发生了变化，如果线程池关闭了，那么移除任务，执行拒绝策略。如果线程依然是运行状态，但是线程池中没有线程，那么就调用addWorker方法创建线程，注意此时传入任务参数是null，即不指定执行任务，因为任务已经加入了阻塞队列。创建完线程后从阻塞队列中取出任务执行。</p>
+</li>
+<li><p>3.如果第2步将任务添加到阻塞队列失败了，说明阻塞队列任务已满，那么则会执行第三步，即创建非核心线程来执行任务，如果非核心线程创建失败那么就执行拒绝策略。</p>
+</li>
+</ul>
+<p>可以看到，代码的执行逻辑和我们在第二章中分析的线程池的工作流程是一样的。</p>
+<p>接下来看下execute方法中创建线程的方法addWoker，addWoker方法承担了核心线程和非核心线程的创建，通过一个boolean参数core来区分是创建核心线程还是非核心线程。先来看addWorker方法前半部分的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// 返回值表示是否成功创建了线程</span><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">addWorker</span><span class="hljs-params">(Runnable firstTask, <span class="hljs-keyword">boolean</span> core)</span> </span>&#123;<br>     <span class="hljs-comment">// 这里做了一个retry标记，相当于goto.</span><br>     retry:<br>     <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> c = ctl.get();;) &#123;<br>         <span class="hljs-comment">// Check if queue empty only if necessary.</span><br>         <span class="hljs-keyword">if</span> (runStateAtLeast(c, SHUTDOWN)<br>             &amp;&amp; (runStateAtLeast(c, STOP)<br>                 || firstTask != <span class="hljs-keyword">null</span><br>                 || workQueue.isEmpty()))<br>             <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br><br>         <span class="hljs-keyword">for</span> (;;) &#123;<br>             <span class="hljs-comment">// 根据core来确定创建最大线程数，超过最大值则创建线程失败，</span><br>             <span class="hljs-comment">// 注意这里的最大值可能有三个corePoolSize、maximumPoolSize和线程池线程的最大容量</span><br>             <span class="hljs-keyword">if</span> (workerCountOf(c)<br>                 &gt;= ((core ? corePoolSize : maximumPoolSize) &amp; COUNT_MASK))<br>                 <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>             <span class="hljs-comment">// 通过CAS来将线程数+1，如果成功则跳出循环，执行下边逻辑    </span><br>             <span class="hljs-keyword">if</span> (compareAndIncrementWorkerCount(c))<br>                 <span class="hljs-keyword">break</span> retry;<br>             c = ctl.get();  <span class="hljs-comment">// Re-read ctl</span><br>             <span class="hljs-comment">// 线程池的状态发生了改变，退回retry重新执行</span><br>             <span class="hljs-keyword">if</span> (runStateAtLeast(c, SHUTDOWN))<br>                 <span class="hljs-keyword">continue</span> retry;<br>         &#125;<br>     &#125;<br>     <br>     <span class="hljs-comment">// ...省略后半部分</span><br>    <br>     <span class="hljs-keyword">return</span> workerStarted;<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>这部分代码会通过是否创建核心线程来确定线程池中线程数的值，如果是创建核心线程，那么最大值不能超过corePoolSize,如果是创建非核心线程那么线程数不能超过maximumPoolSize，另外无论是创建核心线程还是非核心线程，最大线程数都不能超过线程池允许的最大线程数COUNT_MASK(有可能设置的maximumPoolSize大于COUNT_MASK)。如果线程数大于最大值就返回false，创建线程失败。</p>
+<p>接下来通过CAS将线程数加1，如果成功那么就break retry结束无限循环，如果CAS失败了则就continue retry从新开始for循环，注意这里的retry不是Java的关键字，是一个可以任意命名的字符。</p>
+<p>接下来，如果能继续向下执行则开始执行创建线程并执行任务的工作了，看下addWorker方法的后半部分代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">addWorker</span><span class="hljs-params">(Runnable firstTask, <span class="hljs-keyword">boolean</span> core)</span> </span>&#123;<br>     <br>     <span class="hljs-comment">// ...省略前半部分</span><br><br>     <span class="hljs-keyword">boolean</span> workerStarted = <span class="hljs-keyword">false</span>;<br>     <span class="hljs-keyword">boolean</span> workerAdded = <span class="hljs-keyword">false</span>;<br>     Worker w = <span class="hljs-keyword">null</span>;<br>     <span class="hljs-keyword">try</span> &#123;<br>         <span class="hljs-comment">// 实例化一个Worker,内部封装了线程</span><br>         w = <span class="hljs-keyword">new</span> Worker(firstTask);<br>         <span class="hljs-comment">// 取出新建的线程</span><br>         <span class="hljs-keyword">final</span> Thread t = w.thread;<br>         <span class="hljs-keyword">if</span> (t != <span class="hljs-keyword">null</span>) &#123;<br>             <span class="hljs-comment">// 这里使用ReentrantLock加锁保证线程安全</span><br>             <span class="hljs-keyword">final</span> ReentrantLock mainLock = <span class="hljs-keyword">this</span>.mainLock;<br>             mainLock.lock();<br>             <span class="hljs-keyword">try</span> &#123;<br>                 <span class="hljs-keyword">int</span> c = ctl.get();<br>                 <span class="hljs-comment">// 拿到锁湖重新检查线程池状态，只有处于RUNNING状态或者</span><br>                 <span class="hljs-comment">// 处于SHUTDOWN并且firstTask==null时候才会创建线程</span><br>                 <span class="hljs-keyword">if</span> (isRunning(c) ||<br>                     (runStateLessThan(c, STOP) &amp;&amp; firstTask == <span class="hljs-keyword">null</span>)) &#123;<br>                     <span class="hljs-comment">// 线程不是处于NEW状态，说明线程已经启动，抛出异常</span><br>                     <span class="hljs-keyword">if</span> (t.getState() != Thread.State.NEW)<br>                         <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalThreadStateException();<br>                     <span class="hljs-comment">// 将线程加入线程队列，这里的worker是一个HashSet   </span><br>                     workers.add(w);<br>                     workerAdded = <span class="hljs-keyword">true</span>;<br>                     <span class="hljs-keyword">int</span> s = workers.size();<br>                     <span class="hljs-keyword">if</span> (s &gt; largestPoolSize)<br>                         largestPoolSize = s;<br>                 &#125;<br>             &#125; <span class="hljs-keyword">finally</span> &#123;<br>                 mainLock.unlock();<br>             &#125;<br>             <span class="hljs-keyword">if</span> (workerAdded) &#123;<br>                 <span class="hljs-comment">// 开启线程执行任务</span><br>                 t.start();<br>                 workerStarted = <span class="hljs-keyword">true</span>;<br>             &#125;<br>         &#125;<br>     &#125; <span class="hljs-keyword">finally</span> &#123;<br>         <span class="hljs-keyword">if</span> (! workerStarted)<br>             addWorkerFailed(w);<br>     &#125;<br>     <span class="hljs-keyword">return</span> workerStarted;<br> &#125;<br></code></pre></td></tr></table></figure>
+<p>这部分逻辑其实比较容易理解，就是创建Worker并开启线程执行任务的过程，Worker是对线程的封装，创建的worker会被添加到ThreadPoolExecutor中的HashSet中。也就是线程池中的线程都维护在这个名为workers的HashSet中并被ThreadPoolExecutor所管理，HashSet中的线程可能处于正在工作的状态，也可能处于空闲状态，一旦达到指定的空闲时间，则会根据条件进行回收线程。</p>
+<p>我们知道，线程调用start后就会开始执行线程的逻辑代码，执行完后线程的生命周期就结束了，那么线程池是如何保证Worker执行完任务后仍然不结束的呢？当线程空闲超时或者关闭线程池又是怎样进行线程回收的呢？这个实现逻辑其实就在Worker中。看下Worker的代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Worker</span></span><br><span class="hljs-class">       <span class="hljs-keyword">extends</span> <span class="hljs-title">AbstractQueuedSynchronizer</span></span><br><span class="hljs-class">       <span class="hljs-keyword">implements</span> <span class="hljs-title">Runnable</span></span><br><span class="hljs-class">   </span>&#123;<br>       <span class="hljs-comment">// 执行任务的线程</span><br>       <span class="hljs-keyword">final</span> Thread thread;<br>       <span class="hljs-comment">// 初始化Worker时传进来的任务，可能为null，如果不空，</span><br>       <span class="hljs-comment">// 则创建和立即执行这个task，对应核心线程创建的情况</span><br>       Runnable firstTask;<br><br>       Worker(Runnable firstTask) &#123;<br>           <span class="hljs-comment">// 初始化时设置setate为-1</span><br>           setState(-<span class="hljs-number">1</span>); <span class="hljs-comment">// inhibit interrupts until runWorker</span><br>           <span class="hljs-keyword">this</span>.firstTask = firstTask;<br>           <span class="hljs-comment">// 通过线程工程创建线程</span><br>           <span class="hljs-keyword">this</span>.thread = getThreadFactory().newThread(<span class="hljs-keyword">this</span>);<br>       &#125;<br>       <br>       <span class="hljs-comment">// 线程的真正执行逻辑</span><br>       <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;<br>           runWorker(<span class="hljs-keyword">this</span>);<br>       &#125;<br>       <br>       <span class="hljs-comment">// 判断线程是否是独占状态，如果不是意味着线程处于空闲状态</span><br>       <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">isHeldExclusively</span><span class="hljs-params">()</span> </span>&#123;<br>           <span class="hljs-keyword">return</span> getState() != <span class="hljs-number">0</span>;<br>       &#125;<br><br>       <span class="hljs-comment">// 获取锁</span><br>       <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">tryAcquire</span><span class="hljs-params">(<span class="hljs-keyword">int</span> unused)</span> </span>&#123;<br>           <span class="hljs-keyword">if</span> (compareAndSetState(<span class="hljs-number">0</span>, <span class="hljs-number">1</span>)) &#123;<br>               setExclusiveOwnerThread(Thread.currentThread());<br>               <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>           &#125;<br>           <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>       &#125;<br>       <span class="hljs-comment">// 释放锁</span><br>       <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">tryRelease</span><span class="hljs-params">(<span class="hljs-keyword">int</span> unused)</span> </span>&#123;<br>           setExclusiveOwnerThread(<span class="hljs-keyword">null</span>);<br>           setState(<span class="hljs-number">0</span>);<br>           <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>       &#125;<br>       <span class="hljs-comment">// ...</span><br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>Worker是位于ThreadPoolExecutor中的一个内部类，它继承了AQS，使用AQS来实现了独占锁的功能，但是并没支持可重入。这里使用不可重入的特性来表示线程的执行状态，即可以通过isHeldExclusively方法来判断，如果是独占状态，说明线程正在执行任务，如果非独占状态，说明线程处于空闲状态。关于AQS我们前边文章中已经详细分析过了，不了解AQS的可以翻看前边ReentrantLock的文章。</p>
+<p>另外，Worker还实现了Runnable接口，因此它的执行逻辑就是在run方法中，run方法调用的是线程池中的runWorker(this)方法。任务的执行逻辑就在runWorker方法中，它的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-function"><span class="hljs-keyword">final</span> <span class="hljs-keyword">void</span> <span class="hljs-title">runWorker</span><span class="hljs-params">(Worker w)</span> </span>&#123;<br>    Thread wt = Thread.currentThread();<br>    <span class="hljs-comment">// 取出Worker中的任务，可能为空</span><br>    Runnable task = w.firstTask;<br>    w.firstTask = <span class="hljs-keyword">null</span>;<br>    w.unlock(); <span class="hljs-comment">// allow interrupts</span><br>    <span class="hljs-keyword">boolean</span> completedAbruptly = <span class="hljs-keyword">true</span>;<br>    <span class="hljs-keyword">try</span> &#123;<br>        <span class="hljs-comment">// task不为null或者阻塞队列中有任务，通过循环不断的从阻塞队列中取出任务执行</span><br>        <span class="hljs-keyword">while</span> (task != <span class="hljs-keyword">null</span> || (task = getTask()) != <span class="hljs-keyword">null</span>) &#123;<br>            w.lock();<br>            <span class="hljs-comment">// ...</span><br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-comment">// 任务执行前的hook点</span><br>                beforeExecute(wt, task);<br>                <span class="hljs-keyword">try</span> &#123;<br>                    <span class="hljs-comment">// 执行任务</span><br>                    task.run();<br>                    <span class="hljs-comment">// 任务执行后的hook点</span><br>                    afterExecute(task, <span class="hljs-keyword">null</span>);<br>                &#125; <span class="hljs-keyword">catch</span> (Throwable ex) &#123;<br>                    afterExecute(task, ex);<br>                    <span class="hljs-keyword">throw</span> ex;<br>                &#125;<br>            &#125; <span class="hljs-keyword">finally</span> &#123;<br>                task = <span class="hljs-keyword">null</span>;<br>                w.completedTasks++;<br>                w.unlock();<br>            &#125;<br>        &#125;<br>        completedAbruptly = <span class="hljs-keyword">false</span>;<br>    &#125; <span class="hljs-keyword">finally</span> &#123;<br>        <span class="hljs-comment">// 超时没有取到任务，则回收空闲超时的线程</span><br>        processWorkerExit(w, completedAbruptly);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到，runWorker的核心逻辑就是不断通过getTask方法从阻塞队列中获取任务并执行.通过这样的方式实现了线程的复用，避免了创建线程。这里要注意的是这里是一个“生产者-消费者”模式，getTask是从阻塞队列中取任务，所以如果阻塞队列中没有任务的时候就会处于阻塞状态。getTask中通过判断是否要回收线程而设置了等待超时时间，如果阻塞队列中一直没有任务，那么在等待keepAliveTime时间后会返回一个null。最终会走到上述代码的finally方法中，意味着有线程空闲时间超过了keepAliveTime时间，那么调用processWorkerExit方法移除Worker。processWorkerExit方法中没有复杂难以理解的逻辑，这里就不再贴代码了。我们重点看下getTask中是如何处理的，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-function"><span class="hljs-keyword">private</span> Runnable <span class="hljs-title">getTask</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">boolean</span> timedOut = <span class="hljs-keyword">false</span>; <span class="hljs-comment">// Did the last poll() time out?</span><br><br>    <span class="hljs-keyword">for</span> (;;) &#123;<br>        <span class="hljs-keyword">int</span> c = ctl.get();<br>        <span class="hljs-comment">// ...</span><br>       <br><br>        <span class="hljs-comment">// Flag1. 如果配置了allowCoreThreadTimeOut==true或者线程池中的</span><br>        <span class="hljs-comment">// 线程数大于核心线程数，则timed为true，表示开启指定线程超时后被回收</span><br>        <span class="hljs-keyword">boolean</span> timed = allowCoreThreadTimeOut || wc &gt; corePoolSize;<br>        <br>        <span class="hljs-comment">// ...</span><br><br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-comment">// Flag2. 取出阻塞队列中的任务,注意如果timed为true，则会调用阻塞队列的poll方法，</span><br>            <span class="hljs-comment">// 并设置超时时间为keepAliveTime，如果超时没有取到任务则会返回null。</span><br>            Runnable r = timed ?<br>                workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :<br>                workQueue.take();<br>            <span class="hljs-keyword">if</span> (r != <span class="hljs-keyword">null</span>)<br>                <span class="hljs-keyword">return</span> r;<br>            timedOut = <span class="hljs-keyword">true</span>;<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException retry) &#123;<br>            timedOut = <span class="hljs-keyword">false</span>;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>重点看getTask是如何处理空闲超时的逻辑的。我们知道，回收线程的条件是线程大于核心线程数或者配置了allowCoreThreadTimeOut为true,当线程空闲超时的情况下就会回收线程。上述代码在Flag1处先判断了如果线程池中的线程数大于核心线程数，或者开启了allowCoreThreadTimeOut，那么就需要开启线程空闲超时回收。所有在Flag2处，timed为true的情况下调用了阻塞队列的poll方法，并传入了超时时间为keepAliveTime，poll方法是一个阻塞方法，在没有任务时候回进行阻塞。如果在keepAliveTime时间内，没有获取到任务，那么poll方法就会返回null，结束runWorker的循环。进而执行runWorker方法中回收线程的操作。</p>
+<p>这里需要我们理解阻塞队列poll方法的使用，poll方法接受一个时间参数，是一个阻塞操作，在给定的时间内没有获取到数据就返回null。poll方法的核心代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">while</span> (count == <span class="hljs-number">0</span>) &#123; <br>  <span class="hljs-keyword">if</span> (nanos &lt;= <span class="hljs-number">0L</span>) <br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>; <br>  nanos = notEmpty.awaitNanos(nanos); <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>其实说白了，阻塞队列就是一个使用ReentrantLock实现的“生产者-消费者”模式，我们在<a target="_blank" rel="noopener" href="https://juejin.cn/post/6980655421497278495/">深入理解Java线程的等待与唤醒机制（二）</a>这篇文章中使用ReentrantLock实现“生产者-消费者”模型其实就是一个简单的阻塞队列，与JDK中的BlockingQueue实现机制类似。感兴趣的同学可以自己查看ArrayBlockingQueue等阻塞队列的实现，限于文章篇幅，这里就不再赘述了。</p>
+<h3 id="3-ThreadPoolExecutor的拒绝策略"><a href="#3-ThreadPoolExecutor的拒绝策略" class="headerlink" title="3.ThreadPoolExecutor的拒绝策略"></a>3.ThreadPoolExecutor的拒绝策略</h3><p>上一小节中我们多次提到线程池的拒绝策略，它是在reject方法中实现的。实现代码也非常简单,代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">final</span> <span class="hljs-keyword">void</span> <span class="hljs-title">reject</span><span class="hljs-params">(Runnable command)</span> </span>&#123;<br>    handler.rejectedExecution(command, <span class="hljs-keyword">this</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>通过调用handler的rejectedExecution方法实现。这里其实就是运用了策略模式，handler是一个RejectedExecutionHandler类型的成员变量，RejectedExecutionHandler是一个接口，只有一个rejectedExecution方法。在实例化线程池时构造方法中传入对应的拒绝策略实例即可。前文已经提到了Java提供的几种默认实现分别为DiscardPolicy、DiscardOldestPolicy、CallerRunsPolicy以及AbortPolicy。</p>
+<p>以AbortPolicy直接抛出异常为例，来看下代码实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AbortPolicy</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">RejectedExecutionHandler</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">AbortPolicy</span><span class="hljs-params">()</span> </span>&#123; &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">rejectedExecution</span><span class="hljs-params">(Runnable r, ThreadPoolExecutor e)</span> </span>&#123;<br>        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RejectedExecutionException(<span class="hljs-string">&quot;Task &quot;</span> + r.toString() +<br>                                             <span class="hljs-string">&quot; rejected from &quot;</span> +<br>                                             e.toString());<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+<p>可以看到直接在rejectedExecution方法中抛出了RejectedExecutionException来拒绝任务。其他的几个策略实现也都比较简单，有兴趣可以自己查阅代码。</p>
+<h3 id="4-ThreadPoolExecutor的shutdown"><a href="#4-ThreadPoolExecutor的shutdown" class="headerlink" title="4.ThreadPoolExecutor的shutdown"></a>4.ThreadPoolExecutor的shutdown</h3><p>调用shutdown方法后，会将线程池标记为SHUTDOWN状态，上边execute的源码可以看出，只有线程池是RUNNING状态才接受任务，因此被标记位SHUTDOWN后，再提交任务会被线程池拒绝。shutdown的代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">shutdown</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">final</span> ReentrantLock mainLock = <span class="hljs-keyword">this</span>.mainLock;<br>    mainLock.lock();<br>    <span class="hljs-keyword">try</span> &#123;<br>        <span class="hljs-comment">//检查是否可以关闭线程</span><br>        checkShutdownAccess();<br>        <span class="hljs-comment">// 将线程池状态置为SHUTDOWN状态</span><br>        advanceRunState(SHUTDOWN);<br>        <span class="hljs-comment">// 尝试中断空闲线程</span><br>        interruptIdleWorkers();<br>        <span class="hljs-comment">// 空方法，线程池关闭的hook点</span><br>        onShutdown(); <br>    &#125; <span class="hljs-keyword">finally</span> &#123;<br>        mainLock.unlock();<br>    &#125;<br>    tryTerminate();<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">interruptIdleWorkers</span><span class="hljs-params">()</span> </span>&#123;<br>    interruptIdleWorkers(<span class="hljs-keyword">false</span>);<br>&#125;    <br><br></code></pre></td></tr></table></figure>
+<p>修改线程池为SHUTDOWN状态后，会调用interruptIdleWorkers去中断空闲线程线程，具体实现逻辑是在interruptIdleWorkers(boolean onlyOne)方法中，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs java"><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">interruptIdleWorkers</span><span class="hljs-params">(<span class="hljs-keyword">boolean</span> onlyOne)</span> </span>&#123;<br>    <span class="hljs-keyword">final</span> ReentrantLock mainLock = <span class="hljs-keyword">this</span>.mainLock;<br>    mainLock.lock();<br>    <span class="hljs-keyword">try</span> &#123;<br>        <span class="hljs-keyword">for</span> (Worker w : workers) &#123;<br>            Thread t = w.thread;<br>            <span class="hljs-comment">// 尝试tryLock获取锁，如果拿锁成功说明线程是空闲状态</span><br>            <span class="hljs-keyword">if</span> (!t.isInterrupted() &amp;&amp; w.tryLock()) &#123;<br>                <span class="hljs-keyword">try</span> &#123;<br>                    <span class="hljs-comment">// 中断线程</span><br>                    t.interrupt();<br>                &#125; <span class="hljs-keyword">catch</span> (SecurityException ignore) &#123;<br>                &#125; <span class="hljs-keyword">finally</span> &#123;<br>                    w.unlock();<br>                &#125;<br>            &#125;<br>            <span class="hljs-keyword">if</span> (onlyOne)<br>                <span class="hljs-keyword">break</span>;<br>        &#125;<br>    &#125; <span class="hljs-keyword">finally</span> &#123;<br>        mainLock.unlock();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>shutdown的逻辑比较简单，里边做了两件比较重要的事情，即先将线程池状态修改为SHUTDOWN，接着遍历所有Worker，将空闲的Worker进行中断。</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>本文深入的探究了线程池的工作流程和实现原理。就线程池的工作流程而言其实并不难以理解。但是在分析线程池的源码时，如果没有很好的并发基础的话，大概率是难以读懂线程池的源码的。因为线程池内部使用了大量并发知识，对任何一点用到的并发知识认识不到位都会造成理解偏差。写这篇文章参看了很多的其他线程池的相关文章，几乎没有找到一篇能够剖析清楚线程池源码的文章。归根结底还是没能系统的理解Atomic、Lock与AQS、CAS、阻塞队列等并发相关知识。</p>
+<h2 id="参考-amp-推荐阅读"><a href="#参考-amp-推荐阅读" class="headerlink" title="参考&amp;推荐阅读"></a>参考&amp;推荐阅读</h2><p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html">https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/19/45-ThreadLocal/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java并发系列番外篇：ThreadLocal原理其实很简单</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/03/43-wait-notify2/">
+                        <span class="hidden-mobile">深入理解Java线程的等待与唤醒机制（二）</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

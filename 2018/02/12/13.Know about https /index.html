@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>关于Https的那些事儿 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="关于Https的那些事儿">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2018-02-12 01:24" pubdate>
+        2018年2月12日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.6k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      26
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">关于Https的那些事儿</h1>
+            
+            <div class="markdown-body">
+              <p>由于前不久苹果公司已经强制IOS应用必须使用HTTPS协议开发，虽然Google没有强制开发者使用HTTPS，但相信不久的将来Android也会跟随IOS全面转向HTTPS。因此，HTTPS的学习也是相当重要。本篇文章涉及到的代码不多，主要内容是对HTTPS协议的讲解，最后将结合Retrofit实现HTTPS的单双向认证。</p>
+<p>下面将通过以下几节内容来学习HTTPS。</p>
+<ul>
+<li>HTTPS概述</li>
+<li>HTTPS实现原理</li>
+<li>数字证书</li>
+<li>Https单项认证</li>
+<li>Https双向认证</li>
+</ul>
+<h2 id="一、HTTPS概述"><a href="#一、HTTPS概述" class="headerlink" title="一、HTTPS概述"></a>一、HTTPS概述</h2><p> <strong>1.什么是HTTPS？</strong><br> 我们看维基百科给HTTPS的定义：</p>
+<blockquote>
+<p>HTTPS（Hypertext Transfer Protocol Secure）是一种通过计算机网络进行安全通信的传输协议。HTTPS经由HTTP进行通信，但利用TLS来加密数据包。HTTPS开发的主要目的，是提供对网站服务器的身份认证，保护交换数据的隐私与完整性。</p>
+</blockquote>
+<p>原来HTTPS就是在HTTP协议的基础上加入了TLS协议。目的是保证我们的数据在网络上传输的安全性。</p>
+<blockquote>
+<p>TLS是传输层加密协议，前身是SSL协议。由网景公司于1995年发布。后改名为TLS。常用的 TLS 协议版本有：TLS1.2, TLS1.1, TLS1.0 和 SSL3.0。其中 SSL3.0 由于 POODLE 攻击已经被证明不安全。TLS1.0 也存在部分安全漏洞，比如 RC4 和 BEAST 攻击。</p>
+</blockquote>
+<p>由于HTTP协议采用明文传输，我们可以通过抓包很轻松的获取到HTTP所传输的数据。因此，采用HTTP协议是不安全的。这才催生了HTTPS的诞生。HTTPS相对HTTP提供了更安全的数据传输保障。主要体现在三个方面：</p>
+<blockquote>
+<p>1，  内容加密。客户端到服务器的内容都是以加密形式传输，中间者无法直接查看明文内容。<br>2，  身份认证。通过校验保证客户端访问的是自己的服务器。<br>3，  数据完整性。防止内容被第三方冒充或者篡改。</p>
+</blockquote>
+<h2 id="二、HTTPS实现原理"><a href="#二、HTTPS实现原理" class="headerlink" title="二、HTTPS实现原理"></a>二、HTTPS实现原理</h2><p>在学习HTTPS原理之前我们先了解一下两种加密方式： 对称加密和非对称加密。<br><strong>对称加密</strong> 即加密和解密使用同一个密钥，虽然对称加密破解难度很大，但由于对称加密需要在网络上传输密钥和密文，一旦被黑客截取很容就能被破解，因此对称加密并不是一个较好的选择。<br><strong>非对称加密</strong> 即加密和解密使用不同的密钥，分别称为公钥和私钥。我们可以用公钥对数据进行加密，但必须要用私钥才能解密。在网络上只需要传送公钥，私钥保存在服务端用于解密公钥加密后的密文。但是非对称加密消耗的CPU资源非常大，效率很低，严重影响HTTPS的性能和速度。因此非对称加密也不是HTTPS的理想选择。</p>
+<p>那么HTTPS采用了怎样的加密方式呢？其实为了提高安全性和效率HTTPS结合了对称和非对称两种加密方式。即客户端使用对称加密生成密钥（key）对传输数据进行加密，然后使用非对称加密的公钥再对key进行加密。因此网络上传输的数据是被key加密的密文和用公钥加密后的密文key，因此即使被黑客截取，由于没有私钥，无法获取到明文key，便无法获取到明文数据。所以HTTPS的加密方式是安全的。</p>
+<p>接下来我们以TLS1.2为例来认识HTTPS的握手过程。</p>
+<blockquote>
+<p>1，  客户端发送 client_hello，包含一个随机数 random1。<br>2，  服务端回复 server_hello，包含一个随机数 random2，携带了证书公钥 P。<br>3，  客户端接收到 random2 之后就能够生成 premaster_secrect （对称加密的密钥）以及 master_secrect（用premaster_secret加密后的数据）。<br>4，  客户端使用证书公钥 P 将 premaster_secrect 加密后发送给服务器 (用公钥P对premaster_secret加密)。<br>5，  服务端使用私钥解密得到 premaster_secrect。又由于服务端之前就收到了随机数 1，所以服务端根据相同的生成算法，在相同的输入参数下，求出了相同的 master secrect。</p>
+</blockquote>
+<p>HTTPS的握手过程如下图：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMjExMTUzOTIzOTI2?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"></p>
+<h2 id="三、数字证书"><a href="#三、数字证书" class="headerlink" title="三、数字证书"></a>三、数字证书</h2><p>我们上面提到了HTTPS的工作原理，通过对称加密和非对称加密实现数据的安全传输。我们也知道非对称加密过程需要用到公钥进行加密。那么公钥从何而来？其实公钥就被包含在数字证书中。数字证书通常来说是由受信任的数字证书颁发机构CA，在验证服务器身份后颁发，证书中包含了一个密钥对（公钥和私钥）和所有者识别信息。数字证书被放到服务端，具有服务器身份验证和数据传输加密功能。</p>
+<p>除了CA机构颁发的证书之外，还有非CA机构颁发的证书和自签名证书。</p>
+<ul>
+<li>非CA机构即是不受信任的机构颁发的证书，理所当然这样的证书是不受信任的。</li>
+<li>自签名证书，就是自己给自己颁发的证书。当然自签名证书也是不受信任的。</li>
+</ul>
+<p>例如大(chou)名(ming)鼎(zhao)鼎(zhu)的12306网站使用的就是非CA机构颁发的证书（最近发现12306购票页面已经改为CA证书了），12306的证书是由SRCA颁发，SRCA中文名叫中铁数字证书认证中心，简称中铁CA。这是个铁道部自己搞的机构，相当于是自己给自己颁发证书。因此我们访问12306时通常会看到如下情景：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMjExMTczMjQ4NjE3?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"></p>
+<p>说了这么多，我们来总结一下数字证书的两个作用：</p>
+<blockquote>
+<p>1， 分发公钥。每个数字证书都包含了注册者生成的公钥。在 TLS握手时会通过 certificate 消息传输给客户端。<br>2， 身份授权。确保客户端访问的网站是经过 CA 验证的可信任的网站。（在自签名证书的情况下可以验证是否是我们自己的服务器）</p>
+</blockquote>
+<p>最后我们从<a target="_blank" rel="noopener" href="http://blog.csdn.net/dd864140130/article/details/52625666">别处</a>搬来一个中间人攻击的例子，来认识证书是如何保证我们的数据安全的。<br>对于一个正常的网络请求，其流程通常如下：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMjAyMDExODI0OTQ3?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"><br>但是，如果有黑客在通信过程中拦截了这个请求。试想在客户端和服务端中间有一个中间人，两者之间的传输对中间人来说是透明的，那么中间人完全可以获取两端之间的任何数据并加以修改，然后转发给两端。其流程如下图：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMjAyMDEyMTIzODM2?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"><br>此时恶意服务端完全可以发起双向攻击：对上可以欺骗服务端，对下可以欺骗客户端，更严重的是客户端段和服务端完全感知不到已经被攻击了。这就是所谓的中间人攻击。</p>
+<blockquote>
+<p>中间人攻击（MITM攻击）是指，黑客拦截并篡改网络中的通信数据。又分为被动MITM和主动MITM，被动MITM只窃取通信数据而不修改，而主动MITM不但能窃取数据，还会篡改通信数据。最常见的中间人攻击常常发生在公共wifi或者公共路由上。</p>
+</blockquote>
+<p>现在可以看看使用证书是怎么样提高安全性，避免中间人攻击的，用一张简单的流程图来说明：</p>
+<p><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMjAyMTMzNTIxNjM1?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"></p>
+<h2 id="四、HTTPS单项认证"><a href="#四、HTTPS单项认证" class="headerlink" title=" 四、HTTPS单项认证"></a> 四、HTTPS单项认证</h2><p>所谓单项认证只要服务端配置证书，客户端在请求服务端时验证服务器的证书即可。我们上述讲到的内容其实都是说的HTTPS单项认证。通常来说对于安全性要求不高的网站单项认证就可以满足我们的需求了。因此我们访问的HTTPS网站大部分都是单项认证。</p>
+<p><strong>1.关于HTTPS的使用存在的误区</strong><br>由于我们对安全性的认识不够重视，通常对于HTTPS存在一些误区，这些误区可能直接给我们带来一些安全隐患。<br>*<strong>误区（1）：对于CA机构颁发的证书客户端无须内置***<br>上面提到访问HTTPS服务器是需要在客户端配置服务器证书的。有些小伙伴可能就纳闷了，说我们用的就是HTTPS但是并没有在客户端配置证书呢？比如请求百度的网站<a target="_blank" rel="noopener" href="https://www.baidu.com/%EF%BC%8C%E5%92%8C%E8%AF%B7%E6%B1%82HTTP%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%B2%A1%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E3%80%82%E5%85%B6%E5%AE%9E%E8%BF%99%E6%98%AF%E5%9B%A0%E4%B8%BA%E5%9C%A8Android%E7%B3%BB%E7%BB%9F%E4%B8%AD%E5%B7%B2%E7%BB%8F%E5%86%85%E7%BD%AE%E4%BA%86%E6%89%80%E6%9C%89CA%E6%9C%BA%E6%9E%84%E7%9A%84%E6%A0%B9%E8%AF%81%E4%B9%A6%EF%BC%8C%E4%B9%9F%E5%B0%B1%E6%98%AF%E5%8F%AA%E8%A6%81%E6%98%AFCA%E6%9C%BA%E6%9E%84%E9%A2%81%E5%8F%91%E7%9A%84%E8%AF%81%E4%B9%A6%EF%BC%8CAndroid%E6%98%AF%E7%9B%B4%E6%8E%A5%E4%BF%A1%E4%BB%BB%E7%9A%84%E3%80%82%E5%AF%B9%E4%BA%8E%E6%AD%A4%E7%A7%8D%E6%83%85%E5%86%B5%EF%BC%8C%E8%99%BD%E7%84%B6%E5%8F%AF%E4%BB%A5%E6%AD%A3%E5%B8%B8%E8%AE%BF%E9%97%AE%E5%88%B0%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%8C%E4%BD%86%E6%98%AF%E4%BB%8D%E7%84%B6%E5%AD%98%E5%9C%A8%E5%AE%89%E5%85%A8%E9%9A%90%E6%82%A3%E3%80%82%E5%81%87%E5%A6%82%E9%BB%91%E5%AE%A2%E8%87%AA%E5%AE%B6%E6%90%AD%E5%BB%BA%E4%BA%86%E4%B8%80%E4%B8%AA%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%B9%B6%E7%94%B3%E8%AF%B7%E5%88%B0%E4%BA%86CA%E8%AF%81%E4%B9%A6%EF%BC%8C%E7%94%B1%E4%BA%8E%E6%88%91%E4%BB%AC%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%B2%A1%E6%9C%89%E5%86%85%E7%BD%AE%E6%9C%8D%E5%8A%A1%E5%99%A8%E8%AF%81%E4%B9%A6%EF%BC%8C%E9%BB%98%E8%AE%A4%E4%BF%A1%E4%BB%BB%E6%89%80%E6%9C%89CA%E8%AF%81%E4%B9%A6%EF%BC%88%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%AF%E4%BB%A5%E8%AE%BF%E9%97%AE%E6%89%80%E6%9C%89%E6%8C%81%E6%9C%89%E7%94%B1CA%E6%9C%BA%E6%9E%84%E9%A2%81%E5%8F%91%E7%9A%84%E8%AF%81%E4%B9%A6%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%89%EF%BC%8C%E9%82%A3%E4%B9%88%E9%BB%91%E5%AE%A2%E4%BB%8D%E7%84%B6%E5%8F%AF%E4%BB%A5%E5%8F%91%E8%B5%B7%E4%B8%AD%E9%97%B4%E4%BA%BA%E6%94%BB%E5%87%BB%E5%8A%AB%E6%8C%81%E6%88%91%E4%BB%AC%E7%9A%84%E8%AF%B7%E6%B1%82%E5%88%B0%E9%BB%91%E5%AE%A2%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%8C%E5%AE%9E%E9%99%85%E4%B8%8A%E5%B0%B1%E6%88%90%E4%BA%86%E6%88%91%E4%BB%AC%E7%9A%84%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%92%8C%E9%BB%91%E5%AE%A2%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%BB%BA%E7%AB%8B%E8%B5%B7%E4%BA%86%E8%BF%9E%E6%8E%A5%E3%80%82">https://www.baidu.com/，和请求HTTP服务器没什么区别。其实这是因为在Android系统中已经内置了所有CA机构的根证书，也就是只要是CA机构颁发的证书，Android是直接信任的。对于此种情况，虽然可以正常访问到服务器，但是仍然存在安全隐患。假如黑客自家搭建了一个服务器并申请到了CA证书，由于我们客户端没有内置服务器证书，默认信任所有CA证书（客户端可以访问所有持有由CA机构颁发的证书的服务器），那么黑客仍然可以发起中间人攻击劫持我们的请求到黑客的服务器，实际上就成了我们的客户端和黑客的服务器建立起了连接。</a><br>*</strong>误区（2）：对于非CA机构颁发的证书和自签名证书，可以忽略证书校验***<br>另外一种情况，如果我们服务器的证书是非认证机构颁发的 (例如12306)或者自签名证书，那么我们是无法直接访问到服务器的，直接访问通常会抛出如下异常：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-tag">javax</span><span class="hljs-selector-class">.net</span><span class="hljs-selector-class">.ssl</span><span class="hljs-selector-class">.SSLHandshakeException</span>:<br>    <span class="hljs-selector-tag">java</span><span class="hljs-selector-class">.security</span><span class="hljs-selector-class">.cert</span><span class="hljs-selector-class">.CertPathValidatorException</span>:<br>        <span class="hljs-selector-tag">Trust</span> <span class="hljs-selector-tag">anchor</span> <span class="hljs-selector-tag">for</span> <span class="hljs-selector-tag">certification</span> <span class="hljs-selector-tag">path</span> <span class="hljs-selector-tag">not</span> <span class="hljs-selector-tag">found</span>.<br></code></pre></td></tr></table></figure>
+<p>网上很多解决SSLHandshakeException异常的方案是自定义TrustManager忽略证书校验。代码如下：</p>
+<figure class="highlight aspectj"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs aspectj"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-function">SSLSocketFactory <span class="hljs-title">getSSLSocketFactory</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        <span class="hljs-comment">//创建一个不验证证书链的证书信任管理器。</span><br>        <span class="hljs-keyword">final</span> TrustManager[] trustAllCerts = <span class="hljs-keyword">new</span> TrustManager[]&#123;<span class="hljs-keyword">new</span> X509TrustManager() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> checkClientTrusted(<br>                    java.security.cert.X509Certificate[] chain,<br>                    String authType) <span class="hljs-keyword">throws</span> CertificateException &#123;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> checkServerTrusted(<br>                    java.security.cert.X509Certificate[] chain,<br>                    String authType) <span class="hljs-keyword">throws</span> CertificateException &#123;<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> java.security.cert.X509Certificate[] getAcceptedIssuers() &#123;<br>                <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> java.security.cert.X509Certificate[<span class="hljs-number">0</span>];<br>            &#125;<br>        &#125;&#125;;<br><br>        <span class="hljs-comment">// Install the all-trusting trust manager</span><br>        <span class="hljs-keyword">final</span> SSLContext sslContext = SSLContext.getInstance(<span class="hljs-string">&quot;TLS&quot;</span>);<br>        sslContext.init(<span class="hljs-keyword">null</span>, trustAllCerts,<br>                <span class="hljs-keyword">new</span> java.security.SecureRandom());<br>        <span class="hljs-comment">// Create an ssl socket factory with our all-trusting manager</span><br>        <span class="hljs-keyword">return</span> sslContext<br>                .getSocketFactory();<br>    &#125;<br><br><br>  <span class="hljs-comment">//使用自定义SSLSocketFactory</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onHttps</span><span class="hljs-params">(OkHttpClient.Builder builder)</span> </span>&#123;<br>       <span class="hljs-keyword">try</span> &#123;<br>            builder.sslSocketFactory(getSSLSocketFactory()).hostnameVerifier(org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);<br>        &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>            e.printStackTrace();<br>        &#125;<br><br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>对于这样的处理方式虽然解决了SSLHandshakeException异常，但是却存在更大的安全隐患。因为此种做法直接使我们的客户端信任了所有证书（包括CA机构颁发的证书和非CA机构颁发的证书以及自签名证书），因此，这样配置将比第一种情况危害更大。</p>
+<p><strong>2.Retrofit绑定证书实现HTTPS单项认证</strong><br>对于上述两种情况中存在的安全隐患，我们应该如何应对？最简单的解决方案就是在客户端内置服务器的证书，我们在校验服务端证书的时候只比对和App内置的证书是否完全相同，如果不同则断开连接。那么此时再遭遇中间人攻击劫持我们的请求时由于黑客服务器没有相应的证书，此时HTTPS请求校验不通过，则无法与黑客的服务器建立起连接。</p>
+<p>那么接下来我们就结合Retrofit以访问12306为例来实现HTTPS的单项认证。<br>首先从12306网站下载签名证书，并放置到我们项目资源目录raw下。然后根据证书构造SSLSocketFactory，代码如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-comment">/**</span><br><span class="hljs-comment">    * 单项认证</span><br><span class="hljs-comment">    */</span><br>   public static SSLSocketFactory get<span class="hljs-constructor">SSLSocketFactoryForOneWay(InputStream<span class="hljs-operator">...</span> <span class="hljs-params">certificates</span>)</span> &#123;<br>       <span class="hljs-keyword">try</span> &#123;<br>           CertificateFactory certificateFactory = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">CertificateFactory</span>.</span></span>get<span class="hljs-constructor">Instance(CLIENT_TRUST_MANAGER, CLIENT_TRUST_PROVIDER)</span>;<br>           KeyStore keyStore = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">KeyStore</span>.</span></span>get<span class="hljs-constructor">Instance(CLIENT_TRUST_KEYSTORE)</span>;<br>           keyStore.load(null);<br>           <span class="hljs-built_in">int</span> index = <span class="hljs-number">0</span>;<br>           <span class="hljs-keyword">for</span> (InputStream certificate : certificates) &#123;<br>               String certificateAlias = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Integer</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">String(<span class="hljs-params">index</span><span class="hljs-operator">++</span>)</span>;<br>               keyStore.set<span class="hljs-constructor">CertificateEntry(<span class="hljs-params">certificateAlias</span>, <span class="hljs-params">certificateFactory</span>.<span class="hljs-params">generateCertificate</span>(<span class="hljs-params">certificate</span>)</span>);<br>               <span class="hljs-keyword">try</span> &#123;<br>                   <span class="hljs-keyword">if</span> (certificate != null)<br>                       certificate.close<span class="hljs-literal">()</span>;<br>               &#125; catch (IOException e) &#123;<br>                   e.print<span class="hljs-constructor">StackTrace()</span>;<br>               &#125;<br>           &#125;<br><br>           SSLContext sslContext = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">SSLContext</span>.</span></span>get<span class="hljs-constructor">Instance(CLIENT_AGREEMENT)</span>;<br><br>           TrustManagerFactory trustManagerFactory =<br>                   <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">TrustManagerFactory</span>.</span></span>get<span class="hljs-constructor">Instance(TrustManagerFactory.<span class="hljs-params">getDefaultAlgorithm</span>()</span>);<br><br>           trustManagerFactory.init(keyStore);<br>           sslContext.init(null, trustManagerFactory.get<span class="hljs-constructor">TrustManagers()</span>, <span class="hljs-keyword">new</span> <span class="hljs-constructor">SecureRandom()</span>);<br>           return sslContext.get<span class="hljs-constructor">SocketFactory()</span>;<br>       &#125; catch (Exception e) &#123;<br>           e.print<span class="hljs-constructor">StackTrace()</span>;<br>       &#125;<br>       return null;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>接下来为OKHttpClient设置SslSocketFactory以及hostnameVerifier，代码如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">InputStream certificate12306 = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Utils</span>.</span></span>get<span class="hljs-constructor">Context()</span>.get<span class="hljs-constructor">Resources()</span>.<span class="hljs-keyword">open</span><span class="hljs-constructor">RawResource(R.<span class="hljs-params">raw</span>.<span class="hljs-params">srca</span>)</span>;<br>        OkHttpClient okHttpClient = <span class="hljs-keyword">new</span> OkHttpClient.<span class="hljs-constructor">Builder()</span><br>                .read<span class="hljs-constructor">Timeout(Constants.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)</span><br>                .connect<span class="hljs-constructor">Timeout(Constants.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)</span><br>                .add<span class="hljs-constructor">Interceptor(<span class="hljs-params">interceptor</span>)</span><br>                .add<span class="hljs-constructor">Interceptor(<span class="hljs-params">new</span> HttpHeaderInterceptor()</span>)<br>                .add<span class="hljs-constructor">NetworkInterceptor(<span class="hljs-params">new</span> HttpCacheInterceptor()</span>)<br>                .ssl<span class="hljs-constructor">SocketFactory(SslContextFactory.<span class="hljs-params">getSSLSocketFactoryForOneWay</span>(<span class="hljs-params">certificate12306</span>)</span>)<br>                .hostname<span class="hljs-constructor">Verifier(<span class="hljs-params">new</span> SafeHostnameVerifier()</span>)<br>                .cache(cache)<br>                .build<span class="hljs-literal">()</span>;<br></code></pre></td></tr></table></figure>
+<p>上述代码中hostnameVerifier是对服务器的校验，SafeHostnameVerifier代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SafeHostnameVerifier</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">HostnameVerifier</span> </span>&#123;<br>       <span class="hljs-meta">@Override</span><br>       <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">verify</span><span class="hljs-params">(String hostname, SSLSession session)</span> </span>&#123;<br>           <span class="hljs-keyword">if</span> (Constants.IP.equals(hostname)) &#123;<span class="hljs-comment">//校验hostname是否正确，如果正确则建立连接</span><br>               <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>           &#125;<br>           <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>       &#125;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>verify方法中对比了请求的IP和服务器的IP是否一致，一致则返回true表示校验通过，否则返回false，检验不通过，断开连接。对于网上有些处理是直接返回true，即不对请求的服务器IP做校验，我们不推荐这样使用。而且现在谷歌应用商店已经对此种做法做了限制，禁止在verify方法中直接返回true的App上线。</p>
+<h2 id="五、HTTPS双向认证"><a href="#五、HTTPS双向认证" class="headerlink" title=" 五、HTTPS双向认证"></a> 五、HTTPS双向认证</h2><p>对于HTTPS双向认证，用到的情况不多。但是对于像金融行业等对安全性要求较高的企业，通常都会使用双向认证。所谓双向认证就是客户端校验服务器证书，同时服务器也需要校验客户端的证书。因此，双向认证就另需一张证书放到客户端待服务端去验证。</p>
+<blockquote>
+<p>单项认证保证了我们自己的客户端只能访问我们自己的服务器，但并不能保证我们自己的服务器只能被我们自己的客户端访问（第三方客户端忽略证书校验即可）。那么双向认证则保证了我们的客户端只能访问我们自己的服务器，同时我们的服务器也只能被我们自己的客户端访问。因此双向认证可以说相比单项认证安全性足足提高一个等级。</p>
+</blockquote>
+<p><strong>1.双向认证流程</strong><br>接下来我们来了解下双向认证的流程，以加深对双向认证的理解：</p>
+<blockquote>
+<p>a. 客户端发送一个连接请求给服务器。<br>　　b. 服务器将自己的证书，以及同证书相关的信息发送给客户端。<br>　　c. 客户端检查服务器送过来的证书是否和App内置证书相同。如果是，就继续执行协议；如果不是则终止此次请求。<br>　　d. 接着客户端比较证书里的消息，例如域名和公钥，与服务器刚刚发送的相关消息是否一致，如果是一致的，客户端认可这个服务器的合法身份。<br>　　e. 服务器要求客户发送客户自己的证书。收到后，服务器验证客户端的证书，如果没有通过验证，拒绝连接；如果通过验证，服务器获得用户的公钥。<br>　　f. 客户端告诉服务器自己所能够支持的通讯对称密码方案。<br>　　g. 服务器从客户发送过来的密码方案中，选择一种加密程度最高的密码方案，用客户的公钥加过密后通知客户端。<br>　　h. 客户端针对这个密码方案，选择一个通话密钥，接着用服务器的公钥加过密后发送给服务器。<br>　　i. 服务器接收到客户端送过来的消息，用自己的私钥解密，获得通话密钥。<br>　　j. 服务器通过密钥解密客户端发送的被加密数据，得到明文数据。</p>
+</blockquote>
+<p><strong>2.Retrofit实现HTTPS双向认证</strong><br>对于双向认证，我们以华为北向平台登录接口为例来进行学习。想了解华为北向API<a target="_blank" rel="noopener" href="http://developer.huawei.com/ict/cn/doc/site-oceanconnect-northbound_api_reference-zh/index.html/zh-cn_topic_0087306564">请戳此处</a><br>我们直接通过浏览器访问登录接口可以看到如下情景：<br><img src="https://imgconvert.csdnimg.cn/aHR0cDovL2ltZy5ibG9nLmNzZG4ubmV0LzIwMTgwMzA1MTM1OTU3NTg0?x-oss-process=image/format,png" srcset="/img/loading.gif" alt="这里写图片描述"><br>哈，惊喜不？直接被拒绝了！这就是双向认证，没有证书想访问服务器门都没有。那么对于双向认证我们应该做怎样的配置？我们可以参考华为开源出来的代码<a target="_blank" rel="noopener" href="https://github.com/Huawei/IoT_OceanConnect_North_GUI_APPDemo">戳此处</a><br>源码中由两个证书文件ca.jks和outgoing.CertwithKey.pkcs12，其中ca.jks是在客户端配置的证书，outgoing.CertwithKey.pkcs12是在服务端配置的证书。因为我们当前客户端是Android系统，由于Android系统不支持jks格式的证书，因此需要把jks转成Android支持的bks格式。转换方式不再贴出，可自行查阅。<br>有了证书，接下来看获取SSLSocketFactory的代码：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 双向认证</span><br><span class="hljs-comment">   *</span><br><span class="hljs-comment">   * @return SSLSocketFactory</span><br><span class="hljs-comment">   */</span><br>  public static SSLSocketFactory get<span class="hljs-constructor">SSLSocketFactoryForTwoWay()</span> &#123;<br>      <span class="hljs-keyword">try</span> &#123;<br>          InputStream certificate = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Utils</span>.</span></span>get<span class="hljs-constructor">Context()</span>.get<span class="hljs-constructor">Resources()</span>.<span class="hljs-keyword">open</span><span class="hljs-constructor">RawResource(R.<span class="hljs-params">raw</span>.<span class="hljs-params">capk</span>)</span>;<br>          <span class="hljs-comment">//  CertificateFactory certificateFactory = CertificateFactory.getInstance(&quot;X.509&quot;, &quot;BC&quot;);</span><br>          KeyStore keyStore = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">KeyStore</span>.</span></span>get<span class="hljs-constructor">Instance(CLIENT_TRUST_KEY)</span>;<br>          keyStore.load(certificate, <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">SELF_CERT_PWD</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">CharArray()</span>);<br>          KeyManagerFactory kmf = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">KeyManagerFactory</span>.</span></span>get<span class="hljs-constructor">Instance(KeyManagerFactory.<span class="hljs-params">getDefaultAlgorithm</span>()</span>);<br>          kmf.init(keyStore, <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">SELF_CERT_PWD</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">CharArray()</span>);<br><br>          <span class="hljs-keyword">try</span> &#123;<br>              <span class="hljs-keyword">if</span> (certificate != null)<br>                  certificate.close<span class="hljs-literal">()</span>;<br>          &#125; catch (IOException e) &#123;<br>              e.print<span class="hljs-constructor">StackTrace()</span>;<br>          &#125;<br><br>          <span class="hljs-comment">//初始化keystore</span><br>          KeyStore clientKeyStore = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">KeyStore</span>.</span></span>get<span class="hljs-constructor">Instance(CLIENT_TRUST_KEYSTORE)</span>;<br>          clientKeyStore.load(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Utils</span>.</span></span>get<span class="hljs-constructor">Context()</span>.get<span class="hljs-constructor">Resources()</span>.<span class="hljs-keyword">open</span><span class="hljs-constructor">RawResource(R.<span class="hljs-params">raw</span>.<span class="hljs-params">cabks</span>)</span>, <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">TRUST_CA_PWD</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">CharArray()</span>);<br><br>          SSLContext sslContext = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">SSLContext</span>.</span></span>get<span class="hljs-constructor">Instance(CLIENT_AGREEMENT)</span>;<br>          TrustManagerFactory trustManagerFactory = TrustManagerFactory.<br>                  get<span class="hljs-constructor">Instance(TrustManagerFactory.<span class="hljs-params">getDefaultAlgorithm</span>()</span>);<br><br>          trustManagerFactory.init(clientKeyStore);<br><br>          KeyManagerFactory keyManagerFactory = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">KeyManagerFactory</span>.</span></span>get<span class="hljs-constructor">Instance(KeyManagerFactory.<span class="hljs-params">getDefaultAlgorithm</span>()</span>);<br>          keyManagerFactory.init(clientKeyStore, <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">SELF_CERT_PWD</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">CharArray()</span>);<br><br>          sslContext.init(kmf.get<span class="hljs-constructor">KeyManagers()</span>, trustManagerFactory.get<span class="hljs-constructor">TrustManagers()</span>, <span class="hljs-keyword">new</span> <span class="hljs-constructor">SecureRandom()</span>);<br>          return sslContext.get<span class="hljs-constructor">SocketFactory()</span>;<br>      &#125; catch (Exception e) &#123;<br>          e.print<span class="hljs-constructor">StackTrace()</span>;<br>      &#125;<br>      return null;<br>  &#125;<br></code></pre></td></tr></table></figure>
+<p>接下来同样需要配置OKHttpClient，代码如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">OkHttpClient okHttpClient = <span class="hljs-keyword">new</span> OkHttpClient.<span class="hljs-constructor">Builder()</span><br>                .read<span class="hljs-constructor">Timeout(Constants.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)</span><br>                .connect<span class="hljs-constructor">Timeout(Constants.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)</span><br>                .add<span class="hljs-constructor">Interceptor(<span class="hljs-params">interceptor</span>)</span><br>                .add<span class="hljs-constructor">Interceptor(<span class="hljs-params">new</span> HttpHeaderInterceptor()</span>)<br>                .add<span class="hljs-constructor">NetworkInterceptor(<span class="hljs-params">new</span> HttpCacheInterceptor()</span>)<br>                .ssl<span class="hljs-constructor">SocketFactory(SslContextFactory.<span class="hljs-params">getSSLSocketFactoryForTwoWay</span>()</span>)<br>                .hostname<span class="hljs-constructor">Verifier(<span class="hljs-params">new</span> SafeHostnameVerifier()</span>)<br>                .cache(cache)<br>                .build<span class="hljs-literal">()</span>;<br></code></pre></td></tr></table></figure>
+<p>这样就完成了HTTPS的配置，接下来就可以愉快的访问HTTPS 双向认证的接口了。由于北向登录接口中需要appId和secret两个参数，因此，登录相关代码就不再贴出。</p>
+<p>好了，到此关于HTTPS的学习就结束了，如果有不明白的地方可以参看文末源码。以上内容纯属个人对HTTPS的一些认识，如果文中有错误之处还请多多包涵，欢迎留言指正。</p>
+<p>本文写成参考了大量的相关文章，在此表示感谢。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/Retrofit2/tree/master/idea/src/main/java/com/zhpan/idea/net/https">源码参考</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="http://blog.jobbole.com/86660/">大型网站的 HTTPS 实践（1）：HTTPS 协议和原理</a><br><a target="_blank" rel="noopener" href="http://blog.csdn.net/dd864140130/article/details/52625666">Retrofit中如何正确的使用https？</a><br><a target="_blank" rel="noopener" href="http://blog.csdn.net/lmj623565791/article/details/48129405">Android Https相关完全解析 当OkHttp遇到Https</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f2097616e65e">HTTPS原理及OKHTTP对HTTPS的支持</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/https/">https</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2018/06/21/14.Android-Widget/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Android Widget开发详解</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2017/09/10/12.Handler%20source%20code%20analysis/">
+                        <span class="hidden-mobile">追根溯源--探究Handler的实现原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

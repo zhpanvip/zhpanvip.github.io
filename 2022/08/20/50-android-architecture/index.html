@@ -1,0 +1,663 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>Android 架构思想与 MVVM 框架封装 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Android 架构思想与 MVVM 框架封装">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-08-20 14:23" pubdate>
+        2022年8月20日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      6.2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      43
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Android 架构思想与 MVVM 框架封装</h1>
+            
+            <div class="markdown-body">
+              <p>关于Android项目架构也是一个老生常谈的话题了，网上关于Android架构的文章不胜枚举，但是通过Google检索关键字，首页的热门文章多数是对于MVC、MVP及MVVM等架构的概念介绍，概念性的文章对于不了解Android架构的同学来说并不一定能起到很好的帮助。本篇文章其实源自笔者在公司内部的技术分享，稍作修改后作为文章发布出来。文章内容涉及从<br>MVC、MVP 到 MVVM 的演化，同时为便于理解，每种架构都做了代码演示，最后基于 Jetpack 提供的组件封装了 MVVM<br>架构。文章内容比较基础，几乎没有晦涩难懂的知识，对于想要了解Android架构的同学会有很大的帮助。</p>
+<h2 id="一、Android-项目架构的演化"><a href="#一、Android-项目架构的演化" class="headerlink" title="一、Android 项目架构的演化"></a>一、Android 项目架构的演化</h2><p>首先，我们应该明白一点，对于架构而言并不分平台。不管MVC、MVP 还是 MVVM<br>都不是Android平台独有的，甚至由于Android平台起步较晚，Android项目的架构或多或少的参考了前端的架构实现。</p>
+<p>对于前端或者Android端项目而言代码可以分为三部分，分别为UI部分、业务逻辑部分以及数据控制部分。这三部分流转的起点来自于用户输入，即用户通过操作UI调起对应的业务逻辑获取数据，并最终将数据反馈到UI界面上，其流转图如下图所示。</p>
+<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/49e8e5c99ecb41ea9ac3169f940b8f67~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p>根据这三部分内容，我们可以将代码分为三层，即最初的MVC架构分层。但是随着项目的业务逐渐复杂，MVC架构的弊端显露，不能够支撑已有的业务。于是在此背景下衍生出了MVP架构来弥补MVC的不足。甚至后来谷歌官方推出的部分Jetpack组件来专门解决Android架构问题，从主推MVVM，到如今主推的MVI架构。但是不管架构如何演变，都脱离不了上述提到的三层逻辑，只不过新的架构在已有的基础上弥补了老架构的不足，让项目代码更容易维护。</p>
+<p>接下来的内容我们主要探讨Android项目架构从MVC到MVVM的演化。</p>
+<ol>
+<li><h3 id="MVC-简介"><a href="#MVC-简介" class="headerlink" title="MVC 简介"></a>MVC 简介</h3></li>
+</ol>
+<p>基于上面提到的三层逻辑，最初的Android项目采用的是MVC架构。MVC是 <strong>Model-View-Controller</strong><br>的简称。简单来说MVC是用户操作View，View调用Controller去操作Model层，然后Model层将数据返回给View层展示。</p>
+<ul>
+<li>模型层(Model) 负责与数据库和网络层通信，并获取和存储应用的数据；</li>
+<li>视图层(View) 负责将 Model 层的数据做可视化的处理，同时处理与用户的交互；</li>
+<li>控制层(Controller) 用于建立Model层与View层的联系，负责处理主要的业务逻辑，并根据用户操作更新 Model 层数据。</li>
+</ul>
+<p>MVC 的结构图如下图所示。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7ea11f97de5a43bebf35d8aa1573335b~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p>在 Android 项目的 MVC 架构中由于 Activity 同时充当了 View 层与 Controller 层两个角色，所以 Android 中的 MVC 更像下面的这种结构：</p>
+<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/562c78eaf71942498b2865bdd34935e5~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p>基于上图，我们可以以APP的登录流程为例实现 Android 中 MVC 架构的代码。</p>
+<h4 id="（1）Model-层代码实现"><a href="#（1）Model-层代码实现" class="headerlink" title="（1）Model 层代码实现"></a>（1）Model 层代码实现</h4><p>Model 层用于处理登录请求并从服务器获取登录相关数据，成功后通知 View 层更新界面。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginModel</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">login</span><span class="hljs-params">(String username, String password, LoginListener listener)</span> </span>&#123;<br>        RetrofitManager.getApiService()<br>                .login(username, password)<br>                .enqueue(<span class="hljs-keyword">new</span> Callback&lt;User&gt;() &#123;<br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResponse</span><span class="hljs-params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;<br>                        listener.onSuccess(response.data);<br>                    &#125;<br><br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(Exception e)</span> </span>&#123;<br>                        listener.onFailed(e.getMessage());<br>                    &#125;<br>                &#125;);<br>        <br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>上述代码通过 LoginListener 来通知 View 层更新UI，LoginListener 是一个接口，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">    <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">LoginListener</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(User data)</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="（2）Controller-View-代码实现"><a href="#（2）Controller-View-代码实现" class="headerlink" title="（2）Controller/View 代码实现"></a>（2）Controller/View 代码实现</h4><p>由于 Android 的 MVC 架构中 Controller 与 View 层都是由 Activity 负责的，因此 Activity 需要实现 LoginListener 用来更新<br>UI。其代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppCompactActivity</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">LoginListener</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> LoginModel loginModel;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_main);<br>        model = <span class="hljs-keyword">new</span> LoginModel();<br>        findViewbyId(R.id.btn_fetch_data).setOnClickListener(view -&gt; &#123;<br>                    String username = findViewById(R.id.et_username).getText().toString();<br>                    String password = findViewById(R.id.et_password).getText().toString();<br>                    loginModel.login(username, password, <span class="hljs-keyword">this</span>);<br>                &#125;<br>        );<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(User data)</span> </span>&#123;<br>        <span class="hljs-comment">// Update UI</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span> </span>&#123;<br>        <span class="hljs-comment">// Update UI</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>从上述代码中可以看到，Android中的MVC代码对于分层并不明确，导致了Controller层与View层混为一体。与此同时，大家在写Android代码的时候一般不会刻意的再去抽出一个Model层，而是将<br>Model 层的代码也一股脑的塞到 Activity 中实现，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppCompactActivity</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">LoginListener</span>, <span class="hljs-title">View</span>.<span class="hljs-title">OnClickListener</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> LoginModel loginModel;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_main);<br>        model = <span class="hljs-keyword">new</span> LoginModel();<br><br>        findViewbyId(R.id.btn_fetch_data).setOnClickListener(view -&gt; &#123;<br>                    showLoading();<br>                    String username = findViewById(R.id.et_username).getText().toString();<br>                    String password = findViewById(R.id.et_password).getText().toString();<br>                    RetrofitManager.getApiService()<br>                            .login(username, password)<br>                            .enqueue(<span class="hljs-keyword">new</span> Callback&lt;User&gt;() &#123;<br>                                <span class="hljs-meta">@Override</span><br>                                <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResponse</span><span class="hljs-params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;<br>                                    onSuccess(response.data);<br>                                &#125;<br><br>                                <span class="hljs-meta">@Override</span><br>                                <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(Exception e)</span> </span>&#123;<br>                                    listener.onFailed(e.getMessage());<br>                                &#125;<br>                            &#125;);<br>                &#125;<br>        );<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(User data)</span> </span>&#123;<br>        dismissLoading();<br>        <span class="hljs-comment">// Update UI</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span> </span>&#123;<br>        dismissLoading();<br>        <span class="hljs-comment">// Update UI</span><br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">showLoading</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-comment">// ...</span><br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">dismissLoading</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-comment">// ...</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这样的代码分层变得更加模糊，同时也使得代码的结构层次更加混乱。致使一些业务比较复杂的页面 Activity 中的代码可能多达数千行。由此可以看出 Android 项目中的 MVC<br>架构是存在很多问题的。总结主要有如下几点：</p>
+<ul>
+<li>Activity/Fragment 同时承担了 View 层与 Controller 层的工作，违背了单一职责；</li>
+<li>Model 层与 View 层存在耦合，存在相互依赖关系；</li>
+<li>开发时不注重分层，Model层代码也被塞进了Activity/Fragment，使得代码层次更加混乱。</li>
+</ul>
+<ol start="2">
+<li><h3 id="MVP-简介"><a href="#MVP-简介" class="headerlink" title="MVP 简介"></a>MVP 简介</h3></li>
+</ol>
+<p>针对以上MVC架构中存在的问题，我们可以在MVC的基础上进行优化解决。即从Activity中剥离出控制层的逻辑，并阻断Model层与View层的耦合，Model层不直接与View通信，而是在数据改变时让<br>Model通知控制控制层，控制层再通知View层去做界面更新，这就是MVP的架构思想。MVP 是 <strong>Model-View-Presenter</strong> 的简称。 简单来说 MVP 就是将 MVC 的<br>Controller 改为 Presenter，即把逻辑层的代码从 Activity 中抽离到了 Presenter 中，这样代码层次变得更加清晰，其次 Model 层不再持有 View<br>层，代码更加解耦。</p>
+<ul>
+<li>模型层(Model) 与MVC中的一致，同样是负责与数据库和网络层通信，并获取和存储应用的数据，区别在于Model层不再与View层直接通信，而是与Presenter层通信。</li>
+<li>视图层(View) 负责将 Model 层的数据做可视化的处理，同时与Presenter层交互。跟MVC相比，MVP的View层与Model层不再耦合。</li>
+<li>控制层(Presenter) 主要负责处理业务逻辑，并监听Model层数据改变，然后调用View层刷新UI。</li>
+</ul>
+<p>MVP 的结构图如下图所示。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/47edd5445b484e8dbcbb0d63ad83a7fe~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p>从上图中可以看出，View直接与Presenter层通信，当View层接收到用户操作后会调用<br>Presenter层去处理业务逻辑。接着Presenter层通过Model去获取数据，Model层获取到数据后又将最新的数据传回 Presenter。<br>由于Presenter层又持有View层的引用，进而将数据传给<code>View</code>层进行展示。</p>
+<p>下面我们我们仍然以登录为例通过代码来演示MVP架构的实现。</p>
+<h4 id="（1）Model-层代码实现-1"><a href="#（1）Model-层代码实现-1" class="headerlink" title="（1）Model 层代码实现"></a>（1）Model 层代码实现</h4><p>MVP中的Model层与MVC中的Model层是一致的，代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginModel</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">login</span><span class="hljs-params">(String username, String password, LoginListener listener)</span> </span>&#123;<br>        RetrofitManager.getApiService()<br>                .login(username, password)<br>                .enqueue(<span class="hljs-keyword">new</span> Callback&lt;User&gt;() &#123;<br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResponse</span><span class="hljs-params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;<br>                        listener.onSuccess(response.data);<br>                    &#125;<br><br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(Exception e)</span> </span>&#123;<br>                        listener.onFailed(e.getMessage());<br>                    &#125;<br>                &#125;);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在登录接口返回结果后通过 LoginListener 将结果回调出来。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">LoginListener</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(User user)</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String errorInfo)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="（2）Presenter-层代码实现"><a href="#（2）Presenter-层代码实现" class="headerlink" title="（2）Presenter 层代码实现"></a>（2）Presenter 层代码实现</h4><p>由于 Presenter 需要通知 View 层更新UI，因此需要持有View，这里可以抽象出一个 View 接口。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">ILoginView</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">showLoading</span><span class="hljs-params">()</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">dismissLoading</span><span class="hljs-params">()</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">loginSuccess</span><span class="hljs-params">(User data)</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">loginFailer</span><span class="hljs-params">(String errorMsg)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>另外，Presenter也需要与Model层通信，因此Presenter层也会持有Model层，在用户触发登录操作后，调用Presenter的登录逻辑，Presenter通过Model进行登录操作，登录成功后再将结果反馈给View层更新界面。代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginPresenter</span> </span>&#123;<br><br>    <span class="hljs-comment">// Model 层 </span><br>    <span class="hljs-keyword">private</span> LoginModel model;<br><br>    <span class="hljs-comment">// View 层 </span><br>    <span class="hljs-keyword">private</span> ILoginView view;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">LoginPresenter</span><span class="hljs-params">(LoginView view)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.model = <span class="hljs-keyword">new</span> LoginModel();<br>        <span class="hljs-keyword">this</span>.view = view;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">login</span><span class="hljs-params">(String username, String password)</span> </span>&#123;<br>        view.showLoading();<br>        model.login(username, password, <span class="hljs-keyword">new</span> LoginListener() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(User user)</span> </span>&#123;<br>                view.loginSuccess(user);<br>                view.dismissLoading();<br>            &#125;<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span> </span>&#123;<br>                view.loginFailer(msg);<br>                view.dismissLoading();<br>            &#125;<br>        &#125;);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDestory</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-comment">// recycle instance.</span><br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<h4 id="（3）View-层代码实现"><a href="#（3）View-层代码实现" class="headerlink" title="（3）View 层代码实现"></a>（3）View 层代码实现</h4><p>Activity作为View层需要实现上述ILoginView接口，且View层需要持有Presenter来处理业务逻辑。View层的代码实现就变得非常简单了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppCompatActivity</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">ILoginView</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> LoginPresenter presenter;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_main);<br><br>        presenter = <span class="hljs-keyword">new</span> LoginPresenter(<span class="hljs-keyword">this</span>);<br>        findViewById(R.id.button).setOnClickListener(v -&gt; &#123;<br>            String username = findViewById(R.id.et_username).getText().toString();<br>            String password = findViewById(R.id.et_password).getText().toString();<br>            presenter.login(username, password);<br>        &#125;);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">loginSuccess</span><span class="hljs-params">(User user)</span> </span>&#123;<br>        <span class="hljs-comment">// Update UI.</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">loginFailer</span><span class="hljs-params">(String msg)</span> </span>&#123;<br>        <span class="hljs-comment">// Update UI.</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDestroy</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onDestroy();<br>        presenter.onDestroy();<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">showLoading</span><span class="hljs-params">()</span> </span>&#123;<br><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">dismissLoading</span><span class="hljs-params">()</span> </span>&#123;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>MVP的本质是面向接口编程，实现依赖倒置原则。可以看得出来MVP架构在分层上相比 MVC更加清晰明确，且解耦了Model层与View层。但MVP也存在一些弊端，列举如下：</p>
+<ul>
+<li>引入大量的 IView、IPresenter接口实现类，增加项目的复杂度。</li>
+<li>View 层与 Presenter 相互持有，存在耦合。</li>
+</ul>
+<ol start="3">
+<li><h3 id="MVVM-简介"><a href="#MVVM-简介" class="headerlink" title="MVVM 简介"></a>MVVM 简介</h3></li>
+</ol>
+<p>MVP相比于MVC无疑有很多优点，但其自身也并非无懈可击，再加之MVP也并非Google官方推荐的架构，因此也只能算得上程序员对于Android项目架构优化的野路子。从2015年开始，Google官方开始对Android项目架构做出指导，随后推出DataBinding组件以及后边一系列的Jetpack组件来帮助开发者优化项目架构。Google官方给出的这一套指导架构就是MVVM。MVVM是 **<br>Model-View-ViewModel** 的简称。这一架构在一定程度上解决了MVP架构中存在的问题。虽然近期官方的指导架构由MVVM变为了MVI，但MVVM依然是目前Android项目的主流架构。</p>
+<ul>
+<li>模型层(Model) 与MVP中的Model层一致，负责与数据库和网络层通信，获取并存储数据。与MVP的区别在于Model层不再通过回调通知业务逻辑层数据改变，而是通过观察者模式实现。</li>
+<li>视图(View) 负责将Model层的数据做可视化的处理，同时与ViewModel层交互。</li>
+<li>视图模型(ViewModel) 主要负责业务逻辑的处理，同时与 Model 层 和 View层交互。与MVP的Presenter相比，ViewModel不再依赖View，使得解耦更加彻底。</li>
+</ul>
+<p>MVVM 架构的结构图如下。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/dee5d989ca3a421eaa5386bc83b01dcd~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p>MVVM架构的本质是数据驱动，它的最大的特点是单向依赖。MVVM架构通过观察者模式让ViewModel与View解耦，实现了View依赖ViewModel，ViewModel依赖Model的单向依赖。</p>
+<p>接下来我们仍然以登录为例，通过观察者模式来实现MVVM的架构代码。</p>
+<h4 id="（1）观察者模式"><a href="#（1）观察者模式" class="headerlink" title="（1）观察者模式"></a>（1）观察者模式</h4><p>由于 MVVM 架构需要将 ViewModel 与 View 解耦。因此，这里可以使用观察者模式来实现。下面实现观察者模式的代码。</p>
+<ul>
+<li>实现观察者接口</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">Observer</span>&lt;<span class="hljs-title">T</span>&gt; </span>&#123;<br>    <span class="hljs-comment">// 成功的回调</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(T data)</span></span>;<br><br>    <span class="hljs-comment">// 失败的回调</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li>抽象被观察者</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Observable</span>&lt;<span class="hljs-title">T</span>&gt; </span>&#123;<br>    <span class="hljs-comment">// 注册观察者</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">register</span><span class="hljs-params">(Observer observer)</span></span>;<br><br>    <span class="hljs-comment">// 取消注册</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">unregister</span><span class="hljs-params">(Observer observer)</span></span>;<br><br>    <span class="hljs-comment">// 数据改变（设置成功数据）</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setValue</span><span class="hljs-params">(T data)</span> </span>&#123;<br><br>    &#125;<br><br>    <span class="hljs-comment">// 失败，设置失败原因</span><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里我们需要注意被观察者Observable中的setValue方法被设置成了protect。意味着如果View层拿到的是Observable实例，则无法调用setValue来设置数据，以此来保证代码的安全性。</p>
+<ul>
+<li>被观察者具体实现</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginObservable</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Observable</span>&lt;<span class="hljs-title">User</span>&gt; </span>&#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> List&lt;Observer&lt;User&gt;&gt; list = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;();<br><br>    <span class="hljs-keyword">private</span> User user;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">register</span><span class="hljs-params">(Observer&lt;User&gt; observer)</span> </span>&#123;<br>        list.add(observer);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">unregister</span><span class="hljs-params">(Observer&lt;User&gt; observer)</span> </span>&#123;<br>        liset.remove(observer);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setValue</span><span class="hljs-params">(User user)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.user = user;<br>        <span class="hljs-keyword">for</span> (Observer observer : list) &#123;<br>            observer.onSuccess(user);<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String msg)</span> </span>&#123;<br>        <span class="hljs-keyword">for</span> (Observer observer : list) &#123;<br>            observer.onFailed(msg);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>在被观察者的实现类中setValue方法被设置为了public，意味着如果是LoginObservable，那么可以通过setValue来对其设置数据。</p>
+<h4 id="（2）Model-层代码实现"><a href="#（2）Model-层代码实现" class="headerlink" title="（2）Model 层代码实现"></a>（2）Model 层代码实现</h4><p>Model层代码与MVP/MVC的实现基本一致，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginModel</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">login</span><span class="hljs-params">(String username, String password, LoginObservable observable)</span> </span>&#123;<br>        RetrofitManager.getApiService()<br>                .login(username, password)<br>                .enqueue(<span class="hljs-keyword">new</span> Callback&lt;User&gt;() &#123;<br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResponse</span><span class="hljs-params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;<br>                        observable.setValue(response.data);<br>                    &#125;<br><br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(Exception e)</span> </span>&#123;<br>                        observable.onFailed(e.getMessage());<br>                    &#125;<br>                &#125;);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>需要注意的是LoginModel的login方法中接收的是LoginObservable类型，因此这里可以通过setValue来设置数据。</p>
+<h4 id="（3）ViewModel-层实现"><a href="#（3）ViewModel-层实现" class="headerlink" title="（3）ViewModel 层实现"></a>（3）ViewModel 层实现</h4><p>ViewModel层需要持有Model层，并且ViewModel层持有一个LoginObservable，并开放一个getObservable的方法供View层使用。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginViewModel</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> LoginObservable observable;<br><br>    <span class="hljs-keyword">private</span> LoginModel loginModel;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">LoginViewModel</span><span class="hljs-params">()</span> </span>&#123;<br>        loginModel = <span class="hljs-keyword">new</span> LoginModel();<br>        observable = <span class="hljs-keyword">new</span> LoginObservable();<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">login</span><span class="hljs-params">(String username, String password)</span> </span>&#123;<br>        loginModel.login(username, password, observable);<br>    &#125;<br><br>    <span class="hljs-comment">// 这里返回值是父类Observable，即View层得到的Observable无法调用setValue</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Observable <span class="hljs-title">getObservable</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> observable;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里需要注意的是getObservable方法的返回值是Observable，意味着View层只能调用register方法来观察数据改变，而无法通过setValue来设置数据。</p>
+<h4 id="（4）View-层代码实现"><a href="#（4）View-层代码实现" class="headerlink" title="（4）View 层代码实现"></a>（4）View 层代码实现</h4><p>View层持有ViewModel，用户触发登录事件通过View层交给Model处理，Model层在登录成后将数据交给ViewModel中的观察者。因此，View层只需要获取到ViewModel层的观察者并观察到数据改变后更新UI即可。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MainActivity</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppCompatActivity</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Observer</span>&lt;<span class="hljs-title">User</span>&gt; </span>&#123;<br><br>    <span class="hljs-keyword">private</span> LoginViewModel viewModel;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(Bundle savedInstanceState)</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState);<br>        setContentView(R.layout.activity_main);<br><br>        viewModel = <span class="hljs-keyword">new</span> LoginViewModel();<br>        viewModel.getObservable().register(<span class="hljs-keyword">this</span>);<br>        findViewById(R.id.button).setOnClickListener(v -&gt; &#123;<br>            String username = findViewById(R.id.et_username).getText().toString();<br>            String password = findViewById(R.id.et_password).getText().toString();<br>            viewModel.login(username, password);<br>        &#125;);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDestroy</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">super</span>.onDestory();<br>        viewModel.getObservable().unregister(<span class="hljs-keyword">this</span>);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(User user)</span> </span>&#123;<br>        <span class="hljs-comment">// fetch data success,update UI.</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(String message)</span> </span>&#123;<br>        <span class="hljs-comment">// fetch data failed,update UI.</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到我们通过观察者模式实现了View-&gt;ViewModel-&gt;<br>Model的单向依赖。相比于MVP，MVVM解耦的更加纯粹。但是，上边的观察者模式是我们自己实现的，如果直接用到项目中肯定是不稳妥的。上面我们提到Google已经为我们提供了一套Jetpack组件来帮助开发者实现MVVM架构。那接下来我们就来认识一下通过Jetpack实现的MVVM架构。</p>
+<h2 id="二、使用-Jetpack-组件封装-MVVM-架构"><a href="#二、使用-Jetpack-组件封装-MVVM-架构" class="headerlink" title="二、使用 Jetpack 组件封装 MVVM 架构"></a>二、使用 Jetpack 组件封装 MVVM 架构</h2><p>如果你已经看到这里了，相信你对项目架构已经有了一定的认识。这里需要再强调一点架构是一种思想，它与我们使用什么工具来实现没有关系。就像上一章中我们通过自己写的观察者模式来实现MVVM一样，只要遵循了这个架构思想，那它就属于这一架构。Google官方推出的这些组件可以更高效的帮助我们来实现MVVM。</p>
+<h3 id="1-Jetpack-MVVM-简介"><a href="#1-Jetpack-MVVM-简介" class="headerlink" title="1. Jetpack MVVM 简介"></a>1. Jetpack MVVM 简介</h3><p>MVVM 是 Google 官方推荐的框架。为此，Google 提供了一系列实现 MVVM 的工具，这些工具都被包含在Jetpack 组件中，例如 LiveData、ViewModel以及<br>DataBinding 等。下面是官方给的一个通过Jetpack组件实现的 MVVM 架构图。</p>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f9efcc24a9564d6da173784dd6880703~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif"></p>
+<p>这张图与我们上一章的MVVM结构图是一致的，只不过这里融入了Jetpack组件。可以看到图中的箭头都是单向的，View层指向了ViewModel层，表示View层持有ViewModel层的引用，但ViewModel层不持有View层。ViewModel层持有Repository层，但Repository层不会持有ViewModel。这张图与MVVM的对应关系如下：</p>
+<ul>
+<li>视图(View) 对应图中的Activity/Fragment，包含了布局文件等于界面相关的东西；</li>
+<li>视图模型(ViewModel) 对应图中的Jetpack ViewModel<br>与LiveData，用于持有与UI相关的数据，且能保证在旋转屏幕后不丢失数据。另外还提供了给View层调用的接口以及和Repository通信的接口；</li>
+<li>模型层(Model) 对应图中的 Repository，包含本地数据与服务端数据。</li>
+</ul>
+<h3 id="2-MVVM-框架代码封装"><a href="#2-MVVM-框架代码封装" class="headerlink" title="2. MVVM 框架代码封装"></a>2. MVVM 框架代码封装</h3><p>在了解了Jetpack MVVM后，为了更加高效的开发我们通常会做一些基础封装。例如如何结合网络请求与数据库来获取数据、Loading的显示逻辑等。本章内容要求读者对Jetpack<br>ViewModel、LiveData等组件有一定的了解。</p>
+<h4 id="2-1-网络层封装"><a href="#2-1-网络层封装" class="headerlink" title="2.1 网络层封装"></a>2.1 网络层封装</h4><p>针对服务器返回的数据进行封装，可以抽出来一个带有泛型的Response基类。如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseResponse</span>&lt;<span class="hljs-type">T</span>&gt;</span>(<br>    <span class="hljs-keyword">var</span> errorCode: <span class="hljs-built_in">Int</span> = -<span class="hljs-number">1</span>,<br>    <span class="hljs-keyword">var</span> errorMsg: String? = <span class="hljs-literal">null</span>,<br>    <span class="hljs-keyword">var</span> <span class="hljs-keyword">data</span>: T? = <span class="hljs-literal">null</span>,<br>    <span class="hljs-keyword">var</span> dataState: DataState? = <span class="hljs-literal">null</span>,<br>    <span class="hljs-keyword">var</span> exception: Throwable? = <span class="hljs-literal">null</span>,<br>) &#123;<br>    <span class="hljs-keyword">companion</span> <span class="hljs-keyword">object</span> &#123;<br>        <span class="hljs-keyword">const</span> <span class="hljs-keyword">val</span> ERROR_CODE_SUCCESS = <span class="hljs-number">0</span><br>    &#125;<br>    <br>    <span class="hljs-keyword">val</span> success: <span class="hljs-built_in">Boolean</span><br>        <span class="hljs-keyword">get</span>() = errorCode == ERROR_CODE_SUCCESS<br>&#125;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * 网络请求状态</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">enum</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DataState</span> </span>&#123;<br>    STATE_LOADING, <span class="hljs-comment">// 开始请求</span><br>    STATE_SUCCESS, <span class="hljs-comment">// 服务器请求成功</span><br>    STATE_EMPTY, <span class="hljs-comment">// 服务器返回数据为null</span><br>    STATE_FAILED, <span class="hljs-comment">// 接口请求成功但是服务器返回error</span><br>    STATE_ERROR, <span class="hljs-comment">// 请求失败</span><br>    STATE_FINISH, <span class="hljs-comment">// 请求结束</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>对应网络请求的异常情况一般我们都会进行统一处理。这里我们可以放在Observer中进行。 对LiveData 的 Observer进行封装，从而实现Response与异常的统一处理。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ResponseObserver</span>&lt;<span class="hljs-type">T</span>&gt; : <span class="hljs-type">Observer</span>&lt;<span class="hljs-type">BaseResponse&lt;T</span>&gt;&gt; </span>&#123;<br>    <br>    <span class="hljs-keyword">final</span> <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onChanged</span><span class="hljs-params">(response: <span class="hljs-type">BaseResponse</span>&lt;<span class="hljs-type">T</span>&gt;?)</span></span> &#123;<br>        response?.let &#123;<br>            <span class="hljs-keyword">when</span> (response.dataState) &#123;<br>                DataState.STATE_SUCCESS, DataState.STATE_EMPTY -&gt; &#123;<br>                    onSuccess(response.<span class="hljs-keyword">data</span>)<br>                &#125;<br>                DataState.STATE_FAILED -&gt; &#123;<br>                    onFailure(response.errorMsg, response.errorCode)<br>                &#125;<br>                DataState.STATE_ERROR -&gt; &#123;<br>                    onException(response.exception)<br>                &#125;<br>                <span class="hljs-keyword">else</span> -&gt; &#123;<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br>    <br>    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onException</span><span class="hljs-params">(exception: <span class="hljs-type">Throwable</span>?)</span></span> &#123;<br>        ToastUtils.showToast(exception.toString())<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 请求成功</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  data 请求数据</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">abstract</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(<span class="hljs-keyword">data</span>: <span class="hljs-type">T</span>?)</span></span><br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 请求失败</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  errorCode 错误码</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  errorMsg 错误信息</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onFailure</span><span class="hljs-params">(errorMsg: <span class="hljs-type">String</span>?, errorCode: <span class="hljs-type">Int</span>)</span></span> &#123;<br>        ToastUtils.showToast(<span class="hljs-string">&quot;Login Failed,errorCode:<span class="hljs-variable">$errorCode</span>,errorMsg:<span class="hljs-variable">$errorMsg</span>&quot;</span>)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>封装 RetrofitCreator 用来创建 API Service。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">object</span> RetrofitCreator &#123;<br>    <br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> mOkClient = OkHttpClient.Builder()<br>        .callTimeout(Config.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)<br>        .connectTimeout(Config.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)<br>        .readTimeout(Config.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)<br>        .writeTimeout(Config.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)<br>        .retryOnConnectionFailure(<span class="hljs-literal">true</span>)<br>        .followRedirects(<span class="hljs-literal">false</span>)<br>        .addInterceptor(HttpHeaderInterceptor())<br>        .addInterceptor(LogInterceptor())<br>        .build()<br>    <br>    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getRetrofitBuilder</span><span class="hljs-params">(baseUrl: <span class="hljs-type">String</span>)</span></span>: Retrofit.Builder &#123;<br>        <span class="hljs-keyword">return</span> Retrofit.Builder()<br>            .baseUrl(baseUrl)<br>            .client(mOkClient)<br>            .addConverterFactory(GsonConverterFactory.create())<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Create Api service</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  cls Api Service</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  baseUrl Base Url</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-type">&lt;T&gt;</span> <span class="hljs-title">getApiService</span><span class="hljs-params">(cls: <span class="hljs-type">Class</span>&lt;<span class="hljs-type">T</span>&gt;, baseUrl: <span class="hljs-type">String</span>)</span></span>: T &#123;<br>        <span class="hljs-keyword">val</span> retrofit = getRetrofitBuilder(<br>            baseUrl<br>        ).build()<br>        <span class="hljs-keyword">return</span> retrofit.create(cls)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="2-2-Model-层封装"><a href="#2-2-Model-层封装" class="headerlink" title="2.2 Model 层封装"></a>2.2 Model 层封装</h4><p>官方代码中的 Model 层是通过Repository实现的，为了减少模板代码，我们可以封装 BaseRepository 来处理网络请求。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseRepository</span> </span>&#123;<br>    <br>    <span class="hljs-comment">// Loading 状态的 LiveData</span><br>    <span class="hljs-keyword">val</span> loadingStateLiveData: MutableLiveData&lt;LoadingState&gt; <span class="hljs-keyword">by</span> lazy &#123;<br>        MutableLiveData&lt;LoadingState&gt;()<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 发起请求</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  block 真正执行的函数回调</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span> responseLiveData 观察请求结果的LiveData</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-type">&lt;T : Any&gt;</span> <span class="hljs-title">executeRequest</span><span class="hljs-params">(</span></span><br><span class="hljs-function"><span class="hljs-params">        block: <span class="hljs-type">suspend</span> () -&gt; <span class="hljs-type">BaseResponse</span>&lt;<span class="hljs-type">T</span>&gt;,</span></span><br><span class="hljs-function"><span class="hljs-params">        responseLiveData: <span class="hljs-type">ResponseMutableLiveData</span>&lt;<span class="hljs-type">T</span>&gt;,</span></span><br><span class="hljs-function"><span class="hljs-params">        showLoading: <span class="hljs-type">Boolean</span> = <span class="hljs-literal">true</span>,</span></span><br><span class="hljs-function"><span class="hljs-params">        loadingMsg: <span class="hljs-type">String</span>? = <span class="hljs-literal">null</span>,</span></span><br><span class="hljs-function"><span class="hljs-params">    )</span></span> &#123;<br>        <span class="hljs-keyword">var</span> response = BaseResponse&lt;T&gt;()<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">if</span> (showLoading) &#123;<br>                loadingStateLiveData.postValue(LoadingState(loadingMsg, DataState.STATE_LOADING))<br>            &#125;<br>            response = block.invoke()<br>            <span class="hljs-keyword">if</span> (response.errorCode == BaseResponse.ERROR_CODE_SUCCESS) &#123;<br>                <span class="hljs-keyword">if</span> (isEmptyData(response.<span class="hljs-keyword">data</span>)) &#123;<br>                    response.dataState = DataState.STATE_EMPTY<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    response.dataState = DataState.STATE_SUCCESS<br>                &#125;<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                response.dataState = DataState.STATE_FAILED<br><span class="hljs-comment">// throw ServerResponseException(response.errorCode, response.errorMsg)</span><br>            &#125;<br>        &#125; <span class="hljs-keyword">catch</span> (e: Exception) &#123;<br>            response.dataState = DataState.STATE_ERROR<br>            response.exception = e<br>        &#125; <span class="hljs-keyword">finally</span> &#123;<br>            responseLiveData.postValue(response)<br>            <span class="hljs-keyword">if</span> (showLoading) &#123;<br>                loadingStateLiveData.postValue(LoadingState(loadingMsg, DataState.STATE_FINISH))<br>            &#125;<br>        &#125;<br>    &#125;<br>    <br>    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-type">&lt;T&gt;</span> <span class="hljs-title">isEmptyData</span><span class="hljs-params">(<span class="hljs-keyword">data</span>: <span class="hljs-type">T</span>?)</span></span>: <span class="hljs-built_in">Boolean</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">data</span> == <span class="hljs-literal">null</span> || <span class="hljs-keyword">data</span> <span class="hljs-keyword">is</span> List&lt;*&gt; &amp;&amp; (<span class="hljs-keyword">data</span> <span class="hljs-keyword">as</span> List&lt;*&gt;).isEmpty()<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="2-3-ViewModel-层封装"><a href="#2-3-ViewModel-层封装" class="headerlink" title="2.3 ViewModel 层封装"></a>2.3 ViewModel 层封装</h4><p>如果不做封装，ViewModel层也会有模板代码。这里将通用代码在 BaseViewModel 中完成。BaseViewModel 需要持有 Repository。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseViewModel</span>&lt;<span class="hljs-type">T : BaseRepository</span>&gt; : <span class="hljs-type">ViewModel</span></span>() &#123;<br>    <span class="hljs-keyword">val</span> repository: T <span class="hljs-keyword">by</span> lazy &#123;<br>        createRepository()<br>    &#125;<br>    <br>    <span class="hljs-keyword">val</span> loadingDataState: LiveData&lt;LoadingState&gt; <span class="hljs-keyword">by</span> lazy &#123;<br>        repository.loadingStateLiveData<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 创建Repository</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@Suppress(<span class="hljs-meta-string">&quot;UNCHECKED_CAST&quot;</span>)</span><br>    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">createRepository</span><span class="hljs-params">()</span></span>: T &#123;<br>        <span class="hljs-keyword">val</span> baseRepository = findActualGenericsClass&lt;T&gt;(BaseRepository::<span class="hljs-keyword">class</span>.java)<br>            ?: <span class="hljs-keyword">throw</span> NullPointerException(<span class="hljs-string">&quot;Can not find a BaseRepository Generics in <span class="hljs-subst">$&#123;javaClass.simpleName&#125;</span>&quot;</span>)<br>        <span class="hljs-keyword">return</span> baseRepository.newInstance()<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="2-4-View-层封装"><a href="#2-4-View-层封装" class="headerlink" title="2.4 View 层封装"></a>2.4 View 层封装</h4><p>BaseActivity/BaseFragment 中持有 ViewModel，同时根据 LoadingState 处理 Loading 的显示与隐藏。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseActivity</span>&lt;<span class="hljs-type">VM : BaseViewModel&lt;*</span>&gt;, <span class="hljs-type">VB : ViewBinding&gt; : AppCompatActivity</span></span>() &#123;<br>    <br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">val</span> viewModel <span class="hljs-keyword">by</span> lazy &#123;<br>        createViewModel()<br>    &#125;<br>    <br>    <span class="hljs-keyword">protected</span> <span class="hljs-keyword">val</span> binding <span class="hljs-keyword">by</span> lazy &#123;<br>        createViewBinding()<br>    &#125;<br>    <br>    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onCreate</span><span class="hljs-params">(savedInstanceState: <span class="hljs-type">Bundle</span>?)</span></span> &#123;<br>        <span class="hljs-keyword">super</span>.onCreate(savedInstanceState)<br>        setContentView(binding.root)<br>        viewModel.loadingDataState.observe(<span class="hljs-keyword">this</span>) &#123;<br>            <span class="hljs-keyword">when</span> (it.state) &#123;<br>                DataState.STATE_LOADING -&gt;<br>                    showLoading(it.msg)<br>                <span class="hljs-keyword">else</span> -&gt;<br>                    dismissLoading()<br>            &#125;<br>        &#125;<br>        onActivityCreated(savedInstanceState)<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Activity content view created.</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  savedInstanceState savedInstanceState</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">abstract</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onActivityCreated</span><span class="hljs-params">(savedInstanceState: <span class="hljs-type">Bundle</span>?)</span></span><br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 显示Loading</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">showLoading</span><span class="hljs-params">(msg: <span class="hljs-type">String</span>? = <span class="hljs-literal">null</span>)</span></span> &#123;<br>        ToastUtils.showToast(<span class="hljs-string">&quot;showLoading&quot;</span>)<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 隐藏Loading</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">dismissLoading</span><span class="hljs-params">()</span></span> &#123;<br>        ToastUtils.showToast(<span class="hljs-string">&quot;hideLoading&quot;</span>)<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Create ViewBinding</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@Suppress(<span class="hljs-meta-string">&quot;UNCHECKED_CAST&quot;</span>)</span><br>    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">createViewBinding</span><span class="hljs-params">()</span></span>: VB &#123;<br>        <span class="hljs-keyword">val</span> actualGenericsClass = findActualGenericsClass&lt;VB&gt;(ViewBinding::<span class="hljs-keyword">class</span>.java)<br>            ?: <span class="hljs-keyword">throw</span> NullPointerException(<span class="hljs-string">&quot;Can not find a ViewBinding Generics in <span class="hljs-subst">$&#123;javaClass.simpleName&#125;</span>&quot;</span>)<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">val</span> inflate = actualGenericsClass.getDeclaredMethod(<span class="hljs-string">&quot;inflate&quot;</span>, LayoutInflater::<span class="hljs-keyword">class</span>.java)<br>            <span class="hljs-keyword">return</span> inflate.invoke(<span class="hljs-literal">null</span>, layoutInflater) <span class="hljs-keyword">as</span> VB<br>        &#125; <span class="hljs-keyword">catch</span> (e: NoSuchMethodException) &#123;<br>            e.printStackTrace()<br>        &#125; <span class="hljs-keyword">catch</span> (e: IllegalAccessException) &#123;<br>            e.printStackTrace()<br>        &#125; <span class="hljs-keyword">catch</span> (e: InvocationTargetException) &#123;<br>            e.printStackTrace()<br>        &#125;<br>    &#125;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Create ViewModel</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@return</span>  ViewModel</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-meta">@Suppress(<span class="hljs-meta-string">&quot;UNCHECKED_CAST&quot;</span>)</span><br>    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">createViewModel</span><span class="hljs-params">()</span></span>: VM &#123;<br>        <span class="hljs-keyword">val</span> actualGenericsClass = findActualGenericsClass&lt;VM&gt;(BaseViewModel::<span class="hljs-keyword">class</span>.java)<br>            ?: <span class="hljs-keyword">throw</span> NullPointerException(<span class="hljs-string">&quot;Can not find a ViewModel Generics in <span class="hljs-subst">$&#123;javaClass.simpleName&#125;</span>&quot;</span>)<br>        <span class="hljs-keyword">if</span> (Modifier.isAbstract(actualGenericsClass.modifiers)) &#123;<br>            <span class="hljs-keyword">throw</span> IllegalStateException(<span class="hljs-string">&quot;<span class="hljs-variable">$actualGenericsClass</span> is an abstract class,abstract ViewModel class can not create a instance!&quot;</span>)<br>        &#125;<br>        <span class="hljs-comment">// 判断如果是 BaseAndroidViewModel，则使用 AppViewModelFactory 来生成</span><br>        <span class="hljs-keyword">if</span> (BaseAndroidViewModel::<span class="hljs-keyword">class</span>.java.isAssignableFrom(actualGenericsClass)) &#123;<br>            <span class="hljs-keyword">return</span> ViewModelProvider(<span class="hljs-keyword">this</span>, AppViewModelFactory(application))[actualGenericsClass]<br>        &#125;<br>        <span class="hljs-keyword">return</span> ViewModelProvider(<span class="hljs-keyword">this</span>)[actualGenericsClass]<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>创建 ViewModel 的过程是在 BaseActivity 中根据子类的泛型自动生成的。这里使用了反射的方式来实现。如果觉得影响性能可以在子类中重写<code>createViewModel</code>函数来自行生成<br>ViewModel。</p>
+<p>另外，如果需要使用带有 Application 的ViewModel，可以继承 BaseAndroidViewModel,它的实现参照了 AndroidViewModel。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseAndroidViewModel</span>&lt;<span class="hljs-type">T : BaseRepository</span>&gt;</span>(<span class="hljs-meta">@field:SuppressLint</span>(<span class="hljs-string">&quot;StaticFieldLeak&quot;</span>) <span class="hljs-keyword">var</span> application: Application) : BaseViewModel&lt;T&gt;()<br></code></pre></td></tr></table></figure>
+
+<p>这里创建 BaseAndroidViewModel 需要用到 AppViewModelFactory。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppViewModelFactory</span></span>(<span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> application: Application) : ViewModelProvider.NewInstanceFactory() &#123;<br>    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-type">&lt;T : ViewModel&gt;</span> <span class="hljs-title">create</span><span class="hljs-params">(modelClass: <span class="hljs-type">Class</span>&lt;<span class="hljs-type">T</span>&gt;)</span></span>: T &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> (BaseAndroidViewModel::<span class="hljs-keyword">class</span>.java.isAssignableFrom(modelClass)) &#123;<br>            <span class="hljs-keyword">try</span> &#123;<br>                modelClass.getConstructor(Application::<span class="hljs-keyword">class</span>.java).newInstance(application)<br>            &#125; <span class="hljs-keyword">catch</span> (e: NoSuchMethodException) &#123;<br>                <span class="hljs-keyword">throw</span> IllegalStateException(<span class="hljs-string">&quot;Cannot create an instance of <span class="hljs-variable">$modelClass</span>&quot;</span>, e)<br>            &#125; <span class="hljs-keyword">catch</span> (e: IllegalAccessException) &#123;<br>                <span class="hljs-keyword">throw</span> IllegalStateException(<span class="hljs-string">&quot;Cannot create an instance of <span class="hljs-variable">$modelClass</span>&quot;</span>, e)<br>            &#125; <span class="hljs-keyword">catch</span> (e: InstantiationException) &#123;<br>                <span class="hljs-keyword">throw</span> IllegalStateException(<span class="hljs-string">&quot;Cannot create an instance of <span class="hljs-variable">$modelClass</span>&quot;</span>, e)<br>            &#125; <span class="hljs-keyword">catch</span> (e: InvocationTargetException) &#123;<br>                <span class="hljs-keyword">throw</span> IllegalStateException(<span class="hljs-string">&quot;Cannot create an instance of <span class="hljs-variable">$modelClass</span>&quot;</span>, e)<br>            &#125;<br>        &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">super</span>.create(modelClass)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>假如 LoginViewModel 实现了 BaseAndroidViewModel ，那么使用 ViewModelProvider 创建 LoginViewModel 时必须传入<br>AppViewModelFactory 参数，而不是Jetpack ViewModel 库中的 AndroidViewModelFactory。</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs kotlin">ViewModelProvider(<span class="hljs-keyword">this</span>, AppViewModelFactory(application))[LoginViewModel::<span class="hljs-keyword">class</span>.java]<br></code></pre></td></tr></table></figure>
+
+<h3 id="3-MVVM-封装后的实例应用"><a href="#3-MVVM-封装后的实例应用" class="headerlink" title="3. MVVM 封装后的实例应用"></a>3. MVVM 封装后的实例应用</h3><p>在完成上述封装后，我们来看下如何实现登录的逻辑。</p>
+<h4 id="3-1-实现-Repository"><a href="#3-1-实现-Repository" class="headerlink" title="3.1 实现 Repository"></a>3.1 实现 Repository</h4><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginRepository</span> : <span class="hljs-type">BaseRepository</span></span>() &#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Login</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  username 用户名</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  password 密码</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">login</span><span class="hljs-params">(username: <span class="hljs-type">String</span>, password: <span class="hljs-type">String</span>, responseLiveData: <span class="hljs-type">ResponseMutableLiveData</span>&lt;<span class="hljs-type">LoginResponse</span>&gt;, showLoading: <span class="hljs-type">Boolean</span> = <span class="hljs-literal">true</span>)</span></span> &#123;<br>        executeRequest(&#123;<br>            RetrofitManager.apiService.login(username, password)<br>        &#125;, responseLiveData, showLoading)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>RetrofitManager 用来创建管理 API Service：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">object</span> RetrofitManager &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">val</span> BASE_URL = <span class="hljs-string">&quot;https://www.wanandroid.com/&quot;</span><br>    <br>    <span class="hljs-keyword">val</span> apiService: ApiService <span class="hljs-keyword">by</span> lazy &#123;<br>        RetrofitCreator.createApiService(<br>            ApiService::<span class="hljs-keyword">class</span>.java, BASE_URL<br>        )<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="3-2-ViewModel-实例"><a href="#3-2-ViewModel-实例" class="headerlink" title="3.2 ViewModel 实例"></a>3.2 ViewModel 实例</h4><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginViewModel</span> : <span class="hljs-type">BaseViewModel</span>&lt;<span class="hljs-type">LoginRepository</span>&gt;</span>() &#123;<br>    <span class="hljs-comment">// 提供给Model层设置数据</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> _loginLiveData: ResponseMutableLiveData&lt;LoginResponse&gt; = ResponseMutableLiveData()<br>    <br>    <span class="hljs-comment">// 提供给View层观察数据</span><br>    <span class="hljs-keyword">val</span> loginLiveData: ResponseLiveData&lt;LoginResponse&gt; = _loginLiveData<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Login</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  username 用户名</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  password 密码</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">login</span><span class="hljs-params">(username: <span class="hljs-type">String</span>, password: <span class="hljs-type">String</span>)</span></span> &#123;<br>        viewModelScope.launch &#123;<br>            repository.login(username, password, _loginLiveData)<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="3-3-Activity-Fragment-实例"><a href="#3-3-Activity-Fragment-实例" class="headerlink" title="3.3 Activity/Fragment 实例"></a>3.3 Activity/Fragment 实例</h4><figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginActivity</span> : <span class="hljs-type">BaseActivity</span>&lt;<span class="hljs-type">LoginViewModel, ActivityBizAMainBinding</span>&gt;</span>() &#123;<br>    <br>    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onActivityCreated</span><span class="hljs-params">(savedInstanceState: <span class="hljs-type">Bundle</span>?)</span></span> &#123;<br>        binding.tvLogin.setOnClickListener &#123;<br>            viewModel.login(<span class="hljs-string">&quot;110120&quot;</span>, <span class="hljs-string">&quot;123456&quot;</span>)<br>        &#125;<br>        <br>        viewModel.loginLiveData.observe(<span class="hljs-keyword">this</span>, <span class="hljs-keyword">object</span> : ResponseObserver&lt;LoginResponse&gt;() &#123;<br>            <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onSuccess</span><span class="hljs-params">(<span class="hljs-keyword">data</span>: <span class="hljs-type">LoginResponse</span>?)</span></span> &#123;<br>                <span class="hljs-comment">// Update UI</span><br>            &#125;<br>        &#125;)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里需要注意的是，在Activity里边需要使用不可变的 LiveData,防止开发时候在View层通过 LiveData<br>来setValue/postValue，造成错误的UI更新问题。因此，这里对LiveData做了一些改动,如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ResponseLiveData</span>&lt;<span class="hljs-type">T</span>&gt; : <span class="hljs-type">LiveData</span>&lt;<span class="hljs-type">BaseResponse&lt;T</span>&gt;&gt; </span>&#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Creates a MutableLiveData initialized with the given `value`.</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  value initial value</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">constructor</span>(value: BaseResponse&lt;T&gt;?) : <span class="hljs-keyword">super</span>(value)<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Creates a MutableLiveData with no value assigned to it.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">constructor</span>() : <span class="hljs-keyword">super</span>()<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Adds the given observer to the observers list within the lifespan of the given owner.</span><br><span class="hljs-comment">     * The events are dispatched on the main thread. If LiveData already has data set, it</span><br><span class="hljs-comment">     * will be delivered to the observer.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">observe</span><span class="hljs-params">(owner: <span class="hljs-type">LifecycleOwner</span>, observer: <span class="hljs-type">ResponseObserver</span>&lt;<span class="hljs-type">T</span>&gt;)</span></span> &#123;<br>        <span class="hljs-keyword">super</span>.observe(owner, observer)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>ResponseLiveData 继承自 LiveData，因此ResponseLiveData是不可变的。除此之外还定义了一个 ResponseMutableLiveData ，这是一个可变的<br>LiveData，代码如下:</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ResponseMutableLiveData</span>&lt;<span class="hljs-type">T</span>&gt; : <span class="hljs-type">ResponseLiveData</span>&lt;<span class="hljs-type">T</span>&gt; </span>&#123;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Creates a MutableLiveData initialized with the given `value`.</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     *  <span class="hljs-doctag">@param</span>  value initial value</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">constructor</span>(value: BaseResponse&lt;T&gt;?) : <span class="hljs-keyword">super</span>(value)<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Creates a MutableLiveData with no value assigned to it.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">constructor</span>() : <span class="hljs-keyword">super</span>()<br>    <br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">postValue</span><span class="hljs-params">(value: <span class="hljs-type">BaseResponse</span>&lt;<span class="hljs-type">T</span>&gt;?)</span></span> &#123;<br>        <span class="hljs-keyword">super</span>.postValue(value)<br>    &#125;<br>    <br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">setValue</span><span class="hljs-params">(value: <span class="hljs-type">BaseResponse</span>&lt;<span class="hljs-type">T</span>&gt;?)</span></span> &#123;<br>        <span class="hljs-keyword">super</span>.setValue(value)<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>至此关于Jetpack MVVM的封装及使用就结束了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本篇文章比较详细的讲解了Android项目架构从MVC、MVP到MVVM的演化，对三种架构都列举了详细的实现例子。同时针对目前主流的Jetpack<br>MVVM架构进行了封装。当然，由于每个人对于架构的理解并不一定相同，所有文章中避免不了会有与读者理解不一致的地方，欢迎留言讨论。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/MVC/">MVC</a>
+                    
+                      <a class="hover-with-bg" href="/tags/MVP/">MVP</a>
+                    
+                      <a class="hover-with-bg" href="/tags/MVVM/">MVVM</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/17/49-analyze-android-message-mechanism/">
+                        <span class="hidden-mobile">反思 Android 消息机制设计与实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

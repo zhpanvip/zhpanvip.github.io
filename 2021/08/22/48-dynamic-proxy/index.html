@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>浅析 Java 中的动态代理 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="浅析 Java 中的动态代理">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-08-22 11:54" pubdate>
+        2021年8月22日 中午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      13
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">浅析 Java 中的动态代理</h1>
+            
+            <div class="markdown-body">
+              <p>在之前的一篇文章<a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904003524886536">《静态代理这么用？聊一聊ViewPagerIndicator重构的一些经验》</a>中详细的介绍了 java 中的静态代理，并且使用静态代理对<a href="https://link.juejin.cn/?target=https://github.com/zhpanvip/viewpagerindicator">IndicatorView</a>进行了重构。静态代理的优点不必多说，它可以让代码具有扩展性，也可以让代码解耦。但在现实开发中，静态代理有时候也存在很多弊端，列举如下：</p>
+<ul>
+<li>当接口需要增加、删除、修改方法时，被代理类与代理类都需要修改，不易维护。</li>
+<li>由于代理类要实现与被代理类一致的接口，当有多个类需要被代理时，会存在以下问题：<ul>
+<li>如果让代理类实现所有被代理类的接口，这样会使代理类过于庞大；</li>
+<li>如果使用多个代理类，每个代理类只代理一个类，这样会需要构造多个代理类。</li>
+</ul>
+</li>
+</ul>
+<p>对于以上问题都可以使用动态代理来解决。<strong>动态代理会在运行时根据被代理接口生成对应的代理类的字节码，然后加载到JVM中，并创建这个接口的实例的过程。</strong></p>
+<p>本篇文章就来学习以下动态代理的使用，以及深入的理解动态代理的本质。</p>
+<p>开始之前先给大家推荐一下<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote">AndroidNote</a>这个GitHub仓库，这里是我的学习笔记，同时也是我文章初稿的出处。这个仓库中汇总了大量的java进阶和Android进阶知识。是一个比较系统且全面的Android知识库。对于准备面试的同学也是一份不可多得的面试宝典，欢迎大家到GitHub的仓库主页关注。</p>
+<h2 id="一、从-Retrofit-源码看动态代理"><a href="#一、从-Retrofit-源码看动态代理" class="headerlink" title="一、从 Retrofit 源码看动态代理"></a>一、从 Retrofit 源码看动态代理</h2><p>Retrofit 是一个封装了 OKHttp 的网络请求框架，它的使用非常简单。 只需要定义一个接口，然后创建一个Retrofit实例，通过Retrofit实例便可以生成接口的代理对象用来进行网络请求了。</p>
+<p>简单的看下Retrofit的使用步骤：</p>
+<h3 id="1-Retrofit-使用"><a href="#1-Retrofit-使用" class="headerlink" title="1.Retrofit 使用"></a>1.Retrofit 使用</h3><h4 id="1）定义接口"><a href="#1）定义接口" class="headerlink" title="1）定义接口"></a>1）定义接口</h4><p>首先，定义一个名为GitHub的接口，并在接口中添加一个API方法，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">GitHub</span> </span>&#123;<br>  <span class="hljs-meta">@GET(&quot;/repos/&#123;owner&#125;/&#123;repo&#125;/contributors&quot;)</span><br>  Call&lt;List&lt;Contributor&gt;&gt; contributors(<span class="hljs-meta">@Path(&quot;owner&quot;)</span> String owner, <span class="hljs-meta">@Path(&quot;repo&quot;)</span> String repo);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="2）创建Retrofit实例"><a href="#2）创建Retrofit实例" class="headerlink" title="2）创建Retrofit实例"></a>2）创建Retrofit实例</h4><p>Retrofit完美的封装让我们可以通过一个简单的链式调用，就可以生成一个Retrofit实例。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">Retrofit retrofit =<br>    <span class="hljs-keyword">new</span> Retrofit.Builder()<br>        .baseUrl(API_URL)<br>        .addConverterFactory(GsonConverterFactory.create())<br>        .build();<br></code></pre></td></tr></table></figure>
+
+<h4 id="3）生成API接口代理"><a href="#3）生成API接口代理" class="headerlink" title="3）生成API接口代理"></a>3）生成API接口代理</h4><p>使用Retrofit实例生成GitHub接口的代理实例，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java">GitHub github = retrofit.create(GitHub.class);<br></code></pre></td></tr></table></figure>
+<h4 id="4）发起网络请求"><a href="#4）发起网络请求" class="headerlink" title="4）发起网络请求"></a>4）发起网络请求</h4><p>使用GitHub接口的代理，调用contributors方法发起网络请求，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java">github.contributors(<span class="hljs-string">&quot;square&quot;</span>, <span class="hljs-string">&quot;retrofit&quot;</span>).enqueue(<span class="hljs-keyword">new</span> Callback&lt;List&lt;Contributor&gt;&gt;() &#123;<br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResponse</span><span class="hljs-params">(Call&lt;List&lt;Contributor&gt;&gt; call, Response&lt;List&lt;Contributor&gt;&gt; response)</span> </span>&#123;<br><br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailure</span><span class="hljs-params">(Call&lt;List&lt;Contributor&gt;&gt; call, Throwable t)</span> </span>&#123;<br><br>  &#125;<br>&#125;);<br></code></pre></td></tr></table></figure>
+
+<p>在上述代码中，我们仅仅是定义了一个GitHub接口，Retrofit内部究竟是怎么生成 GitHub 实例的呢？其实这里就是用到了动态代理来实现的。</p>
+<h3 id="Retrofit-动态代理"><a href="#Retrofit-动态代理" class="headerlink" title="Retrofit 动态代理"></a>Retrofit 动态代理</h3><p>Retrofit 的 create 方法接受一个 <code>Class&lt;T&gt;</code>类型的参数，并且会返回一个这个<code>Class&lt;T&gt;</code>对应的实例对象。这里就是使用动态代理来创建<code>Class&lt;T&gt;</code>的实例的。看下代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> &lt;T&gt; <span class="hljs-function">T <span class="hljs-title">create</span><span class="hljs-params">(<span class="hljs-keyword">final</span> Class&lt;T&gt; service)</span> </span>&#123;<br>  <span class="hljs-comment">// 校验 service 是否合法</span><br>  validateServiceInterface(service);<br>  <span class="hljs-keyword">return</span> (T)<br>      Proxy.newProxyInstance(  <span class="hljs-comment">// 通过 Proxy.newProxyInstance 生成 service 的实例对象</span><br>          service.getClassLoader(), <span class="hljs-comment">// 类加载器</span><br>          <span class="hljs-keyword">new</span> Class&lt;?&gt;[] &#123;service&#125;, <span class="hljs-comment">// 被代理的接口</span><br>          <span class="hljs-keyword">new</span> InvocationHandler() &#123; <span class="hljs-comment">// 一个匿名内部类，是被代理方法真正执行的逻辑</span><br>            <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Platform platform = Platform.get();<br>            <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> Object[] emptyArgs = <span class="hljs-keyword">new</span> Object[<span class="hljs-number">0</span>];<br><br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> <span class="hljs-meta">@Nullable</span> <span class="hljs-function">Object <span class="hljs-title">invoke</span><span class="hljs-params">(Object proxy, Method method, <span class="hljs-meta">@Nullable</span> Object[] args)</span></span><br><span class="hljs-function">                <span class="hljs-keyword">throws</span> Throwable </span>&#123;<br><br>                <span class="hljs-comment">// ...</span><br><br>              <span class="hljs-keyword">return</span> loadServiceMethod(method).invoke(args);<br>            &#125;<br>          &#125;);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上述代码我进行了简化，抛开被代理方法的执行逻辑来着重看静态代理的实现。首先再次明确一下 create 方法返回的是一个 GitHub 接口的代理对象. 这个对象是通过 Proxy.newProxyInstance 方法生成的。newProxyInstance 方法接收三个参数，分别为类加载器、被代理的接口，以及一个InvocationHandler的匿名内部类。</p>
+<p>到这里可能有些同学还是没明白到底是怎么回事。让我们再来看一下动态代理的定义 ：<strong>动态代理会在运行时根据被代理接口生成对应的代理类的字节码，然后加载到JVM中，并创建这个接口的实例的过程。</strong></p>
+<p>结合create的代码来说就是这个方法会在运行时通过Proxy.newProxyInstance生成一个代理类，并且会将这个代理类加载到JVM中，并生成代理的实例。 当通过代理接口调用接口中的中的方法时，实际会执行InvocationHandler 的 invoke 方法。</p>
+<p>所以，到这里代理与被代理的关系其实应该很清晰了。即 Proxy.newProxyInstance 生成的这个类（也就是本章第1节，第3小节中的github实例）是代理类，而匿名内部类 InvocationHandler 中的 invoke 方法是被代理的方法。所以真正的执行逻辑就在这个 invoke 方法中。</p>
+<h2 id="二、实现一个动态代理"><a href="#二、实现一个动态代理" class="headerlink" title="二、实现一个动态代理"></a>二、实现一个动态代理</h2><p>上一章我们了解了retrofit中的动态代理。本章内容，我们来自己完成一个动态代理的例子，加深对动态代理的理解。仍然以<a target="_blank" rel="noopener" href="https://juejin.cn/post/6844904003524886536">《静态代理这么用？聊一聊ViewPagerIndicator重构的一些经验》</a> 这篇文章中的场景为例：</p>
+<blockquote>
+<p>Ryan想在上海买一套房子，但是他又不懂房地产的行情，于是委托了中介（Proxy）来帮助他买房子。</p>
+</blockquote>
+<h3 id="1-实现动态代理"><a href="#1-实现动态代理" class="headerlink" title="1.实现动态代理"></a>1.实现动态代理</h3><h4 id="1）定义代理接口"><a href="#1）定义代理接口" class="headerlink" title="1）定义代理接口"></a>1）定义代理接口</h4><p>毫无疑问，应该首先定义一个Buy House 的接口，如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IPersonBuyHouse</span> </span>&#123;<br>    <span class="hljs-comment">// 特意加了一个返回值，表示是否成功购买</span><br>    <span class="hljs-function"><span class="hljs-keyword">boolean</span> <span class="hljs-title">buyHouse</span><span class="hljs-params">(String name)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="2）使用动态代理"><a href="#2）使用动态代理" class="headerlink" title="2）使用动态代理"></a>2）使用动态代理</h4><p>模仿retrofit中create方法的代码，来实现动态代理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs java">InvocationHandler handler = (proxy, method, args1) -&gt; &#123;<br>    <span class="hljs-keyword">if</span> (method.getName().equals(<span class="hljs-string">&quot;buyHouse&quot;</span>)) &#123;<br>        System.out.println(args1[<span class="hljs-number">0</span>] + <span class="hljs-string">&quot; will buy a house.&quot;</span>);<br>    &#125;<br>    <span class="hljs-comment">// 返回true，表示购买成功</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>&#125;;<br><span class="hljs-comment">// 通过 Proxy.newProxyInstance 生成代理对象</span><br>IPersonBuyHouse proxy = (IPersonBuyHouse)Proxy<br>        .newProxyInstance(IPersonBuyHouse.class.getClassLoader(), // ClassLoader<br>                <span class="hljs-keyword">new</span> Class[]&#123;IPersonBuyHouse.class&#125;, // 传入要实现的接口<br>                handler); <span class="hljs-comment">// 传入处理调用方法的InvocationHandler</span><br></code></pre></td></tr></table></figure>
+<h4 id="3）执行代理"><a href="#3）执行代理" class="headerlink" title="3）执行代理"></a>3）执行代理</h4><p>生成代理后，便可以调用代理中的方法来买房子了，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">boolean</span> success = proxy.buyHouse(<span class="hljs-string">&quot;Ryan&quot;</span>);<br></code></pre></td></tr></table></figure>
+
+<p>执行上述代码会得到如下日志：</p>
+<blockquote>
+<p>Ryan will buy a house.</p>
+</blockquote>
+<p>即 InvocationHandler 的 invoke 方法中输出的日志。</p>
+<h3 id="2-动态代理的本质"><a href="#2-动态代理的本质" class="headerlink" title="2. 动态代理的本质"></a>2. 动态代理的本质</h3><p>其实，在第一章中关于动态代理的本质已经解释的很清楚了。Proxy.newProxyInstance 会生成一个IPersonBuyHouse的代理对象。执行代理对象的方法就是执行了InvocationHandler的invoke方法。也就是InvocationHandler其实是被代理的对象。</p>
+<p>如果将上一节中的动态代理代码改成静态代理，其实就是这样的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Proxy</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IPersonBuyHouse</span> </span>&#123;<br>    <span class="hljs-comment">// 这里可以理解为被代理类 Ryan</span><br>    InvocationHandler handler = <span class="hljs-keyword">new</span> InvocationHandler() &#123;<br>        <span class="hljs-meta">@Override</span><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">invoke</span><span class="hljs-params">(Object proxy, Method method, Object[] args)</span> </span>&#123;<br>            <span class="hljs-keyword">if</span> (method.getName().equals(<span class="hljs-string">&quot;buyHouse&quot;</span>)) &#123;<br>                System.out.println(args[<span class="hljs-number">0</span>] + <span class="hljs-string">&quot; will buy a house.&quot;</span>);<br>            &#125;<br>            <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>        &#125;<br>    &#125;;<br><br>    <span class="hljs-comment">// 代理方法</span><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">buyHouse</span><span class="hljs-params">(String name)</span> </span>&#123;<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-comment">// 反射获取buyHouse这个Method</span><br>            Method buyHouseMethod = IPersonBuyHouse.class.getDeclaredMethod(&quot;buyHouse&quot;, String.class);<br>            <span class="hljs-comment">// 将buyHouse的参数封装成一个Object数组</span><br>            Object[] params = <span class="hljs-keyword">new</span> Object[<span class="hljs-number">1</span>];<br>            params[<span class="hljs-number">0</span>] = name;<br>            <span class="hljs-comment">// 实际调用了InvocationHandler的invoke方法</span><br>            <span class="hljs-keyword">return</span> (<span class="hljs-keyword">boolean</span>) handler.invoke(<span class="hljs-keyword">this</span>, buyHouseMethod, params);<br>        &#125; <span class="hljs-keyword">catch</span> (Throwable e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">false</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>测试代码直接实例化Proxy并调用buyHouse即可</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">new</span> Proxy().buyHouse(<span class="hljs-string">&quot;Ryan&quot;</span>);<br></code></pre></td></tr></table></figure>
+<p>打印结果与使用动态代理打印结果一致：</p>
+<blockquote>
+<p>Ryan will buy a house.</p>
+</blockquote>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本篇文章详细且深入的讲解了动态代理的使用以及动态代理的本质。动态代理使用Proxy.newProxyInstance来生成代理类，解决了静态代理中不能同时代理多个类的弊端。被代理类在动态代理中也没有被显示声明，而是以InvocationHandler的形式来实现。调用代理类的方法实则调用了InvocationHandler的invoke方法。真正的执行逻辑就是在这个invoke方法中。</p>
+<p>最后贴下本篇文章的初稿：<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote/wiki/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86">AndroidNote#动态代理</a>,同时，欢迎关注<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidNote">AndroidNote</a>,你会有意想不到的收获。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Java%E8%BF%9B%E9%98%B6/">Java进阶</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86/">动态代理</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/06/17/49-analyze-android-message-mechanism/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">反思 Android 消息机制设计与实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/08/06/47-binder-aidl/">
+                        <span class="hidden-mobile">不得不说的Android Binder机制与AIDL</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

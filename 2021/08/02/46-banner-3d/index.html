@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>用BVP一比一还原自如客APP裸眼3D效果（Android原生） - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="用BVP一比一还原自如客APP裸眼3D效果（Android原生）">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-08-02 22:45" pubdate>
+        2021年8月2日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      9
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">用BVP一比一还原自如客APP裸眼3D效果（Android原生）</h1>
+            
+            <div class="markdown-body">
+              <p>前几天，<a target="_blank" rel="noopener" href="https://juejin.cn/post/6989227733410644005">自如大前端</a>开源了一个裸眼3D效果的Banner轮播图的实现方案。看着非常有意思，于是趁着空闲时间结合我的开源库<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>码了一个自如裸眼3D效果的demo。demo基本实现了自如APP的Banner效果。</p>
+<p>关于实现原理，<a target="_blank" rel="noopener" href="https://juejin.cn/post/6989227733410644005">自如客APP裸眼3D效果的实现</a>这篇文章已经写得很清楚了，本篇文章就不再赘述了，这里主要看一下代码实现。</p>
+<h2 id="一、监听传感器的ViewSensorLayout"><a href="#一、监听传感器的ViewSensorLayout" class="headerlink" title="一、监听传感器的ViewSensorLayout"></a>一、监听传感器的ViewSensorLayout</h2><p>裸眼3D效果的核心其实就是SensorLayout的实现，这个View通过监听传感器来计算View的位移，然后通过Scroller进行滑动。首先，在构造方法中设置传感器的监听事件：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">SensorLayout</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> Context context, <span class="hljs-meta">@Nullable</span> AttributeSet attrs, <span class="hljs-keyword">int</span> defStyleAttr)</span> </span>&#123;<br>    <span class="hljs-keyword">super</span>(context, attrs, defStyleAttr);<br>    mScroller = <span class="hljs-keyword">new</span> Scroller(context);<br>    mSensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);<br>    <span class="hljs-comment">// 重力传感器</span><br>    <span class="hljs-keyword">if</span> (mSensorManager != <span class="hljs-keyword">null</span>) &#123;<br>        Sensor accelerateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);<br>        <span class="hljs-comment">// 地磁场传感器</span><br>        Sensor magneticSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);<br>        mSensorManager.registerListener(<span class="hljs-keyword">this</span>, accelerateSensor, SensorManager.SENSOR_DELAY_GAME);<br>        mSensorManager.registerListener(<span class="hljs-keyword">this</span>, magneticSensor, SensorManager.SENSOR_DELAY_GAME);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>然后，在传感器发生变化的时候通过Scroller来移动View，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Override</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onSensorChanged</span><span class="hljs-params">(SensorEvent event)</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) &#123;<br>        mAccelerateValues = event.values;<br>    &#125;<br>    <span class="hljs-keyword">if</span> (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) &#123;<br>        mMagneticValues = event.values;<br>    &#125;<br>    <span class="hljs-keyword">float</span>[] values = <span class="hljs-keyword">new</span> <span class="hljs-keyword">float</span>[<span class="hljs-number">3</span>];<br>    <span class="hljs-keyword">float</span>[] R = <span class="hljs-keyword">new</span> <span class="hljs-keyword">float</span>[<span class="hljs-number">9</span>];<br>    <span class="hljs-keyword">if</span> (mMagneticValues != <span class="hljs-keyword">null</span> &amp;&amp; mAccelerateValues != <span class="hljs-keyword">null</span>)<br>        SensorManager.getRotationMatrix(R, <span class="hljs-keyword">null</span>, mAccelerateValues, mMagneticValues);<br>    SensorManager.getOrientation(R, values);<br>    <span class="hljs-comment">// x轴的偏转角度</span><br>    values[<span class="hljs-number">1</span>] = (<span class="hljs-keyword">float</span>) Math.toDegrees(values[<span class="hljs-number">1</span>]);<br>    <span class="hljs-comment">// y轴的偏转角度</span><br>    values[<span class="hljs-number">2</span>] = (<span class="hljs-keyword">float</span>) Math.toDegrees(values[<span class="hljs-number">2</span>]);<br>    <span class="hljs-keyword">double</span> degreeX = values[<span class="hljs-number">1</span>];<br>    <span class="hljs-keyword">double</span> degreeY = values[<span class="hljs-number">2</span>];<br>    <span class="hljs-keyword">if</span> (degreeY &lt;= <span class="hljs-number">0</span> &amp;&amp; degreeY &gt; mDegreeYMin) &#123;<br>        hasChangeX = <span class="hljs-keyword">true</span>;<br>        scrollX = (<span class="hljs-keyword">int</span>) (degreeY / Math.abs(mDegreeYMin) * mXMoveDistance * mDirection);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (degreeY &gt; <span class="hljs-number">0</span> &amp;&amp; degreeY &lt; mDegreeYMax) &#123;<br>        hasChangeX = <span class="hljs-keyword">true</span>;<br>        scrollX = (<span class="hljs-keyword">int</span>) (degreeY / Math.abs(mDegreeYMax) * mXMoveDistance * mDirection);<br>    &#125;<br>    <span class="hljs-keyword">if</span> (degreeX &lt;= <span class="hljs-number">0</span> &amp;&amp; degreeX &gt; mDegreeXMin) &#123;<br>        hasChangeY = <span class="hljs-keyword">true</span>;<br>        scrollY = (<span class="hljs-keyword">int</span>) (degreeX / Math.abs(mDegreeXMin) * mYMoveDistance * mDirection);<br>    &#125; <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (degreeX &gt; <span class="hljs-number">0</span> &amp;&amp; degreeX &lt; mDegreeXMax) &#123;<br>        hasChangeY = <span class="hljs-keyword">true</span>;<br>        scrollY = (<span class="hljs-keyword">int</span>) (degreeX / Math.abs(mDegreeXMax) * mYMoveDistance * mDirection);<br>    &#125;<br>    smoothScroll(hasChangeX ? scrollX : mScroller.getFinalX(), hasChangeY ? scrollY : mScroller.getFinalY());<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>代码中的mDirection表示的是移动的方向，这个参数会开放给外面，来设置跟随传感器移动还是与传感器反向移动。<br>而smoothScroll通过Scroller实现弹性滑动，代码如下：</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">public void smooth<span class="hljs-constructor">Scroll(<span class="hljs-params">int</span> <span class="hljs-params">destX</span>, <span class="hljs-params">int</span> <span class="hljs-params">destY</span>)</span> &#123;<br>    <span class="hljs-built_in">int</span> scrollY = get<span class="hljs-constructor">ScrollY()</span>;<br>    <span class="hljs-built_in">int</span> delta = destY - scrollY;<br>    mScroller.start<span class="hljs-constructor">Scroll(<span class="hljs-params">destX</span>, <span class="hljs-params">scrollY</span>, 0, <span class="hljs-params">delta</span>, 200)</span>;<br>    invalidate<span class="hljs-literal">()</span>;<br>&#125;<br><br>@Override<br>public void compute<span class="hljs-constructor">Scroll()</span> &#123;<br>    <span class="hljs-keyword">if</span> (mScroller.compute<span class="hljs-constructor">ScrollOffset()</span>) &#123;<br>        scroll<span class="hljs-constructor">To(<span class="hljs-params">mScroller</span>.<span class="hljs-params">getCurrX</span>()</span>, mScroller.get<span class="hljs-constructor">CurrY()</span>);<br>        post<span class="hljs-constructor">Invalidate()</span>;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上述的代码核心来自<a target="_blank" rel="noopener" href="https://juejin.cn/post/6989227733410644005">自如客APP裸眼3D效果的实现</a>。通过一下布局，便可以实现裸眼3D的效果了。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">FrameLayout</span> <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">xmlns:android</span>=<span class="hljs-string">&quot;http://schemas.android.com/apk/res/android&quot;</span>&gt;</span><br><br>  <span class="hljs-tag">&lt;<span class="hljs-name">com.zhpan.sample.banner3d.SensorLayout</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;match_parent&quot;</span>&gt;</span><br><br>    <span class="hljs-tag">&lt;<span class="hljs-name">ImageView</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/iv_background&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:scaleType</span>=<span class="hljs-string">&quot;centerCrop&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:scaleX</span>=<span class="hljs-string">&quot;1.3&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;match_parent&quot;</span> /&gt;</span><br><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">com.zhpan.sample.banner3d.SensorLayout</span>&gt;</span><br><br>  <span class="hljs-tag">&lt;<span class="hljs-name">ImageView</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/iv_mid&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:scaleType</span>=<span class="hljs-string">&quot;fitXY&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_marginEnd</span>=<span class="hljs-string">&quot;@dimen/dp_16&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_marginStart</span>=<span class="hljs-string">&quot;@dimen/dp_16&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_gravity</span>=<span class="hljs-string">&quot;bottom&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;@dimen/dp_100&quot;</span> /&gt;</span><br><br>  <span class="hljs-tag">&lt;<span class="hljs-name">com.zhpan.sample.banner3d.SensorLayout</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/sensor_layout&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_gravity</span>=<span class="hljs-string">&quot;bottom&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;wrap_content&quot;</span>&gt;</span><br><br>    <span class="hljs-tag">&lt;<span class="hljs-name">ImageView</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/iv_foreground&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:scaleType</span>=<span class="hljs-string">&quot;fitXY&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_marginStart</span>=<span class="hljs-string">&quot;@dimen/dp_16&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_marginEnd</span>=<span class="hljs-string">&quot;@dimen/dp_16&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;@dimen/dp_100&quot;</span> /&gt;</span><br><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">com.zhpan.sample.banner3d.SensorLayout</span>&gt;</span><br><br><span class="hljs-tag">&lt;/<span class="hljs-name">FrameLayout</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4fd6f3ea8b644f5c9cb64d3622926cb3~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="123.gif"></p>
+<h2 id="二、BannerViewPager实现裸眼3D轮播图"><a href="#二、BannerViewPager实现裸眼3D轮播图" class="headerlink" title="二、BannerViewPager实现裸眼3D轮播图"></a>二、BannerViewPager实现裸眼3D轮播图</h2><p>自如APP的Banner是两个Banner叠加在一起来实现的。这里我稍微做了一些优化，即背景层使用ImageView也可以达到一样的效果，而前景层使用<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>实现无线轮播。布局文件代码如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">FrameLayout</span> <span class="hljs-attr">xmlns:android</span>=<span class="hljs-string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">xmlns:app</span>=<span class="hljs-string">&quot;http://schemas.android.com/apk/res-auto&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">xmlns:tools</span>=<span class="hljs-string">&quot;http://schemas.android.com/tools&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">    <span class="hljs-attr">tools:context</span>=<span class="hljs-string">&quot;.MainActivity&quot;</span>&gt;</span><br><br>  <span class="hljs-tag">&lt;<span class="hljs-name">com.zhpan.sample.banner3d.SensorLayout</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/sensor_layout&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;@dimen/dp_200&quot;</span>&gt;</span><br><br>    <span class="hljs-tag">&lt;<span class="hljs-name">ImageView</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/iv_background&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:scaleType</span>=<span class="hljs-string">&quot;centerCrop&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:scaleX</span>=<span class="hljs-string">&quot;1.3&quot;</span></span><br><span class="hljs-tag">        <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;match_parent&quot;</span> /&gt;</span><br><br>  <span class="hljs-tag">&lt;/<span class="hljs-name">com.zhpan.sample.banner3d.SensorLayout</span>&gt;</span><br><br>  <span class="hljs-tag">&lt;<span class="hljs-name">com.zhpan.bannerview.BannerViewPager</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:id</span>=<span class="hljs-string">&quot;@+id/bvp_foreground&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_width</span>=<span class="hljs-string">&quot;match_parent&quot;</span></span><br><span class="hljs-tag">      <span class="hljs-attr">android:layout_height</span>=<span class="hljs-string">&quot;@dimen/dp_220&quot;</span> /&gt;</span><br><br><span class="hljs-tag">&lt;/<span class="hljs-name">FrameLayout</span>&gt;</span><br></code></pre></td></tr></table></figure>
+<p>Activity中实现轮播图的代码如下：</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs kotlin">mBannerForeground.apply &#123;<br>  <span class="hljs-comment">// 为BannerViewPager设置Adapter</span><br>  adapter = ForegroundAdapter()<br>  <span class="hljs-comment">// 设置自动轮播</span><br>  setAutoPlay(<span class="hljs-literal">true</span>)<br>  <span class="hljs-comment">// 设置指示器相关样式</span><br>  setIndicatorStyle(IndicatorStyle.ROUND_RECT)<br>  setIndicatorSlideMode(IndicatorSlideMode.SCALE)<br>  setIndicatorSliderWidth(<br>    resources.getDimensionPixelOffset(R.dimen.dp_7),<br>    resources.getDimensionPixelOffset(R.dimen.dp_10)<br>  )<br>  setIndicatorMargin(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, resources.getDimensionPixelOffset(R.dimen.dp_16), <span class="hljs-number">0</span>)<br>  setIndicatorSliderColor(<br>    resources.getColor(R.color.gray_88),<br>    resources.getColor(R.color.dark_gray)<br>  )<br>  setIndicatorGravity(IndicatorGravity.END)<br>  setScrollDuration(<span class="hljs-number">800</span>)<br>  setIndicatorSliderGap(resources.getDimensionPixelOffset(R.dimen.dp_3))<br>&#125; <span class="hljs-comment">// 页面切换的监听</span><br>.registerOnPageChangeCallback(<span class="hljs-keyword">object</span> : OnPageChangeCallback() &#123;<br>  <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onPageSelected</span><span class="hljs-params">(position: <span class="hljs-type">Int</span>)</span></span> &#123;<br>    <span class="hljs-keyword">val</span> banner3DData = mBannerForeground.<span class="hljs-keyword">data</span>[position]<br>    <span class="hljs-comment">// 切换页面后改变背景</span><br>    mIvBackGround.setImageResource(banner3DData?.background!!)<br>  &#125;<br>&#125;).create(arrayList)<br></code></pre></td></tr></table></figure>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>的使用非常简单，可以轻松实现一个带有指示器的，且能无限轮播的Banner。如果你不了解<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>，可以到GitHub主页查看使用步骤。</p>
+<p>最终，实现的效果几乎与自如APP一模一样。如下图：</p>
+<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/36876a30beb74e899c6a6b6583fea81a~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="ezgif-3-aa7e1b542b89.gif"></p>
+<p>注：图片来源自如APP</p>
+<p>最后，相关代码我已提交至GitHub：<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/AndroidSample/tree/master/app/src/main/java/com/zhpan/sample/banner3d">AndroidSample</a></p>
+<p>同时，欢迎关注<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>轮播图库。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%87%AA%E5%AE%9A%E4%B9%89View/">自定义View</a>
+                    
+                      <a class="hover-with-bg" href="/tags/BVP/">BVP</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/08/06/47-binder-aidl/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">不得不说的Android Binder机制与AIDL</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/07/19/45-ThreadLocal/">
+                        <span class="hidden-mobile">Java并发系列番外篇：ThreadLocal原理其实很简单</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

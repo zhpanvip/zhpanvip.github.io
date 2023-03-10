@@ -1,0 +1,608 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>反思 Android 消息机制设计与实现 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="反思 Android 消息机制设计与实现">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-06-17 20:18" pubdate>
+        2022年6月17日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      8.7k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      51
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">反思 Android 消息机制设计与实现</h1>
+            
+            <div class="markdown-body">
+              <p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6994057245113729038">上篇文章</a>介绍了 Android 中的 Binder 机制。Binder 在 Android 系统中占有着举足轻重的地位，它是 Android 系统中跨进程通信最重要的方式。而另外一个重要的且能与Binder相提并论的角色便是本文要分析的 Handler。Binder 支撑起了 Android 系统进程间的通信，而 Handler 支撑起的则是进程内线程间的通信。同时，Android 应用程序的运行皆依靠 Handler 的消息机制驱动，这其中就包括触摸事件的分发、View的绘制流程、屏幕的刷新机制以及Activity的生命周期等等。</p>
+<p>关于 Handler 其实早在几年前笔者就写过一篇<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573/article/details/77919141?spm=1001.2014.3001.5502">《追根溯源—— 探究Handler的实现原理》</a>的文章。 但是鉴于当时对于 Handler 的理解并不那么深刻，所以这篇文章的内容与网上大多数写 Handler 的文章一样仅仅是源码分析，对 Android 消息机制没有一个深刻的理解和认识。当然，并不是说这样的文章不好，对于初学者来说更适合阅读这样的文章的。所以，如果你对于 Handler 还没有太熟悉的话，不妨先读一读。</p>
+<p>如今，作为一个已有多年 Android 开发经验的从业者，在阅读了大量的 framework 源码之后，对于 Android 的消息机制有了一些更加深刻的认识，这是要写这篇文章的原因。</p>
+<h2 id="一、从“生产者-消费者”模型说起"><a href="#一、从“生产者-消费者”模型说起" class="headerlink" title="一、从“生产者-消费者”模型说起"></a>一、从“生产者-消费者”模型说起</h2><p>关注笔者比较久的同学可能看过我之前写过的一篇文章 <a target="_blank" rel="noopener" href="https://juejin.cn/post/6980002998361522190">《深入理解Java线程的等待与唤醒机制》</a>。在这篇文章中为了分析 synchronized 锁的等待与唤醒机制，举了一个 “生产者-消费者” 问题的例子。</p>
+<blockquote>
+<p>“生产者-消费者” 问题又称有限缓冲问题（Bounded-buffer problem），是一个多线程同步问题的经典案例。该问题描述了共享固定大小缓冲区的两个线程——即所谓的“生产者”和“消费者”——在实际运行时会发生的问题。生产者的主要作用是生成一定量的数据放到缓冲区中，然后重复此过程。与此同时，消费者会在缓冲区消耗这些数据。该问题的关键就是要保证生产者不会在缓冲区满时加入数据，消费者也不会在缓冲区中空时消耗数据。<br>”生产者-消费者“模型图如下：</p>
+</blockquote>
+<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/08aa1fce00cb43fb830907d484e6911e~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp" srcset="/img/loading.gif" alt="生产者-消费者"></p>
+<p>可以看得出来，图中的 “生产者”和”消费者”处于两个不同的线程，但是他们共用了同一个队列。生产者在完成数据的生产后会通过 notify 方法唤醒消费者线程，当队列满的时候，生产者线程会调用 wait 方法来阻塞自身。同时，消费者线程在被唤醒后则会从队列中取出数据，并通过 notify 方法唤醒生产者线程继续生产数据。当队列中的数据被取空的时候，消费者线程同样会调用 wait 方法阻塞自身。</p>
+<p>关于”生产者-消费者“模型的代码实现就不在这里重复贴出了，大家可以到<a target="_blank" rel="noopener" href="https://juejin.cn/post/6980002998361522190">《深入理解Java线程的等待与唤醒机制》</a>这篇文章中阅读第一章的内容，这些内容对于阅读本文会有一定的帮助。</p>
+<p>”生产者-消费者“模型的案例在平时的开发中是很常见的。例如 Rxjava 的流控制就是典型的”生产者-消费者“模型，除此之外还有线程池的内部实现，以及 Android 系统中输入事件的采集与派发都是基于”生产者-消费者“模型设计的。</p>
+<p>上文提到”生产者-消费者“模型解决的是多个线程共享内存的有限缓冲问题。但其实它还解决了另外一个重要问题，即实现了线程间的通信。在生产与消费的过程中由于共用了同一个缓冲队列，”生产者“产生的数据从生产者线程传递给了消费者线程，对缓冲队列内的数据而言就实现了线程的切换。</p>
+<p>了解了“生产者-消费者”模型之后对于 Android 理解消息机制的设计思想会有很大的帮助。</p>
+<h2 id="二、设计消息机制的框架"><a href="#二、设计消息机制的框架" class="headerlink" title="二、设计消息机制的框架"></a>二、设计消息机制的框架</h2><p>现在让我们回到 Android 来想一下 Android 中的场景。在文章开头已经提到 Android 应用中触摸事件的分发、View的绘制、屏幕的刷新以及 Activity 的生命周期等都是基于消息实现的。这意味着在 Android 应用中随时都在产生大量的 Message，同时也有大量的 Message 被消费掉。</p>
+<p>另外我们都知道在 Android 系统中，UI更新只能在主线程中进行。因此，为了更流畅的页面渲染，所有的耗时操作包括网络请求、文件读写、资源文件的解析等都应该放到子线程中。在这一场景下，线程间的通信就显得尤为重要。因为我们需要在网络请求、文件读写或者资源解析后将得到的数据交给主线程去进行页面渲染。</p>
+<p>那在这样的背景下如果让我们作为 Android 系统的设计者，会如何设计并实现 Android 的消息机制，让其即满足具有缓冲功能又能实现线程切换的能力呢？</p>
+<p>有了第一章的知识后我想你一定会很自然的想到使用”生产者-消费者“模型来实现。因为这一模型既能解决数据缓冲问题，又实现了数据在线程间的切换。</p>
+<p>没错，Android系统的设计者也是这么想的，于是便诞生 Handler 这一杰作！接下来让我们跟随消息机制设计者们的思维来看一下如何实现这一功能。</p>
+<h3 id="1-设计消息缓冲区–MessageQueue"><a href="#1-设计消息缓冲区–MessageQueue" class="headerlink" title="1.设计消息缓冲区–MessageQueue"></a>1.设计消息缓冲区–MessageQueue</h3><p>由于系统中无时无刻都在产生消息，因此我们首先需要有一个消息缓冲区，用来存放各个生产者线程所产生的消息，我们将这个缓冲区命名为 MessageQueue。作为一个消息队列，其内部需要有一个存放消息的容器。同时需要对外提供插入消息和取出消息的接口，将这两个接口方法分别命名为 <code>enqueueMessage(Message msg)</code> 与 <code>next()</code>。MessageQueue 伪代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MessageQueue</span> </span>&#123;<br>    <span class="hljs-comment">// 消息容器，暂且使用 LinkedList。</span><br>    <span class="hljs-keyword">private</span> LinkedList&lt;Message&gt; list = <span class="hljs-keyword">new</span> LinkedList&lt;&gt;();<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title">enqueueMessage</span><span class="hljs-params">(Message msg)</span> </span>&#123;<br>        list.add(msg);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> Message <span class="hljs-title">next</span><span class="hljs-params">()</span> </span>&#123;<br>    <br>         <span class="hljs-keyword">while</span> (list.isEmpty()) &#123;<br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-comment">// 如果容器为空，则阻塞消费者线程</span><br>                wait();<br>            &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>                e.printStackTrace();<br>            &#125;<br>        &#125;<br>       <br>        <span class="hljs-keyword">return</span> list.removeFirst()  <br>     &#125;<br>  &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>在 MessageQueue 中维护了一个集合，当插入消息时将消息存入这个集合，取出消息时，将消息从集合中移除并返回。</p>
+<p>有了消息队列之后，还需要有”生产者“与”消费者“这两个角色，生产者负责向 MessageQueue 中插入消息，而消费者负责从 MessageQueue 中取出消息并进行消费。</p>
+<h3 id="2-设计消息机制的”生产者“–Handler"><a href="#2-设计消息机制的”生产者“–Handler" class="headerlink" title="2.设计消息机制的”生产者“–Handler"></a>2.设计消息机制的”生产者“–Handler</h3><p>系统各处产生的消息需要存入到消息队列中，等待消费者取出消息并将其消费。因此我们可以设计一个包装类来实现消息插入到消息队列，将这个包装类命名为 Handler。既然作为消息队列的包装， Handler 肯定要持有 MessageQueue，以便于向消息队列中插入消息。同时还需要对外提供插入消息的API，可以将这个插入消息的API命名为 <code>sendMessage(Message msg)</code>,在这个方法内实现把 Message 插入到 MessageQueue 的逻辑。</p>
+<p>另外，作为Handler的使用方，在通过 Handler 将消息插入到 MessageQueue 后，肯定迫切的需要知道消息何时被消费者处理。因此，还需要在 Handler 中添加一个处理消息的回调方法，以便于使用方重写该方法，并完成需要的逻辑。我们将这个方法命名为<code>dispatchMessage</code>。至此，”生产者“的设计就完成了。Handler 的伪代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Handler</span> </span>&#123;<br><br>   <span class="hljs-keyword">private</span> MessageQueue mQueue;<br>   <br>   <span class="hljs-comment">// 这里的 MessageQueue 应当与消费者的 MessageQueue 是同一个</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Handler</span><span class="hljs-params">(MessageQueue queue)</span></span>&#123;<br>       mQueue = queue;<br>   &#125;<br>   <br>   <span class="hljs-comment">// 处理消息的回调</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">dispatchMessage</span><span class="hljs-params">(Message msg)</span></span>&#123;<br>       <br>   &#125;<br>   <br>   <span class="hljs-comment">// 向消息队列中插入消息</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">sendMessage</span><span class="hljs-params">(Message msg)</span> </span>&#123;<br>       <span class="hljs-comment">// Message 中需要持有Handler，以便回调 dispatchMessage 方法。</span><br>       msg.target = <span class="hljs-keyword">this</span>;<br>       mQueue.enqueueMessage(msg);<br>   &#125;<br>   <br>   <span class="hljs-comment">// ... 另外还可以实现多个 sendMessage 的重载方法，以适用不同的需求。</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="3-设计消息机制的信使–-Message"><a href="#3-设计消息机制的信使–-Message" class="headerlink" title="3.设计消息机制的信使– Message"></a>3.设计消息机制的信使– Message</h3><p>Message 应该充当的是信使的作用，即 Message 需要携带调用方赋予的数据。而这一数据类型并不确定，因此我们可以将它声明为 Object 类型。另外，在消息被消费者处理的时候需要通知调用方消息被处理了。因此可以让 Message 持有一个 Handler,以便在消息被处理后回调给Handler。我们将这个 Handler 命名为 target。于是 Message 的伪代码就可以有如下实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Message</span></span>&#123;<br>    <span class="hljs-comment">// 携带的消息</span><br>    Object obj;<br>    <span class="hljs-comment">// 持有 Handler</span><br>    Handler target;<br>    <span class="hljs-comment">// ...</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="4-设计消息机制的”消费者“–Looper"><a href="#4-设计消息机制的”消费者“–Looper" class="headerlink" title="4.设计消息机制的”消费者“–Looper"></a>4.设计消息机制的”消费者“–Looper</h3><p>在完成了消息队列、生产者、以及消息信使的设计之后，我们还需要实现消费者这一角色。作为消费者，它的职责就是从 MessageQueue 中取出 Message ，并将其消费。值得注意的是这个 MessageQueue 必须是与生产者所共用的。这里我们将”消费者“这一角色命名为 Looper。Looper作为”消费者“，其职责就是需要不断的从 MessageQueue 中取出消息并进行消费。那么我们就将这个取消息的方法命名为 loop(),因为需要不断的从 MessageQueue 中取出消息，所以这个方法应该被设计成一个死循环，没有消息的时候就阻塞执行。因此 Looper 的伪代码实现如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Looper</span> </span>&#123;<br><br>    <span class="hljs-comment">// 在 Looper 中实例化消息队列，并提供给Handler，实现生产者与消费者共享</span><br>    MessageQueue mQueu = <span class="hljs-keyword">new</span> MessageQueue();<br>    <br>    <span class="hljs-comment">// 从消息队列中取出消息并消费</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">loop</span><span class="hljs-params">()</span></span>&#123;<br>        <span class="hljs-keyword">for</span>(;;) &#123;<br>            <span class="hljs-comment">// 静态方法，需要获取Looper的实例</span><br>            Message msg = myLooper().mQueue.next();<br>            <span class="hljs-keyword">if</span>(msg == <span class="hljs-keyword">null</span>) &#123;<br>                <span class="hljs-keyword">return</span>;<br>            &#125;<br>            <span class="hljs-comment">// 回调到 Handler</span><br>            msg.target.dispatchMessage(mgs);<br>        &#125;<br>    &#125;<br>    <br>    <span class="hljs-comment">// 这里假设通过myLooper方法拿到looper的实例</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Looper <span class="hljs-title">myLooper</span><span class="hljs-params">()</span></span>&#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Looper();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>通过”生产者-消费者“模型，我们可以很轻松的写出 Android 消息机制的大体框架.而接下来我们要思考的是在这个实现过程中会面临什么样的问题，以及该如何去解决。</p>
+<h2 id="三、完善消息机制的实现逻辑"><a href="#三、完善消息机制的实现逻辑" class="headerlink" title="三、完善消息机制的实现逻辑"></a>三、完善消息机制的实现逻辑</h2><p>上一章中，我们搭建起了消息机制的大体框架，下一步就是要实现具体的逻辑了。仔细想一想会发现我们面临着不少的问题，我列举出了以下几个，不妨来思考思考。</p>
+<ul>
+<li>线程切换是消息机制的一个重要功能，应该如何实现？</li>
+<li>一个线程可以有多个 Looper 实例吗？如果不可以，那应该如何保证线程级别的 Looper 单例？</li>
+<li>APP 在运行时会产生大量的 Message，每次都通过 “new” 关键字实例化 Message 可行吗 ？</li>
+<li>系统发送的某些消息具有较高的优先级，如何才能保证其优先执行？</li>
+</ul>
+<h3 id="1-实现线程切换"><a href="#1-实现线程切换" class="headerlink" title="1.实现线程切换"></a>1.实现线程切换</h3><p>消息机制一个很重要的需求，即在子线程中获取到的数据需要发送给主线程进行页面渲染。这个让数据从子线程切换到主线程的功能该如何实现呢？</p>
+<p>这其实是一个很简单的问题，只需要在主线程中实例化 Looper，同时在实例化 Handler 的时候在 Handler 构造方法中传入 Looper 持有的 MessageQueue 即可。这样 Looper 和 Handler 共享了同一个 MessageQueue。不管 Handler 在哪个线程发送消息，最终 Looper 都会在主线程中取出消息并执行。看一下代码的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyActivityThread</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span></span>&#123;<br>    <br>        <span class="hljs-comment">// 实例化一个 Looper</span><br>        Looper looper = Looper.myLooper();<br>        <br>        <span class="hljs-comment">// 实例化 Handler,并传入 Looper 持有的 MessageQueue</span><br>        Handler handler = <span class="hljs-keyword">new</span> Handler(looper.mQueue) &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">dispatchMessage</span><span class="hljs-params">(Message msg)</span></span>&#123;<br>                <span class="hljs-comment">// 在主线程中得到了 Message</span><br>            &#125;<br>        &#125;;<br>        <br>        <span class="hljs-comment">// 开启一个子线程</span><br>        <span class="hljs-keyword">new</span> Thread() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span></span>&#123;<br>                <span class="hljs-comment">// 在子线程中通过 Handler 发出一个消息</span><br>                handler.sendMessage(<span class="hljs-keyword">new</span> Message());<br>            &#125;<br>        <br>        &#125;<br>        <br>        <span class="hljs-comment">// 调用loop,开启循环不断的从MessageQueue中取出消息，没有消息就会被阻塞。</span><br>        <span class="hljs-comment">// 通过这样的方式，导致 main 方法不会被执行完而退出程序，Android 系统源码也是</span><br>        <span class="hljs-comment">// 这样实现的，这也是为什么 Android 中的 APP 不会像java程序一样，执行完逻辑就结束掉。</span><br>        looper.loop();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>当然，这里举的是子线程与主线程的例子，对于子线程与子线程的切换是与之类似的。</p>
+<h3 id="2-实现线程级别的-Looper-单例"><a href="#2-实现线程级别的-Looper-单例" class="headerlink" title="2.实现线程级别的 Looper 单例"></a>2.实现线程级别的 Looper 单例</h3><p>先来看这个问题，一个线程可以有多个 Looper 实例吗？一个线程中有多个 Looper 站在逻辑的角度来看显然是没什么问题的。但是如果站在 Android 系统的角度来考虑，一个线程有多个Looper实例显然有很大的问题！因为 Looper 的 loop() 方法是一个阻塞方法。如果在一个线程中实例化了多个 Looper，并且都调用了它的 loop 方法，那么一定只有第一个调用 loop 方法的 Looper 实例会运行，其他的 Looper 会被阻塞永远也执行不了。</p>
+<p>因此，作为消息机制的设计者，我们应该保证单个线程只能实例化一个 Looper。而不能寄托于使用者，要求他们在使用 Looper 的时候只实例化一次。</p>
+<p>那么这个时候再来回顾一下上一章我们对 Looper 的设计，似乎是有很大缺陷的。因为此时的Looper可以在主线程中通过 myLooper 方法实例化出任意多个 Looper 对象。显然这是不符合我们的需求的。有的同学说可以将 Looper 设计成单例，这样就不会被实例化出多个 Looper 了。但这样显然也是不符合需求的，我们需要的是在同一个线程里边只能有一个 Looper 实例，但多个线程可以有多个 Looper 实例。也就是说这个 Looper 应该是一个线程级别的单例。那应该怎么实现呢？</p>
+<p>说到这里，java基础掌握比较好的同学应该已经想到了，可以使用 ThreadLocal来实现！</p>
+<p>ThreadLocal提供了线程级别的数据存储能力。即在A线程中使用 ThreadLocal 存储了一个数据，那么这个数据只对A线程可见，只有在A线程中才能取出，其他线程无法取到。关于 ThreadLocal 了解这么多就足够了，这里不再赘述 ThreadLocal 的实现原理，如果你对 ThreadLocal 比较感兴趣可以参考我之前写的一篇文章<a target="_blank" rel="noopener" href="https://juejin.cn/post/6986301941269659656">《Java并发系列番外篇：ThreadLocal原理其实很简单》</a></p>
+<p>有了以上理论的支持，我们就可以重构 Looper 的实现逻辑了。修改后的 Looper 代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Looper</span> </span>&#123;<br><br>    <span class="hljs-comment">// 使用 ThreadLocal 存储Looper</span><br>    <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> ThreadLocal&lt;Looper&gt; sThreadLocal = <span class="hljs-keyword">new</span> ThreadLocal&lt;Looper&gt;();<br>    <br>    MessageQueue mQueu;<br>    <br>    <span class="hljs-comment">// 私有化构造方法，避免单个线程中被多次实例化</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-title">Looper</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-comment">// 实例化 MessageQueue</span><br>        mQueue = <span class="hljs-keyword">new</span> MessageQueue();<br>    &#125;<br>    <br>    <span class="hljs-comment">// 添加一个 prepare 方法来实例化 Looper,并将其存储到 TheadLocal</span><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-comment">// 需要保证Looper是线程唯一的</span><br>        <span class="hljs-keyword">if</span> (sThreadLocal.get() != <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-comment">// 走到这里说明该线程已经实例化过 Looper 了，抛出异常终止程序执行</span><br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">&quot;Only one Looper may be created per thread&quot;</span>);<br>        &#125;<br>        <span class="hljs-comment">// 将 Looper 实例存入到 ThreadLocal</span><br>        sThreadLocal.set(<span class="hljs-keyword">new</span> Looper());<br>    &#125;<br>    <br>    <span class="hljs-comment">// 从 ThreadLocal 中取出 Looper 实例</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Looper <span class="hljs-title">myLooper</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> sThreadLocal.get();<br>    &#125;<br><br>    <span class="hljs-comment">// 从消息队列中取出消息并消费</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">loop</span><span class="hljs-params">()</span></span>&#123;<br>        <span class="hljs-keyword">for</span>(;;) &#123;<br>            Message msg = myLooper().mQueue.next();<br>            <span class="hljs-keyword">if</span>(msg == <span class="hljs-keyword">null</span>) &#123;<br>                <span class="hljs-keyword">return</span>;<br>            &#125;<br>            msg.target.dispatchMessage(mgs);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>通过以上代码，我们实现了一个线程级别的单例，保证了每个线程只能创建一个 Looper，多次创建就会导致程序崩溃。</p>
+<h3 id="3-Message-对象池"><a href="#3-Message-对象池" class="headerlink" title="3.Message 对象池"></a>3.Message 对象池</h3><p>Android APP 在运行的时候会有大量的 Message 由系统插入到 MessageQueue 中，前面已经提到过的 View 的绘制过程、事件分发过程、Activity 启动过程等等都会向 MessageQueue 插入消息。这就意味着会有大量的 Message 被实例化。如果每次用到 Message 的时候都通过 “new” 关键字来实例化实现 Message 对象，那么肯定会导致严重的内存抖动问题。</p>
+<p>因此，为了避免 Message 的频繁实例化，我们可以对获取 Message 对象的过程做一些优化。通常避免频繁的创建对象的解决方案都是使用对象池。也就是维护一个 Message 对象池，在用完之将后将 Message 的数据进行重置，并将其放入到对象池中，等待下次复用。这样就避免了频繁实例化 Message 可能导致的内存抖动问题。主要是了解一下池化思想，这里就直接 copy 系统的源码了，系统源码中 Message 是一个拥有链表结构的类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Message</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Parcelable</span> </span>&#123;<br>    <br>    <span class="hljs-keyword">public</span> Object obj;<br>    <br>    Message next;<br>    <br>    <span class="hljs-comment">// 对象池中有空闲对象直接使用，没有则实例化Message</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Message <span class="hljs-title">obtain</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">synchronized</span> (sPoolSync) &#123;<br>            <span class="hljs-keyword">if</span> (sPool != <span class="hljs-keyword">null</span>) &#123;<br>                Message m = sPool;<br>                sPool = m.next;<br>                m.next = <span class="hljs-keyword">null</span>;<br>                m.flags = <span class="hljs-number">0</span>; <span class="hljs-comment">// clear in-use flag</span><br>                sPoolSize--;<br>                <span class="hljs-keyword">return</span> m;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Message();<br>    &#125;<br><br>    <span class="hljs-comment">// 回收 Message，并加入到对象池</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">recycle</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (isInUse()) &#123;<br>            <span class="hljs-keyword">if</span> (gCheckRecycle) &#123;<br>                <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> IllegalStateException(<span class="hljs-string">&quot;This message cannot be recycled because it &quot;</span><br>                        + <span class="hljs-string">&quot;is still in use.&quot;</span>);<br>            &#125;<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br>        recycleUnchecked();<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">recycleUnchecked</span><span class="hljs-params">()</span> </span>&#123;<br>        <span class="hljs-comment">// Mark the message as in use while it remains in the recycled object pool.</span><br>        <span class="hljs-comment">// Clear out all other details.</span><br>        flags = FLAG_IN_USE;<br>        what = <span class="hljs-number">0</span>;<br>        arg1 = <span class="hljs-number">0</span>;<br>        arg2 = <span class="hljs-number">0</span>;<br>        obj = <span class="hljs-keyword">null</span>;<br>        replyTo = <span class="hljs-keyword">null</span>;<br>        sendingUid = UID_NONE;<br>        workSourceUid = UID_NONE;<br>        when = <span class="hljs-number">0</span>;<br>        target = <span class="hljs-keyword">null</span>;<br>        callback = <span class="hljs-keyword">null</span>;<br>        data = <span class="hljs-keyword">null</span>;<br><br>        <span class="hljs-keyword">synchronized</span> (sPoolSync) &#123;<br>            <span class="hljs-keyword">if</span> (sPoolSize &lt; MAX_POOL_SIZE) &#123;<br>                next = sPool;<br>                sPool = <span class="hljs-keyword">this</span>;<br>                sPoolSize++;<br>            &#125;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Message</span><span class="hljs-params">()</span> </span>&#123;<br>    &#125;<br>   <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到 Message 实现对象池的两个核心方法就是 obtain() 与 recycle()，obtain负责从对象池中取出 Message，如果对象池没有空闲的 Message，则直接实例化 Message，而 recycle() 则是回收用完的Message，并将其插入到复用链表中。这里所谓的对象池其实就是一个空闲的 Message 链表。</p>
+<h3 id="4-无界队列-MessageQueue"><a href="#4-无界队列-MessageQueue" class="headerlink" title="4. 无界队列 MessageQueue"></a>4. 无界队列 MessageQueue</h3><p>在上一小节中我们已经知道 Message 其实是一个拥有链表结构的类。因此 MessageQueue 中的容器其实并非像第二章第1小节中写的那样是一个 LinkedList，而是一个 Message 链表。</p>
+<p>通常来说”生产者-消费者“模型中的缓冲队列是有特定的容量的，在缓冲队列填满的时候就会阻塞生产者继续添加数据。因此，一个标准的”生产者-消费者“模型必然要考虑<strong>背压策略</strong>，就比如大家所熟知的 RxJava 由于内部使用的是有界队列，因此当队列的容量不足时就会抛出 <code>MissingBackpressureException</code>。而 Rxjava 也给出了多个背压策略，例如丢弃事件、扩容、或者直接抛出异常。与之类似的是线程池的实现，区别是线程池内不叫背压策略，而是叫<strong>拒绝策略</strong>。</p>
+<p>但是作为接收系统消息的 MessageQueue 如果被设计成有界队列合适吗？显然是不合适的，因为系统发送的消息多是一些中要的消息，任何事件的丢失都可能会导致严重的系统 bug。所以作为消息机制设计者一定会把 MessageQueue 设计成一个无界队列。这样插入消息永远不会被阻塞，也不用考虑所谓的背压策略了。这是消息机制与标准的 ”生产者-消费者“ 模型的区别之一。</p>
+<p>关于 MessageQueue 插入消息与取出消息的实现，前面我们只是简单写了伪代码，而且是使用集合实现的。由于我们已经知道系统源码中的 Message 是一个链表结构的类。因此，我们可以使用链表的结构来实现插消息和取消息。</p>
+<p>因为这两个方法的实现还是比较复杂的，因此现在我们跳出设计者的身份，跟随 Android 系统源码来解读这两个方法的实现。</p>
+<h4 id="（1）插入消息的实现"><a href="#（1）插入消息的实现" class="headerlink" title="（1）插入消息的实现"></a>（1）插入消息的实现</h4><p>MessageQueue 插入消息的逻辑是在 enqueueMessage 方法中实现的， 简化后的源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">boolean</span> <span class="hljs-title">enqueueMessage</span><span class="hljs-params">(Message msg, <span class="hljs-keyword">long</span> when)</span> </span>&#123;<br><br>    <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br><br>        msg.when = when;<br>        <br>        Message p = mMessages;<br>        <span class="hljs-keyword">boolean</span> needWake;<br>       <br>        <span class="hljs-keyword">if</span> (p == <span class="hljs-keyword">null</span> || when == <span class="hljs-number">0</span> || when &lt; p.when) &#123;<br>            <span class="hljs-comment">// 如果队列为空，或者该消息不是延迟消息，或者是延迟消息</span><br>            <span class="hljs-comment">// 但执行的时间比头消息早，则将消息插入到队列的头部</span><br>            <span class="hljs-comment">// New head, wake up the event queue if blocked.</span><br>            msg.next = p;<br>            mMessages = msg;<br>            needWake = mBlocked;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            <span class="hljs-comment">// 这种情况下说明要插入的消息时延迟消息，遍历链表找到合适的插入位置</span><br>        <br>            Message prev;<br>            <span class="hljs-keyword">for</span> (;;) &#123;<br>                prev = p;<br>                p = p.next;<br>                <span class="hljs-comment">// 如果已经遍历到队列尾部了或者在队列中找到了比要插入的消</span><br>                <span class="hljs-comment">// 息延迟时间更长的消息则终止循环，即找到了合适的插入位置</span><br>                <span class="hljs-keyword">if</span> (p == <span class="hljs-keyword">null</span> || when &lt; p.when) &#123;<br>                    <span class="hljs-keyword">break</span>;<br>                &#125;<br>                <span class="hljs-keyword">if</span> (needWake &amp;&amp; p.isAsynchronous()) &#123;<br>                    needWake = <span class="hljs-keyword">false</span>;<br>                &#125;<br>            &#125;<br>            <span class="hljs-comment">// 将消息插入到这个合适的位置</span><br>            msg.next = p; <span class="hljs-comment">// invariant: p == prev.next</span><br>            prev.next = msg;<br>        &#125;<br><br>        <span class="hljs-comment">// We can assume mPtr != 0 because mQuitting is false.</span><br>        <span class="hljs-keyword">if</span> (needWake) &#123;<br>            <span class="hljs-comment">// 唤醒线程</span><br>            nativeWake(mPtr);<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>enqueueMessage 的逻辑其实并不难理解，就是把 Message 插入到链表中去，同时插入链表的位置是根据消息 delay 的时间决定的，delay 的时间越长，插入队列时就越靠后，即越晚执行。最后根据是否要唤醒线程来调用 nativeWake， 这个方法是在 native 层实现的。可以把他理解为”生产者-消费者”模型中 通过 notify 唤醒线程的操作。</p>
+<h4 id="（2）取出消息的实现"><a href="#（2）取出消息的实现" class="headerlink" title="（2）取出消息的实现"></a>（2）取出消息的实现</h4><p>取出消息是通过 MessageQueue 的 next 方法实现的，简化后的 next 方法的源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function">Message <span class="hljs-title">next</span><span class="hljs-params">()</span> </span>&#123;<br><br>    <span class="hljs-keyword">int</span> pendingIdleHandlerCount = -<span class="hljs-number">1</span>; <span class="hljs-comment">// -1 only during first iteration</span><br>    <span class="hljs-keyword">int</span> nextPollTimeoutMillis = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span> (;;) &#123;<br><br>        <span class="hljs-comment">// 阻塞线程</span><br>        nativePollOnce(ptr, nextPollTimeoutMillis);<br><br>        <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>        <br>            <span class="hljs-comment">// ... 省略异步消息的处理</span><br>            <br>            <span class="hljs-keyword">if</span> (msg != <span class="hljs-keyword">null</span>) &#123;<br>              <br>                <span class="hljs-keyword">if</span> (now &lt; msg.when) &#123; <span class="hljs-comment">// 根据delay的时间判断该Message是否可以执行</span><br>                    <span class="hljs-comment">// 未到执行时间则走到下一次循环调用nativePollOnce阻塞该方法</span><br>                    nextPollTimeoutMillis = (<span class="hljs-keyword">int</span>) Math.min(msg.when - now, Integer.MAX_VALUE);<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    <span class="hljs-comment">// 从链表取出消息</span><br>                    mBlocked = <span class="hljs-keyword">false</span>;<br>                    <span class="hljs-keyword">if</span> (prevMsg != <span class="hljs-keyword">null</span>) &#123;<br>                        prevMsg.next = msg.next;<br>                    &#125; <span class="hljs-keyword">else</span> &#123;<br>                        mMessages = msg.next;<br>                    &#125;<br>                    msg.next = <span class="hljs-keyword">null</span>;<br>                    msg.markInUse();<br>                    <span class="hljs-comment">// 将消息返回</span><br>                    <span class="hljs-keyword">return</span> msg;<br>                &#125;<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                <span class="hljs-comment">// 消息队列为空，阻塞时间设置于为-1，表示一直阻塞</span><br>                nextPollTimeoutMillis = -<span class="hljs-number">1</span>;<br>            &#125;<br>        &#125;<br>        <br>        <span class="hljs-comment">// 省略 IdelHandler 的处理逻辑</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这里暂时忽略 next 方法的异步消息处理逻辑以及 IdleHandler 的处理逻辑。简化后的代码并也容易理解。首先是一个用 for 实现的死循环，循环中先调用 nativePollOnce 对线程进行阻塞，这个方法也是一个 native 方法，可以将它理解为”生产者-消费者“模型中阻塞线程的 wait 方法。这个方法的第二个参数表示阻塞的时间，如果是正数，则表示阻塞这个值的毫秒时长，如果是0表示不阻塞，如果小于0，则会一直阻塞。</p>
+<p>接下来的逻辑则是判断消息是不是到了该执行的时间了，如果没到，则继续 for 循环执行 nativePollOnce 来阻塞方法，如果消息到了执行的时间就将消息从链表中取出并返回给 Looper，交给 Looper 对消息进行消费。</p>
+<h3 id="5-Message-的优先级"><a href="#5-Message-的优先级" class="headerlink" title="5.Message 的优先级"></a>5.Message 的优先级</h3><p>在标准的”生产者-消费者“模型中消息是没有优先级之分的。即按照标准的队列执行先进先出的逻辑。但是在 Android 消息机制中是需要对消息进行优先级划分的，普通消息应该将优先执行的权利让给那些会影响程序性能的消息，比如 View 绘制的消息、屏幕刷新的消息以及Activity启动的消息等。这是消息机制与标准的”生产者-消费者“模型的又一重要区别。</p>
+<p>就我的理解而言，消息机制中的消息一共被划分了四个优先级。优先级由高到低分别是<strong>异步消息</strong>、<strong>普通消息</strong>、<strong>IDleHandler</strong> 以及<strong>延迟消息</strong>。</p>
+<h4 id="（1）异步消息"><a href="#（1）异步消息" class="headerlink" title="（1）异步消息"></a>（1）异步消息</h4><p>在 Message 的源码中为开发者提供了一个 setAsynchronous 的方法，这个方法是对外开放的。通过这个方法会为消息设置一个异步标记。使用代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java">Message message = Message.obtain();<br><span class="hljs-comment">// 设置异步消息</span><br>message.setAsynchronous(<span class="hljs-keyword">true</span>);<br></code></pre></td></tr></table></figure>
+<p>异步消息拥有最高的执行优先级，但是仅仅将其设置为异步消息并没有什么作用。它需要配合同步屏障消息来执行。什么是同步屏障消息呢？其实就是一个 Message.target 为 null 的消息。它的实现逻辑在 MessageQueue 的 postSyncBarrier 方法中。源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// MessageQueue</span><br><br><span class="hljs-meta">@UnsupportedAppUsage</span> <span class="hljs-comment">// 不支持APP调用</span><br><span class="hljs-meta">@TestApi</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">int</span> <span class="hljs-title">postSyncBarrier</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> postSyncBarrier(SystemClock.uptimeMillis());<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span> <span class="hljs-title">postSyncBarrier</span><span class="hljs-params">(<span class="hljs-keyword">long</span> when)</span> </span>&#123;<br>    <span class="hljs-comment">// Enqueue a new sync barrier token.</span><br>    <span class="hljs-comment">// We don&#x27;t need to wake the queue because the purpose of a barrier is to stall it.</span><br>    <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>        <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> token = mNextBarrierToken++;<br>        <span class="hljs-keyword">final</span> Message msg = Message.obtain();<br>        msg.markInUse();<br>        msg.when = when;<br>        msg.arg1 = token;<br><br>        Message prev = <span class="hljs-keyword">null</span>;<br>        Message p = mMessages;<br>        <span class="hljs-keyword">if</span> (when != <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-keyword">while</span> (p != <span class="hljs-keyword">null</span> &amp;&amp; p.when &lt;= when) &#123;<br>                prev = p;<br>                p = p.next;<br>            &#125;<br>        &#125;<br>        <span class="hljs-keyword">if</span> (prev != <span class="hljs-keyword">null</span>) &#123; <span class="hljs-comment">// invariant: p == prev.next</span><br>            msg.next = p;<br>            prev.next = msg;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            msg.next = p;<br>            mMessages = msg;<br>        &#125;<br>        <span class="hljs-keyword">return</span> token;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到 postSyncBarrier 方法被 <code>@UnsupportedAppUsage</code> 注解所修饰，意味着这个方法对开发者是不可见的。而 postSyncBarrier 中的逻辑其实就是向链表的头部插入了一条 Message。而这个 Message 与普通消息不同的是，它的 target 并没有被赋值。在上一节中分析 MessageQueue 的 next 方法时我们忽略了异步消息的处理逻辑。现在来具体看一下这段代码的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function">Message <span class="hljs-title">next</span><span class="hljs-params">()</span> </span>&#123;<br><br>    <span class="hljs-keyword">int</span> pendingIdleHandlerCount = -<span class="hljs-number">1</span>; <span class="hljs-comment">// -1 only during first iteration</span><br>    <span class="hljs-keyword">int</span> nextPollTimeoutMillis = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span> (;;) &#123;<br><br>        <span class="hljs-comment">// 阻塞线程</span><br>        nativePollOnce(ptr, nextPollTimeoutMillis);<br><br>        <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>            <span class="hljs-comment">// 消息队列头</span><br>            Message msg = mMessages;<br>            <span class="hljs-comment">// 如果 msg 不为 null,并且 msg.target 为 null，则执行if中的逻辑</span><br>            <span class="hljs-keyword">if</span> (msg != <span class="hljs-keyword">null</span> &amp;&amp; msg.target == <span class="hljs-keyword">null</span>) &#123;<br>                <span class="hljs-comment">// 走到这里说明读取到了同步屏障消息</span><br>                <span class="hljs-comment">// 通过 do...while 循环遍历message链表，找到异步消息</span><br>                <span class="hljs-keyword">do</span> &#123;<br>                    prevMsg = msg;<br>                    msg = msg.next;<br>                &#125; <span class="hljs-keyword">while</span> (msg != <span class="hljs-keyword">null</span> &amp;&amp; !msg.isAsynchronous());<br>            &#125;<br>        <br>            <span class="hljs-comment">// ... 省略取消息逻辑</span><br>        &#125;<br>        <br>        <span class="hljs-comment">// 省略 IdelHandler 的处理逻辑</span><br><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到这里首先判断如果 msg 不为 null,并且 msg.target 为 null，则执行if中的逻辑，而if中则通过 do…while 循环来遍历 message 链表，直到找到异步消息才会终止do…while。然后取出异步消息执行下边的消息处理逻辑。不难看出，当遇到同步屏障消息之后就会阻塞普通消息的执行。然后遍历 Message 链表找到被标记为异步的消息优先执行。</p>
+<p>但是有个问题，同步屏障消息是在什么时候被插件 MessageQueue 的呢？答案是在ViewRootImpl 中当计划开始遍历 View 树的时候。看下 ViewRootImpl 的 requestLayout 方法，其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// ViewRootImpl.java</span><br><br><span class="hljs-meta">@Override</span><br><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">requestLayout</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (!mHandlingLayoutInLayoutRequest) &#123;<br>        <span class="hljs-comment">// 检查是否是在主线程中，如果不是主线程则直接抛出异常</span><br>        checkThread();<br>        <span class="hljs-comment">// mLayoutRequested标记设置为true，在同一个Vsync周期内，执行多次requestLayout的流程</span><br>        mLayoutRequested = <span class="hljs-keyword">true</span>;<br>        <span class="hljs-comment">// 计划遍历View树</span><br>        scheduleTraversals();<br>    &#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">scheduleTraversals</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (!mTraversalScheduled) &#123;<br>        <span class="hljs-comment">// 保证一次 requestLayout 只执行一次View树的遍历</span><br>        mTraversalScheduled = <span class="hljs-keyword">true</span>;<br>        <span class="hljs-comment">// 通过Handler发送同步屏障阻塞同步消息</span><br>        mTraversalBarrier = mHandler.getLooper().getQueue().postSyncBarrier();<br>        <span class="hljs-comment">// 通过Choreographer发出一个mTraversalRunnable，会在这里执行</span><br>        mChoreographer.postCallback(<br>        Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, <span class="hljs-keyword">null</span>);<br>        <span class="hljs-comment">// ...</span><br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到在调用 ViewRootImpl 的 requestLayout 方法后，会执行scheduleTraversals方法，在这个方法中通过 <code>mHandler.getLooper().getQueue().postSyncBarrier()</code>调用了 MessageQueue 的同步屏障方法，从而插入了一个同步屏障消息。</p>
+<p>如果你对 Android 的屏幕绘制流程有一定了解的话，应该知道 Vsync 信号与 Choreographer。 Choreographer 会向系统底层订阅 Vsync 信号,系统底层会间隔大约16ms（60hz刷新率的屏幕）发送一次 Vsync信号。等到接收到 Vsync 信号后，Choreographer 会回调 ViewRootImpl 的 doTraversal 方法开始 View 树真正的遍历与绘制。doTraversal 源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">// ViewRootImpl</span><br><br><span class="hljs-keyword">final</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TraversalRunnable</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Runnable</span> </span>&#123;<br>   <span class="hljs-meta">@Override</span><br>   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">run</span><span class="hljs-params">()</span> </span>&#123;<br>      doTraversal();<br>   &#125;<br>&#125;<br><br>   <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">doTraversal</span><span class="hljs-params">()</span> </span>&#123;<br>      <span class="hljs-keyword">if</span> (mTraversalScheduled) &#123;<br>         mTraversalScheduled = <span class="hljs-keyword">false</span>;<br>         <span class="hljs-comment">// 移除同步屏障</span><br>         mHandler.getLooper().getQueue().removeSyncBarrier(mTraversalBarrier);<br><br>         <span class="hljs-keyword">if</span> (mProfile) &#123;<br>            Debug.startMethodTracing(<span class="hljs-string">&quot;ViewAncestor&quot;</span>);<br>         &#125;<br>         <span class="hljs-comment">//  通过该方法开启View的绘制流程，会调用performMeasure方法、performLayout方法和performDraw方法。</span><br>         performTraversals();<br><br>         <span class="hljs-keyword">if</span> (mProfile) &#123;<br>            Debug.stopMethodTracing();<br>            mProfile = <span class="hljs-keyword">false</span>;<br>         &#125;<br>      &#125;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到在doTraversal方法中会将同步屏障消息移除掉，之后普通消息又会得到执行的机会。其实到这里也很容易理解为什么 postSyncBarrier 方法不允许开发者调用了。因为一旦开发者执行这个方法，且没有即使移除同步屏障就会导致普通消息再也没有被执行的机会。</p>
+<h4 id="（2）普通消息和延迟消息"><a href="#（2）普通消息和延迟消息" class="headerlink" title="（2）普通消息和延迟消息"></a>（2）普通消息和延迟消息</h4><p>关于普通消息和延迟消息其实没有什么可说的，普通消息的优先级比异步消息低毋庸置疑。而延迟消息由于在插入消息队列时会根据延迟时间确定插入到队列中的位置，即延迟越久的消息在队列中的位置越靠后。因此延迟消息的优先级是最低的。</p>
+<h4 id="（3）IdleHandler"><a href="#（3）IdleHandler" class="headerlink" title="（3）IdleHandler"></a>（3）IdleHandler</h4><p>除了以上消息的优先级外，还有一种叫 IdelHandler 的消息(这里冒昧的称它为消息)，IdelHandler 从本质上来说并不是一个 Message，而是一个接口，其源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IdleHandler</span> </span>&#123;<br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Called when the message queue has run out of messages and will now</span><br><span class="hljs-comment">     * wait for more.  Return true to keep your idle handler active, false</span><br><span class="hljs-comment">     * to have it removed.  This may be called if there are still messages</span><br><span class="hljs-comment">     * pending in the queue, but they are all scheduled to be dispatched</span><br><span class="hljs-comment">     * after the current time.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">boolean</span> <span class="hljs-title">queueIdle</span><span class="hljs-params">()</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>通过注释可以看得出来 queueIdle 方法是在 MessageQueue 中的消息执行完后或者有延迟消息在等待执行时才会被调用。因此可以看得出 IdleHandler 执行的优先级是比异步消息和普通消息低的，但要比延迟消息优先级高。接下来我们看一下IdleHandler的具体源码实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MessageQueue</span> </span>&#123;<br>    <br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ArrayList&lt;IdleHandler&gt; mIdleHandlers = <span class="hljs-keyword">new</span> ArrayList&lt;IdleHandler&gt;();<br>    <br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">addIdleHandler</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> IdleHandler handler)</span> </span>&#123;<br>        <span class="hljs-keyword">if</span> (handler == <span class="hljs-keyword">null</span>) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> NullPointerException(<span class="hljs-string">&quot;Can&#x27;t add a null IdleHandler&quot;</span>);<br>        &#125;<br>        <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>            mIdleHandlers.add(handler);<br>        &#125;<br>    &#125;<br>    <br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">removeIdleHandler</span><span class="hljs-params">(<span class="hljs-meta">@NonNull</span> IdleHandler handler)</span> </span>&#123;<br>        <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>            mIdleHandlers.remove(handler);<br>        &#125;<br>    &#125;<br>    <br>&#125;<br></code></pre></td></tr></table></figure>
+<p>可以看到在 MessageQueue 中有一个泛型为 IdleHandler 的 ArrayList 的成员变量，并且提供了addIdleHandler 方法可以向 mIdleHandlers 中添加 IdelHandler,同时也提供了 removeIdleHandler 来移除 IdleHandler。</p>
+<p>那接下来继续看 MessageQueue 的 next 方法中对于 IdleHandler 的处理逻辑。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function">Message <span class="hljs-title">next</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-comment">// pendingIdleHandlerCount 默认是-1，小于0</span><br>    <span class="hljs-keyword">int</span> pendingIdleHandlerCount = -<span class="hljs-number">1</span>; <span class="hljs-comment">// -1 only during first iteration</span><br>    <span class="hljs-keyword">int</span> nextPollTimeoutMillis = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span> (;;) &#123;<br>        <span class="hljs-comment">// ...</span><br>        <br>        <span class="hljs-keyword">int</span> pendingIdleHandlerCount = -<span class="hljs-number">1</span>;<br><br>        <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>         <br><br>            <span class="hljs-comment">// ... 省略异步消息与普通消息的处理逻辑</span><br><br>            <span class="hljs-comment">// 如果第一次调用next方法，pendingIdleHandlerCount 一定小于0</span><br>            <span class="hljs-comment">// mMessage == null 说明消息队列中没有消息</span><br>            <span class="hljs-comment">// now &lt; mMessages.when 说明有延迟消息，但是还没有到执行的时间</span><br>            <span class="hljs-keyword">if</span> (pendingIdleHandlerCount &lt; <span class="hljs-number">0</span><br>                    &amp;&amp; (mMessages == <span class="hljs-keyword">null</span> || now &lt; mMessages.when)) &#123;<br>                <span class="hljs-comment">// 获取IdleHandler的个数    </span><br>                pendingIdleHandlerCount = mIdleHandlers.size();<br>            &#125;<br>            <span class="hljs-comment">// 说明没有 IdleHandler</span><br>            <span class="hljs-keyword">if</span> (pendingIdleHandlerCount &lt;= <span class="hljs-number">0</span>) &#123;<br>                mBlocked = <span class="hljs-keyword">true</span>;<br>                跳过下面的逻辑，继续执行<span class="hljs-keyword">for</span>循环<br>                <span class="hljs-keyword">continue</span>;<br>            &#125;<br><br>            <span class="hljs-keyword">if</span> (mPendingIdleHandlers == <span class="hljs-keyword">null</span>) &#123;<br>                mPendingIdleHandlers = <span class="hljs-keyword">new</span> IdleHandler[Math.max(pendingIdleHandlerCount, <span class="hljs-number">4</span>)];<br>            &#125;<br>            <span class="hljs-comment">// 将mIdleHandlers中的数据复制到mPendingIdleHandlers数组中</span><br>            mPendingIdleHandlers = mIdleHandlers.toArray(mPendingIdleHandlers);<br>        &#125;<br><br>        <span class="hljs-comment">// 遍历 mPendingIdleHandlers 数组</span><br>        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; pendingIdleHandlerCount; i++) &#123;<br>            <span class="hljs-comment">// 取出遍历到的IdleHandler</span><br>            <span class="hljs-keyword">final</span> IdleHandler idler = mPendingIdleHandlers[i];<br>            <span class="hljs-comment">// 将以取出的位置设置为null</span><br>            mPendingIdleHandlers[i] = <span class="hljs-keyword">null</span>; <span class="hljs-comment">// release the reference to the handler</span><br><br>            <span class="hljs-keyword">boolean</span> keep = <span class="hljs-keyword">false</span>;<br>            <span class="hljs-keyword">try</span> &#123;<br>                <span class="hljs-comment">// 执行Idler.queueIdle方法</span><br>                keep = idler.queueIdle();<br>            &#125; <span class="hljs-keyword">catch</span> (Throwable t) &#123;<br>                Log.wtf(TAG, <span class="hljs-string">&quot;IdleHandler threw exception&quot;</span>, t);<br>            &#125;<br>            <span class="hljs-comment">// 这里可以看出 queueIdle 如果返回false,则会将这个IdleHandler从集合中移除，下次就不会再执行了。</span><br>            <span class="hljs-keyword">if</span> (!keep) &#123;<br>                <span class="hljs-keyword">synchronized</span> (<span class="hljs-keyword">this</span>) &#123;<br>                    mIdleHandlers.remove(idler);<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>代码中的注释已经写得非常详细了，可以看得出来 IdleHandler 只有在 MessageQueue 没有消息时或者延迟消息没有到执行时间时才会执行 IdleHandler 的 queueIdle 方法。并且 queueIdle 方法的返回值确定了是否会将这个 IdleHandler 从集合中移除。</p>
+<p>消息机制的设计者设计 IdelHandler 的目的就是为了执行一些不那么紧急的任务，在异步消息和普通消息执行完后，处于空闲时间时才会开始执行 IdleHandler。</p>
+<p>而 IdleHandler 在 Framework 的源码中也是被频繁用到的。典型的用法是 Activity 的 onDestroy 生命周期的调用，就是通过向 MessageQueue 中添加 IdleHandler 来实现的。也就是说当 Activity 执行了 finish 方法后并不会立即执行 onDestory 方法，而是要等到消息队列空闲时 onDestory 才会被调用。</p>
+<p>如果是这样的话，在Activity调用 finish 时，不断的向 MessageQueue 中插入消息，是不是会导致 Activity 的 onDestory 一直不会被调用呢？理论上是这样的，但是在系统的源码中做了一个兜底，即如果finish之后过了十秒 Activity 依然没有被销毁则会主动调用 Activity 的 onDestory 来执行销毁逻辑。</p>
+<p>关于 onDestory 部分的源码分析可以参考路遥的一篇文章<a target="_blank" rel="noopener" href="https://juejin.cn/post/6898588053451833351">《面试官：为什么 Activity.finish() 之后 10s 才 onDestroy ？》</a>，这里就不做过多解读了。</p>
+<h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>本篇文章的内容比较长，文章从 ”生产者-消费者“模型来对比Android消息机制的实现，并尝试站在设计者的角度分析应该怎样设计系统的消息机制，还尝试分析了在实现过程中碰到的问题及解决方案。如果你能细心的看完这篇文章，一定会有所收获，并且会对 Android 的消息机制有一个全新的理解。</p>
+<h2 id="推荐阅读"><a href="#推荐阅读" class="headerlink" title="推荐阅读"></a>推荐阅读</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573/article/details/77919141?spm=1001.2014.3001.5502">《追根溯源—— 探究Handler的实现原理》</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6986301941269659656">《Java并发系列番外篇：ThreadLocal原理其实很简单》</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6980002998361522190">《深入理解Java线程的等待与唤醒机制》</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6898588053451833351">《面试官：为什么 Activity.finish() 之后 10s 才 onDestroy ？》</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Framework/">Framework</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Handler/">Handler</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/20/50-android-architecture/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Android 架构思想与 MVVM 框架封装</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/08/22/48-dynamic-proxy/">
+                        <span class="hidden-mobile">浅析 Java 中的动态代理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

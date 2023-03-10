@@ -1,0 +1,593 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="zhangpan">
+  <meta name="keywords" content="">
+  <title>静态代理这么用？--聊一聊ViewPagerIndicator重构的一些经验 - zhangpan&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="//at.alicdn.com/t/font_2048617_el7rbx5279a.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","version":"1.8.7","typing":{"enable":true,"typeSpeed":50,"cursorChar":"|","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":200}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>我赌一包辣条</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('https://raw.githubusercontent.com/zhpanvip/images/master/blog/article.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="静态代理这么用？--聊一聊ViewPagerIndicator重构的一些经验">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2019-11-24 12:05" pubdate>
+        2019年11月24日 中午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.6k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      15
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">静态代理这么用？--聊一聊ViewPagerIndicator重构的一些经验</h1>
+            
+            <div class="markdown-body">
+              <p>ViewPagerIndicator的代码可谓一波三折，在不久前ViewPagerIndicator作为一个单独的仓库从<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>中拆分了出来。拆分后的indicator已经不仅仅适用于BannerViewPager，还可以用于ViewPager和ViewPager2。现在，经历了几次代码重构后,总算可以拿得出手了。本篇文章就来写一写关于重构indicator的一些经验，了解下该库是如何通过静态代理模式来实现多种多样的indicator样式的。</p>
+<p>先贴上<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">ViewPagerIndicator</a>源码链接以及预览图，使用方式可以参考GitHub主页README,同时有兴趣的同学欢迎到GitHub star项目。</p>
+<table>
+<thead>
+<tr>
+<th>Attrs</th>
+<th>CIRCLE</th>
+<th>DASH</th>
+<th>ROUND_RECT</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NORMAL</td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe6bc1be5e6b~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="CIRCLE_NORMAL"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe714fea7070~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="DASH_NORMAL"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe76ed8e7596~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="ROUND_RECT_NORMAL"></td>
+</tr>
+<tr>
+<td>SMOOTH</td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe7f3eb8b67f~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="CIRCLE_SMOOTH"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe84d8e72c01~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="DASH_SMOOTH"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe8d4610a819~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="ROUND_RECT_SMOOTH"></td>
+</tr>
+<tr>
+<td>WORM</td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe94b8343002~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="CIRCLE_WORM"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbe99efa4bf70~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="DASH_WORM"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbea0ee416556~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="ROUND_WORM"></td>
+</tr>
+<tr>
+<td>COLOR</td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbea5f0dc18b9~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="CIRCLE_COLOR"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbeab734b3d64~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="DASH_COLOR"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbeb3b468aa46~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="ROUND_COLOR"></td>
+</tr>
+<tr>
+<td>SCALE</td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbeba52f93dea~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="CIRCLE_SCALE"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbebfeec63dd2~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="DASH_SCALE"></td>
+<td><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/27/171bbec80f11b947~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="ROUND_SCALE"></td>
+</tr>
+</tbody></table>
+<h2 id="一、为什么要重构"><a href="#一、为什么要重构" class="headerlink" title="一、为什么要重构"></a>一、为什么要重构</h2><p>在Indicator未拆分之前针对IndicatorView进行了两次较大的重构。第一次重构在上篇文章中也有提到。最初的Indicator是在BannerViewPager内部维护了一个指示器ImageView的List集合，在BannerViewPager内部会根据页面size动态添加指示器的Image。显然这种处理方式存在很大的弊端，即：不灵活、可扩展性低、性能相对较差等诸多问题。针对这一系列问题，在后续版本中对Indicator进行了第一次重构。这次重构将Indicator改为自定义View，并且抽象出了IIndicator接口，极大的增强了Indicator的可扩展性。因此，在后续若干个版本迭代中Indicator逐渐支持了多种样式（CIRCLE/DASH/ROUND_RECT）和多种滑动模式（SMOOTH/NORMAL）并且支持自定义Indicator。相比最初版本，不管在功能还是性能上都有了很大的提升。但是，在后续版本的迭代中却又暴露出许多问题。而这些问题很大程度上影响了开发和使用。列举其中一个最大问题如下：</p>
+<h3 id="多个IndicatorView不利于维护和使用"><a href="#多个IndicatorView不利于维护和使用" class="headerlink" title="多个IndicatorView不利于维护和使用"></a>多个IndicatorView不利于维护和使用</h3><p>在BannerViewPager早期版本中indicator已经支持了CIRCLE和DASH两种样式，与之对应的是CircleIndicatorView和DashIndicatorView。在BannerViewPager内部用简单工厂模式根据IndicatorStyle来生成对应的IndicatorView。这么以来就出现了一个弊端，即每添加一种Indicator样式都需要一个与之对应的IndicatorView类，当Indicator 样式越来越多的时候维护成本和使用成本都会随之增加–使用该库的开发人员需要记住每种样式对应的IndicatorView名字，作为该库维护者也要面对越来越臃肿的代码结构，这是大家都不愿意看到的。因此，在这样的背景下IndicatorView的第二次重构就势在必行，不得不做了。针对这一问题，在第二次重构中使用了静态代理模式对代码结构进行了优化。</p>
+<h2 id="二、回顾静态代理模式"><a href="#二、回顾静态代理模式" class="headerlink" title="二、回顾静态代理模式"></a>二、回顾静态代理模式</h2><p>不知道现在大家对代理模式还记得多少，也不知道是否经常会在项目种用到代理模式。不管怎样，我们先来回顾以下静态代理模式吧：</p>
+<blockquote>
+<p>代理模式即为其它对象提供一种代理控制对这个对象的访问。在代理模式中，一个类代表另一个类的功能。这种类型的设计模式属于结构型模式。在代理模式中，我们创建具有现有对象的对象，以便向外界提供功能接口。</p>
+</blockquote>
+<p>代理模式的结构图如下：<br><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/11/24/16e9bbccba24acd7~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="这里写图片描述"><br>注：图片来源《大话设计模式》</p>
+<p>看定义总是那么的晦涩难懂，我们还是来举一个代理模式的场景：</p>
+<blockquote>
+<p>Ryan想在上海买一套房子，但是他又不懂房地产的行情，于是委托了中介（Proxy）来帮助他买房子。</p>
+</blockquote>
+<p>我们把这个场景通过Java代码来实现一下：</p>
+<h3 id="1-抽象出接口"><a href="#1-抽象出接口" class="headerlink" title="1.抽象出接口"></a>1.抽象出接口</h3><p>首先我们把买房子的一类人抽象出来一个接口，接口中有一个buyHouse的方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IPersonBuyHouse</span> </span>&#123;<br>	<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">buyHouse</span><span class="hljs-params">()</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="2-明确被代理的对象"><a href="#2-明确被代理的对象" class="headerlink" title="2.明确被代理的对象"></a>2.明确被代理的对象</h3><p>Ryan想要买房子，于是他就需要实现这个IPersonBuyHouse接口:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Ryan</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IPersonBuyHouse</span></span>&#123;<br><br>	<span class="hljs-meta">@Override</span><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">buyHouse</span><span class="hljs-params">()</span> </span>&#123;<br>		System.out.println(<span class="hljs-string">&quot;Ryan:I want buy a House...&quot;</span>);<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="3-寻找代理"><a href="#3-寻找代理" class="headerlink" title="3.寻找代理"></a>3.寻找代理</h3><p>由于Ryan不了解房地产行情，于是将买房子的事情委托给了中介（Proxy），因此中介（Proxy）也需要实现IPersonBuyHouse的接口。但是中介不是给自己买房子的，而是买给其它有购房需求者的，所以他应该持有一个IPersonBuyHouse。而此处的购房需求者就是Ryan.于是Proxy代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Proxy</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IPersonBuyHouse</span></span>&#123;<br>	<br>	<span class="hljs-keyword">private</span> IPersonBuyHouse mIPerson;<br>	<br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Proxy</span><span class="hljs-params">()</span> </span>&#123;<br>	    mIPerson=<span class="hljs-keyword">new</span> Ryan();<br>	&#125;<br>	<br>	<span class="hljs-meta">@Override</span><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">buyHouse</span><span class="hljs-params">()</span> </span>&#123;<br>	    System.out.println(<span class="hljs-string">&quot;Proxy:I can help you to buy house&quot;</span>);<br>	    mIPerson.buyHouse();<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>接下来我们在Main方法种测试一下Proxy类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ProxyTest</span> </span>&#123;<br><br>	<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>&#123;<br>	    <span class="hljs-keyword">new</span> Proxy().buyHouse();<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>输出结果：</p>
+<p><img src="https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/11/24/16e9bbccbc4943bd~tplv-t2oaga2asx-image.image" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>通过上面的例子可以看到静态代理是一个很简单的设计模式。那么接下来我们看下如何通过静态代理模式来完成对IndicatorView的重构吧。</p>
+<h2 id="三、用静态代理模式重构Indicator"><a href="#三、用静态代理模式重构Indicator" class="headerlink" title="三、用静态代理模式重构Indicator"></a>三、用静态代理模式重构Indicator</h2><p>在第一章节中我们就已经提到了当前Indicator的弊端：要维护多个IndicatorView，不利于开发也不利于使用。我们当前的目的就是要将IndicatorView统一成一个。而我们现在面临的困境是如何让一个IndicatorView承载多个Indicator Style？因为它既要绘制CIRCLE Style又要绘制DASH Style，以及以后可能还会增加更多的Style样式。在这种场景下我们就可以想到代理模式来解决问题。</p>
+<p>上一个章节中我们举了一个静态代理的例子是正向思维写下来的，那么本章中我们就采用逆向思维，看下如何倒推出来静态代理模式。</p>
+<h3 id="1-初步设想"><a href="#1-初步设想" class="headerlink" title="1.初步设想"></a>1.初步设想</h3><p>首先，我们想要一个IndicatorView承接所有Style的绘制，那么正常来说我们就需要在IndicatorView中通过IndicatorStyle判断是哪种样式，然后在IndicatorView中进行绘制。其伪代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IndicatorView</span>  </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onMeasure</span><span class="hljs-params">(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec)</span> </span>&#123;<br>    	<span class="hljs-keyword">if</span>(Style==CIRCLE) &#123;<br>    	    setMeasuredDimension(measurCircleWidth(), measurCircleHeight());<br>    	&#125; <span class="hljs-keyword">else</span> &#123;<br>    		setMeasuredDimension(measurDashWidth(), measurDashHeight());<br>	    &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDraw</span><span class="hljs-params">(Canvas canvas)</span> </span>&#123;<br>    	<span class="hljs-keyword">if</span>(Style==CIRCLE) &#123;<br>	        drawCircleIndicator(canvas);<br>	    &#125; <span class="hljs-keyword">else</span> &#123;<br>	        drawDashleIndicator(canvas);<br>	    &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>但是如果IndicatorStyle样式非常多的情况下，IndicatorView必然会变得非常庞大且臃肿。因此，我们自然而然的就会想到将View的measure和draw的逻辑抽出来单独给一个类来完成，那么这个类中呢至少应该有measure和draw两个方法。因此，我们将这个类的伪代码写出来大概应该是这样子的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DrawerProxy</span>  </span>&#123;<br><br>    <span class="hljs-keyword">public</span> BaseDrawer.<span class="hljs-function">MeasureResult <span class="hljs-title">onMeasure</span><span class="hljs-params">(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec)</span> </span>&#123;<br>    	<span class="hljs-keyword">if</span>(Style==CIRCLE) &#123;<br>    		<span class="hljs-keyword">return</span> measureCircleIndicator(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec);<br>    	&#125; <span class="hljs-keyword">else</span> &#123;<br>    		<span class="hljs-keyword">return</span> measureDashIndicator(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec);<br>	    &#125;<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDraw</span><span class="hljs-params">(Canvas canvas)</span> </span>&#123;<br>    	<span class="hljs-keyword">if</span>(Style==CIRCLE) &#123;<br>	        drawCircleIndicator(canvas);<br>	    &#125; <span class="hljs-keyword">else</span> &#123;<br>	        drawDashleIndicator(canvas);<br>	    &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="2-抽象接口"><a href="#2-抽象接口" class="headerlink" title="2.抽象接口"></a>2.抽象接口</h3><p>通过上一小节的操作我们虽然将测量和绘制逻辑从IndicatorView中剥离了出来，但是DrawerProxy 这个类却承载了所有的测量和绘制逻辑。当Style样式多的时候同样会使DrawerProxy类变得臃肿不堪。因此，我们又很自然的想到了应该把不同Style的绘制逻辑单独抽出来，于是就有了CircleDrawer和DashDrawer两个类来分别处理各自的逻辑。但因为这两个类又要同时被放在DrawerProxy类中，且这两个类都又共同的方法。因此可以抽出一个CircleDrawer和DashDrawer的共同接口。于是就有了这样的一个IDrawer的接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">IDrawer</span> </span>&#123;<br><br>    BaseDrawer.<span class="hljs-function">MeasureResult <span class="hljs-title">onMeasure</span><span class="hljs-params">(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec)</span></span>;<br><br>    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">onDraw</span><span class="hljs-params">(Canvas canvas)</span></span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>同时CircleDrawer和DashDrawer都应该实现该接口：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CircleDrawer</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IDrawer</span> </span>&#123;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> MeasureResult <span class="hljs-title">onMeasure</span><span class="hljs-params">(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec)</span> </span>&#123;<br>   		<span class="hljs-comment">// ... 省略measure逻辑</span><br>        <span class="hljs-keyword">return</span> mMeasureResult;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDraw</span><span class="hljs-params">(Canvas canvas)</span> </span>&#123;<br>        drawIndicator(canvas);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">drawIndicator</span><span class="hljs-params">(Canvas canvas)</span> </span>&#123;<br>       <span class="hljs-comment">// ...	省略draw逻辑</span><br>    &#125;<br>&#125;<br><span class="hljs-comment">//	DashDrawer与此类似，不再贴出</span><br></code></pre></td></tr></table></figure>
+<h3 id="3-回眸一看，静态代理？"><a href="#3-回眸一看，静态代理？" class="headerlink" title="3.回眸一看，静态代理？"></a>3.回眸一看，静态代理？</h3><p>到了这里我们在再来看DrawerProxy，发现这个类中同样需要onMeasure和onDraw，那他实现IDrawer接口顺理成章，同时它应该持有一个IDrawer类以便完成真实的测量和绘制任务。于是乎，完善之后的DrawerProxy类就成了这个样子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DrawerProxy</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IDrawer</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> IDrawer mIDrawer;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">DrawerProxy</span><span class="hljs-params">(IndicatorOptions indicatorOptions)</span> </span>&#123;<br>        init(indicatorOptions);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">init</span><span class="hljs-params">(IndicatorOptions indicatorOptions)</span> </span>&#123;<br>        mIDrawer = DrawerFactory.createDrawer(indicatorOptions);<br>    &#125;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setIndicatorOptions</span><span class="hljs-params">(IndicatorOptions indicatorOptions)</span> </span>&#123;<br>        init(indicatorOptions);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> BaseDrawer.<span class="hljs-function">MeasureResult <span class="hljs-title">onMeasure</span><span class="hljs-params">(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec)</span> </span>&#123;<br>        <span class="hljs-keyword">return</span> mIDrawer.onMeasure(widthMeasureSpec, heightMeasureSpec);<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDraw</span><span class="hljs-params">(Canvas canvas)</span> </span>&#123;<br>        mIDrawer.onDraw(canvas);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>到这里，我们回过神来看一下，这不就是一个非常标准的静态代理模式吗？当然，这里也结合了简单工厂模式来生成对应的Drawer。<br>接着我们来看下重构后的IndicatorView</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IndicatorView</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseIndicatorView</span> </span>&#123;<br><br>  <span class="hljs-keyword">private</span> DrawerProxy mDrawerProxy;<br><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">IndicatorView</span><span class="hljs-params">(Context context)</span> </span>&#123;<br>    <span class="hljs-keyword">this</span>(context, <span class="hljs-keyword">null</span>);<br>  &#125;<br><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">IndicatorView</span><span class="hljs-params">(Context context, <span class="hljs-meta">@Nullable</span> AttributeSet attrs)</span> </span>&#123;<br>    <span class="hljs-keyword">this</span>(context, attrs, <span class="hljs-number">0</span>);<br>  &#125;<br><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">IndicatorView</span><span class="hljs-params">(Context context, <span class="hljs-meta">@Nullable</span> AttributeSet attrs, <span class="hljs-keyword">int</span> defStyleAttr)</span> </span>&#123;<br>    <span class="hljs-keyword">super</span>(context, attrs, defStyleAttr);<br>    mDrawerProxy = <span class="hljs-keyword">new</span> DrawerProxy(getIndicatorOptions());<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onMeasure</span><span class="hljs-params">(<span class="hljs-keyword">int</span> widthMeasureSpec, <span class="hljs-keyword">int</span> heightMeasureSpec)</span> </span>&#123;<br>    <span class="hljs-keyword">super</span>.onMeasure(widthMeasureSpec, heightMeasureSpec);<br>    BaseDrawer.MeasureResult measureResult = mDrawerProxy.onMeasure(widthMeasureSpec, heightMeasureSpec);<br>    setMeasuredDimension(measureResult.getMeasureWidth(), measureResult.getMeasureHeight());<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onDraw</span><span class="hljs-params">(Canvas canvas)</span> </span>&#123;<br>    <span class="hljs-keyword">super</span>.onDraw(canvas);<br>    mDrawerProxy.onDraw(canvas);<br>  &#125;<br><br>  <span class="hljs-meta">@Override</span><br>  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">setIndicatorOptions</span><span class="hljs-params">(IndicatorOptions indicatorOptions)</span> </span>&#123;<br>    <span class="hljs-keyword">super</span>.setIndicatorOptions(indicatorOptions);<br>    mDrawerProxy.setIndicatorOptions(indicatorOptions);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到通过静态代理模式简化完后的IndicatorView仅仅剩下了三十多行的代码，所有的测量和绘制逻辑都交给代理类DrawerProxy来处理，而DrawerProxy又将逻辑移交给对应的Drawer来完成。这样，所有的类都各司其职，代码简单明了！开发和维护起来也就变得更加得心应手了！</p>
+<p>最后，我们来看下如何使用Indicator：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">    indicatorView<br>.setSlideMode(IndicatorSlideMode.WORM)<br>.setIndicatorStyle(IndicatorStyle.CIRCLE)<br>.setSliderColor(getResColor(R.color.red_normal_color), getResColor(R.color.red_checked_color))<br>.setupWithViewPager(viewPager)<br></code></pre></td></tr></table></figure>
+<p>通过一个简单的链式调用传入不同的参数便实现了多种多样的指示器样式。</p>
+<h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>本篇文章分享了对ViewPagerIndicator重构的一些经验。通过本篇文章相信大家对于静态代理模式也会有了更深的认识。重构后的代码在维护和使用上相比以前显然有了更明显的提升。但是并不等于现在的Indicator已经无懈可击了。相反，它还有很长的路要走。就目前而言，Indicator的SlideMode部分还是又相当大的优化空间的，那么我们就在后面的版本中拭目以吧。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhpanvip/viewpagerindicator">ViewPagerIndicator源码戳此处</a></p>
+<p>同时，欢迎关注用ViewPagerIndicator实现的<a target="_blank" rel="noopener" href="https://github.com/zhpanvip/BannerViewPager">BannerViewPager</a>库</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
+                    
+                      <a class="hover-with-bg" href="/tags/ViewPager2/">ViewPager2</a>
+                    
+                      <a class="hover-with-bg" href="/tags/indicator/">indicator</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！ <div class="text-center"> <div class="about-info"> <div class="about-icons" style="margin-top:20px;"> <a target="_blank" rel="noopener" href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub> <i class="iconfont icon-github-fill" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://juejin.im/user/2735240659359448/posts" class="hint--bottom hint--rounded" aria-label=掘金> <i class="iconfont icon-juejin" aria-hidden="true"></i> </a> <a href="mailto:zhpanvip@outlook.com" class="hint--bottom hint--rounded" aria-label=邮箱> <i class="iconfont icon-mail" aria-hidden="true"></i> </a> <a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_20521573" class="qr-trigger"> <i class="iconfont icon-wechat-fill" aria-hidden="true"></i> <img class="qr-img" src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" alt="qrcode" /> </a> </div> </div></p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2019/12/05/23.Development%20tools%20for%20programmer/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">干货满满，整理给程序员的15款开发利器</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2019/09/08/21.BVP%20source/">
+                        <span class="hidden-mobile">BannerViewPager源码剖析(二)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'zhpanvip/utterances-comment');
+      s.setAttribute('issue-term', 'title');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/group/wechat_gzh.jpg" srcset="/img/loading.gif" class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <span rel="nofollow noopener">Copyright © 2016-<span id="current_year"><a target="_blank" href="https://github.com/zhpanvip" rel="nofollow noopener noopener"></span> ZhangPan</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+<script type="text/javascript"> function setCurrentYear() { var date = new Date(); var currentYear = date.getFullYear(); document.getElementById("current_year").innerHTML = currentYear; }
+window.onload=function(){ setCurrentYear(); } </script>
+
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>
