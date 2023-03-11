@@ -17,7 +17,7 @@
   <meta name="description" content="">
   <meta name="author" content="zhangpan">
   <meta name="keywords" content="">
-  <title>深入JVM--探索Java虚拟机的类加载机制 - zhangpan&#39;s blog</title>
+  <title>探索Java虚拟机的类加载机制 - zhangpan&#39;s blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
 
@@ -178,7 +178,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="深入JVM--探索Java虚拟机的类加载机制">
+            <span class="h2" id="subtitle" title="探索Java虚拟机的类加载机制">
               
             </span>
 
@@ -240,7 +240,7 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">深入JVM--探索Java虚拟机的类加载机制</h1>
+            <h1 style="display: none">探索Java虚拟机的类加载机制</h1>
             
             <div class="markdown-body">
               <p>我们知道Java程序在编译的过程中需要先经过javac将Java文件编译成字节码文件才能被虚拟机执行。而类加载指的就是将编译好的字节码（不仅仅指.class文件中的字节码，任意的字节码流都可以被读取到JVM）读取到JVM的内存中的过程。虚拟机在加载.class文件时会对数据进行校验、转换解析和初始化。最终形成可以被虚拟机直接使用的Java类型。这个过程称作虚拟机的类加载机制。类加载机制是虚拟机中很重要的一部分内容，在面试中出现的频率也是比较高。因此，作为一个Java程序员，JVM的类加载机制是我们必须掌握的知识。</p>
@@ -253,7 +253,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs java">I<span class="hljs-string">&#x27;m a persion</span><br><span class="hljs-string">I&#x27;</span>m a student<br>Ryan.indentity=Student<br></code></pre></td></tr></table></figure>
 
 <p>是否和你的答案一样呢？如果不一样，那说明你还没有清楚的理解JVM的类加载机制。接下来不妨就来学习一下JVM的类加载吧。</p>
-<h2 id="一、类加载的过程"><a href="#一、类加载的过程" class="headerlink" title="一、类加载的过程"></a>一、类加载的过程</h2><p>一个类从被加载到虚拟机内存中开始，到卸载出虚拟机内存为止，它的声明周期会经历加载（Loading）、连接（Linking）、初始化（Initialization）、使用（Using）和卸载（Unloading）这几个阶段。而连接阶段又包含验证（Verification）、准备（Preparation）、解析（Resolution）三个阶段。如下图所示：<br><img src="https://img-blog.csdnimg.cn/20201206190018743.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70#pic_center" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>其中，加载、验证、准备、初始化和卸载这五个阶段的顺序是确定的，而解析阶段则不一定：它在某些情况下可以在初始化阶段之后再开始。接下来，我们来详细的了解Java虚拟机中类加载的过程，即加载、验证、准备、解析和初始化这五个阶段。</p>
+<h2 id="一、类加载的过程"><a href="#一、类加载的过程" class="headerlink" title="一、类加载的过程"></a>一、类加载的过程</h2><p>一个类从被加载到虚拟机内存中开始，到卸载出虚拟机内存为止，它的声明周期会经历加载（Loading）、连接（Linking）、初始化（Initialization）、使用（Using）和卸载（Unloading）这几个阶段。而连接阶段又包含验证（Verification）、准备（Preparation）、解析（Resolution）三个阶段。如下图所示：<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/783e7cea90b74dc98ad6ab37c87ba3cd~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>其中，加载、验证、准备、初始化和卸载这五个阶段的顺序是确定的，而解析阶段则不一定：它在某些情况下可以在初始化阶段之后再开始。接下来，我们来详细的了解Java虚拟机中类加载的过程，即加载、验证、准备、解析和初始化这五个阶段。</p>
 <h3 id="1-加载阶段"><a href="#1-加载阶段" class="headerlink" title="1.加载阶段"></a>1.加载阶段</h3><p>加载阶段是类加载过程的第一个阶段。这一阶段JVM会通过类的全限定名（可能来自.class文件，也可能来自ZIP压缩包、网络等，甚至可以是运行时生成。）来读取类的二进制字节流。并将读取到的二进制字节流转化为方法区的运行时数据结构，然后在内存中生成一个代表这个类的java.lang.Class对象。</p>
 <p>简单的来说，这一阶段就是将类的字节码二进制流读取到JVM，并生成代表这个类的Class对象。</p>
 <h3 id="2-连接"><a href="#2-连接" class="headerlink" title="2.连接"></a>2.连接</h3><p>连接阶段包含了验证、准备、解析三个过程。</p>
@@ -309,7 +309,7 @@
 <h4 id="3）应用程序类加载器（Application-Class-Loader）"><a href="#3）应用程序类加载器（Application-Class-Loader）" class="headerlink" title="3）应用程序类加载器（Application Class Loader）"></a>3）应用程序类加载器（Application Class Loader）</h4><p>这个类加载器位于sun.misc.Launcher$AppClassLoader中，同样是由Java语言实现。他负责加载用户类路径（ClassPath)上所有的类库。开发者同样可以直接在代码中使用这个类加载器。如果程序中没有自定义的类加载器，一般情况下这个就是程序中默认的类加载器。</p>
 <h4 id="4）自定义类加载器（User-Class-Loader）"><a href="#4）自定义类加载器（User-Class-Loader）" class="headerlink" title="4）自定义类加载器（User Class Loader）"></a>4）自定义类加载器（User Class Loader）</h4><p>除了上述三种Java系统中的类加载器外，很多情况下用户还会通过自定义类加载器加载所需要的类。诸如增加除了磁盘位置之外的Class文件来源，或者通过类加载器实现类的隔离、重载等功能</p>
 <h3 id="2-双亲委派模型"><a href="#2-双亲委派模型" class="headerlink" title="2.双亲委派模型"></a>2.双亲委派模型</h3><p>在本章开头我们已经提到两个类相等的前提条件应该是这两个类是由同一个类加载器加载的。既然Java种存在这么多的类加载器，那么Java是如何保证同一个类都是由同一个类加载器加载的呢？这主要得益于类加载器的“双亲委派模型”。接下来我们就来认识一下什么是“双亲委派模型”。</p>
-<p>如下图所示，展示了各个类加载器之间的层次关系就是本节要讲的“双亲委派模型”<br><img src="https://img-blog.csdnimg.cn/20201224235232797.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzIwNTIxNTcz,size_16,color_FFFFFF,t_70#pic_center" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>双亲委派模型要求除了顶层启动类加载器外，其余的类加载器都应该有自己的父类加载器。而这里类加载器之间的父子关系不是通过继承来实现的，而是通过组合的关系来复用父加载器的代码。</p>
+<p>如下图所示，展示了各个类加载器之间的层次关系就是本节要讲的“双亲委派模型”<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0af264e166d44d59a7b95383fc516d15~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp" srcset="/img/loading.gif" alt="在这里插入图片描述"><br>双亲委派模型要求除了顶层启动类加载器外，其余的类加载器都应该有自己的父类加载器。而这里类加载器之间的父子关系不是通过继承来实现的，而是通过组合的关系来复用父加载器的代码。</p>
 <p>双亲委派模型的工作过程如下：</p>
 <blockquote>
 <p>如果一个类加载器收到了类加载的请求，首先它不会自己尝试加载这个类，而是把这个请求委派给父类加载器来完成，每个层次的类加载器都是如此。因此，所有的类加载请求最终都会被传送到最顶层的启动类加载器种，只有当父加载器无法找到这个加载请求的类时，子类加载器才会尝试去完成加载。</p>
