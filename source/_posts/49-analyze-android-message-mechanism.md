@@ -27,7 +27,120 @@ tags: [Handler]
 
 可以看得出来，图中的 "生产者"和"消费者"处于两个不同的线程，但是他们共用了同一个队列。生产者在完成数据的生产后会通过 notify 方法唤醒消费者线程，当队列满的时候，生产者线程会调用 wait 方法来阻塞自身。同时，消费者线程在被唤醒后则会从队列中取出数据，并通过 notify 方法唤醒生产者线程继续生产数据。当队列中的数据被取空的时候，消费者线程同样会调用 wait 方法阻塞自身。
 
-关于”生产者-消费者“模型的代码实现就不在这里重复贴出了，大家可以到[《深入理解Java线程的等待与唤醒机制》](https://juejin.cn/post/6980002998361522190)这篇文章中阅读第一章的内容，这些内容对于阅读本文会有一定的帮助。
+我们仍然拿生产面包的例子来看。首先需要有一个存放面包的容器（缓冲队列），可以将其命名为BreadContainer，提供放入面包和取出面包的方法。代码如下：
+
+```java
+public class BreadContainer {
+
+    LinkedList<Bread> list = new LinkedList<>();
+    // 容器容量
+    private final static int CAPACITY = 10;
+
+    /**
+     * 放入面包
+     */
+    public synchronized void put(Bread bread) {
+        while (list.size() == CAPACITY) {
+            try {
+                // 如果容器已满，则阻塞生产者线程
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        list.add(bread);
+        // 面包生产成功后通知消费者线程
+        notify();
+        System.out.println(Thread.currentThread().getName() + " product a bread" + bread.toString() + " size = " + list.size());
+    }
+
+    /**
+     * 取出面包
+     */
+    public synchronized Bread take() {
+        while (list.isEmpty()) {
+            try {
+                // 如果容器为空，则阻塞消费者线程
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        Bread bread = list.removeFirst();
+        // 消费后通知生产者生产面包
+        notify();
+        System.out.println("Consumer " + Thread.currentThread().getName() + " consume a bread" + bread.toString() + " size = " + list.size());
+        return bread;
+    }
+}
+```
+
+接下来实现生产者，让生产者来生产面包，并提供面包容器。
+
+来生产面包，并提供面包容器。
+
+```
+// 生产者
+public class Producer {
+
+    private final BreadContainer container;
+
+    public Producer() {
+        container = new BreadContainer();
+    }
+
+    public BreadContainer getContainer() {
+        return container;
+    }
+
+    public void makeBread() {
+        // 生产者生产面包
+        container.put(new Bread());
+    }
+}
+```
+
+实现消费者则负责从面包容器中取出面包进行消费
+
+```
+// 消费者
+public class Consumer {
+    BreadContainer container;
+
+    public Consumer(BreadContainer container){
+        this.container = container;
+    }
+
+    public void takeBread() {
+        for (; ; ) {
+            Bread bread = container.take();
+            bread.eat();
+        }
+    }
+}
+```
+
+完成生产者与消费者两个角色后，我们可以一个测试代码，如下:
+
+```
+public static void main(String[] args) {
+
+    // 实例化生产者
+    Producer producer = new Producer();
+    // 实例化消费者
+    Consumer consumer = new Consumer(producer.getContainer());
+    // 开启生产者线程
+    new Thread(() -> {
+        for (int i = 0; i < 100000; i++) {
+            producer.makeBread();
+        }
+    }).start();
+
+    // 消费者在主线程消费   
+    consumer.takeBread();
+}
+```
+看到上边这段代码是否有种似曾相识的感觉？如果没有那么不妨去看看Android源码中ActivityThread 的main方法的实现，你一定会恍然大悟！
 
 ”生产者-消费者“模型的案例在平时的开发中是很常见的。例如 Rxjava 的流控制就是典型的”生产者-消费者“模型，除此之外还有线程池的内部实现，以及 Android 系统中输入事件的采集与派发都是基于”生产者-消费者“模型设计的。
 
@@ -354,7 +467,7 @@ public final class Message implements Parcelable {
 
 在上一小节中我们已经知道 Message 其实是一个拥有链表结构的类。因此 MessageQueue 中的容器其实并非像第二章第1小节中写的那样是一个 LinkedList，而是一个 Message 链表。
 
-通常来说”生产者-消费者“模型中的缓冲队列是有特定的容量的，在缓冲队列填满的时候就会阻塞生产者继续添加数据。因此，一个标准的”生产者-消费者“模型必然要考虑**背压策略**，就比如大家所熟知的 RxJava 由于内部使用的是有界队列，因此当队列的容量不足时就会抛出 `MissingBackpressureException`。而 Rxjava 也给出了多个背压策略，例如丢弃事件、扩容、或者直接抛出异常。与之类似的是线程池的实现，区别是线程池内不叫背压策略，而是叫**拒绝策略**。
+通常来说”生产者-消费者“模型中的缓冲队列是有特定的容量的，在缓冲队列填满的时候就会阻塞生产者继续添加数据,即出现所谓的**背压**问题。因此，一个标准的”生产者-消费者“模型必然要考虑**背压策略**，就比如大家所熟知的 RxJava 由于内部使用的是有界队列，因此当队列的容量不足时就会抛出 `MissingBackpressureException`。而 Rxjava 也给出了多个背压策略，例如丢弃事件、扩容、或者直接抛出异常。与之类似的是线程池的实现，区别是线程池内不叫背压策略，而是叫**拒绝策略**。
 
 但是作为接收系统消息的 MessageQueue 如果被设计成有界队列合适吗？显然是不合适的，因为系统发送的消息多是一些中要的消息，任何事件的丢失都可能会导致严重的系统 bug。所以作为消息机制设计者一定会把 MessageQueue 设计成一个无界队列。这样插入消息永远不会被阻塞，也不用考虑所谓的背压策略了。这是消息机制与标准的 ”生产者-消费者“ 模型的区别之一。
 
@@ -621,7 +734,7 @@ final class TraversalRunnable implements Runnable {
       }
    }
 ```
-可以看到在doTraversal方法中会将同步屏障消息移除掉，之后普通消息又会得到执行的机会。其实到这里也很容易理解为什么 postSyncBarrier 方法不允许开发者调用了。因为一旦开发者执行这个方法，且没有即使移除同步屏障就会导致普通消息再也没有被执行的机会。
+可以看到在doTraversal方法中会将同步屏障消息移除掉，之后普通消息又会得到执行的机会。其实到这里也很容易理解为什么 postSyncBarrier 方法不允许开发者调用了。因为一旦开发者执行这个方法，且没有及时移除同步屏障就会导致普通消息再也没有被执行的机会。
 
 #### （2）普通消息和延迟消息
 
@@ -744,8 +857,260 @@ Message next() {
 
 关于 onDestory 部分的源码分析可以参考路遥的一篇文章[《面试官：为什么 Activity.finish() 之后 10s 才 onDestroy ？》](https://juejin.cn/post/6898588053451833351)，这里就不做过多解读了。
 
+## 四、Handler 的设计思想在开发中的应用
 
-## 三、总结
+
+### 1.Handler 与卡顿监控
+
+
+导致卡顿的原因一般是因为主线程里有耗时操作。由于主线程中只有一个Looper,且主线程是被 Looper.loop()阻塞着的。所以可以通过监控主线程的 Message 执行时间来找出耗时的地方。
+
+
+在Looper 的 loop 方法中有这样一段代码：
+
+
+```
+public static void loop() {
+    ...
+
+    for (;;) {
+        ...
+
+        // This must be in a local variable, in case a UI event sets the logger
+        Printer logging = me.mLogging;
+        if (logging != null) {
+            logging.println(">>>>> Dispatching to " + msg.target + " " +
+                    msg.callback + ": " + msg.what);
+        }
+
+        msg.target.dispatchMessage(msg);
+
+        if (logging != null) {
+            logging.println("<<<<< Finished to " + msg.target + " " + msg.callback);
+        }
+
+        ...
+    }
+}
+```
+
+如果想要监控 Message 的执行耗时，只需要自定义一个Printer即可：
+
+```
+class LooperMonitor implements Printer {  
+    
+    private boolean mPrintingStarted = false;  
+  
+    @Override
+    public void println(String x) {
+        if (!mStartedPrinting) {
+            mStartTimeMillis = System.currentTimeMillis();
+            mStartThreadTimeMillis = SystemClock.currentThreadTimeMillis();
+            mStartedPrinting = true;
+        } else {
+            final long endTime = System.currentTimeMillis();
+            mStartedPrinting = false;
+            if (isBlock(endTime)) {
+                notifyBlockEvent(endTime);
+            }
+        }
+    }
+    
+    private boolean isBlock(long endTime) {
+        return endTime - mStartTimeMillis > mBlockThresholdMillis;
+    }
+}    
+    
+```
+
+然后将这个自定义的 Printer 设置到主线程的 Looper 中，就可以监控到所有主线程消息的耗时了。
+
+```
+Looper.getMainLooper().setMessageLogging(mainLooperPrinter);
+```
+
+### 2.捕获异常，让 APP不再Crash.
+
+为什么Android程序发生空指针等异常时，会导致应用会崩溃？
+
+```
+publicclass RuntimeInit {
+    finalstatic String TAG = "AndroidRuntime";
+  
+    ....
+      
+    privatestaticclass LoggingHandler implements Thread.UncaughtExceptionHandler {
+        publicvolatileboolean mTriggered = false;
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            mTriggered = true;
+
+            if (mCrashing) return;
+                //打印异常日志
+            if (mApplicationObject == null && (Process.SYSTEM_UID == Process.myUid())) {
+                Clog_e(TAG, "*** FATAL EXCEPTION IN SYSTEM PROCESS: " + t.getName(), e);
+            } else {
+                StringBuilder message = new StringBuilder();
+                message.append("FATAL EXCEPTION: ").append(t.getName()).append("\n");
+                final String processName = ActivityThread.currentProcessName();
+                if (processName != null) {
+                    message.append("Process: ").append(processName).append(", ");
+                }
+                message.append("PID: ").append(Process.myPid());
+                Clog_e(TAG, message.toString(), e);
+            }
+        }
+    }
+
+    privatestaticclass KillApplicationHandler implements Thread.UncaughtExceptionHandler {
+        privatefinal LoggingHandler mLoggingHandler;
+        public KillApplicationHandler(LoggingHandler loggingHandler) {
+            this.mLoggingHandler = Objects.requireNonNull(loggingHandler);
+        }
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            try {
+                ensureLogging(t, e);
+
+                if (mCrashing) return;
+                mCrashing = true;
+                if (ActivityThread.currentActivityThread() != null) {
+                    ActivityThread.currentActivityThread().stopProfiling();
+                }
+
+                ActivityManager.getService().handleApplicationCrash(
+                        mApplicationObject, new ApplicationErrorReport.ParcelableCrashInfo(e));
+            } catch (Throwable t2) {
+                if (t2 instanceof DeadObjectException) {
+                } else {
+                    try {
+                        Clog_e(TAG, "Error reporting crash", t2);
+                    } catch (Throwable t3) {
+                    }
+                }
+            } finally {
+                //杀死进程
+                Process.killProcess(Process.myPid());
+                System.exit(10);
+            }
+        }
+        private void ensureLogging(Thread t, Throwable e) {
+            if (!mLoggingHandler.mTriggered) {
+                try {
+                    mLoggingHandler.uncaughtException(t, e);
+                } catch (Throwable loggingThrowable) {
+                }
+            }
+        }
+    
+      ....
+    }
+  
+  
+    protected static final void commonInit() {
+                //设置异常处理回调
+        LoggingHandler loggingHandler = new LoggingHandler();
+        Thread.setUncaughtExceptionPreHandler(loggingHandler);
+        Thread.setDefaultUncaughtExceptionHandler(new KillApplicationHandler(loggingHandler));
+      
+                ....
+    }
+```
+
+`RuntimeInit`有两个的内部类，`LoggingHandler`和`KillApplicationHandler`。`LoggingHandler`的作用是打印异常日志，而`KillApplicationHandler`就是App发生`Crash`的真正原因，其内部调用了`Process.killProcess(Process.myPid())`来杀死发生`Uncaught`异常的进程。
+
+
+
+
+这两个内部类都实现了`Thread.UncaughtExceptionHandler`接口。分别通过`Thread.setUncaughtExceptionPreHandler`和`Thread.setDefaultUncaughtExceptionHandler`方法进行注册
+
+
+
+
+-   Thread.setUncaughtExceptionPreHandler，覆盖所有线程，会在回调DefaultUncaughtExceptionHandler之前调用，只能在Android Framework内部调用该方法
+-   Thread.setDefaultUncaughtExceptionHandler，如果在任意线程中调用即可覆盖所有线程的异常，可以在应用层调用，每次调用传入的Thread.UncaughtExceptionHandler都会覆盖上一次的，即我们可以手动覆盖系统实现的KillApplicationHandler
+-   new Thread().setUncaughtExceptionHandler()，只可以覆盖当前线程的异常，如果某个Thread有定义UncaughtExceptionHandler，则忽略全局DefaultUncaughtExceptionHandler
+
+Uncaught异常发生时会终止线程，此时，系统便会通知`UncaughtExceptionHandler`，告诉它被终止的线程以及对应的异常， 然后便会调用`uncaughtException`函数。如果该UncaughtExceptionHandler没有被显式设置，则会调用对应线程组的默认UncaughtExceptionHandlerr。如果我们要捕获该异常，必须实现我们自己的handler
+
+
+
+
+应用层调用`Thread.setDefaultUncaughtExceptionHandler`来实现所有线程的`Uncaught`异常的监听，并且会覆盖系统的默认实现的`KillApplicationHandler`，这样就可以做到让线程发生Uncaught异常的时候只是当前杀死线程，而不会杀死整个进程。这适用于子线程发生Uncaught异常。如果主线程发生Uncaught异常呢？主线程都被销毁了，这和Crash似乎就没什么区别的。那么有办法让主线程发生Uncaught异常也不会发生Crash吗？
+
+
+
+
+由于整个系统都是基于消息机制，主线程的异常一定会经过Looper.loop()，所以其实只要try catch Looper.loop()即可捕获主线程异常。
+
+```
+publicclass CrashCatch {
+
+    private CrashHandler mCrashHandler;
+
+    privatestatic CrashCatch mInstance;
+
+    private CrashCatch(){
+
+    }
+
+    private static CrashCatch getInstance(){
+        if(mInstance == null){
+            synchronized (CrashCatch.class){
+                if(mInstance == null){
+                    mInstance = new CrashCatch();
+                }
+            }
+        }
+
+        return mInstance;
+    }
+
+    public static void init(CrashHandler crashHandler){
+        getInstance().setCrashHandler(crashHandler);
+    }
+
+    private void setCrashHandler(CrashHandler crashHandler){
+
+        mCrashHandler = crashHandler;
+        //主线程异常拦截
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                for (;;) {
+                    try {
+                        Looper.loop();
+                    } catch (Throwable e) {
+                        if (mCrashHandler != null) {
+                          //处理异常
+                    mCrashHandler.handlerException(Looper.getMainLooper().getThread(), e);
+                        }
+                    }
+                }
+            }
+        });
+      
+         //所有线程异常拦截，由于主线程的异常都被我们catch住了，所以下面的代码拦截到的都是子线程的异常
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                if(mCrashHandler!=null){
+                  //处理异常
+                   mCrashHandler.handlerException(t,e);
+                }
+            }
+        });
+    }
+
+    publicinterface CrashHandler{
+        void handlerException(Thread t,Throwable e);
+    }
+}
+```
+
+## 五、总结
 
 本篇文章的内容比较长，文章从 ”生产者-消费者“模型来对比Android消息机制的实现，并尝试站在设计者的角度分析应该怎样设计系统的消息机制，还尝试分析了在实现过程中碰到的问题及解决方案。如果你能细心的看完这篇文章，一定会有所收获，并且会对 Android 的消息机制有一个全新的理解。
 
@@ -758,3 +1123,5 @@ Message next() {
 [《深入理解Java线程的等待与唤醒机制》](https://juejin.cn/post/6980002998361522190)
 
 [《面试官：为什么 Activity.finish() 之后 10s 才 onDestroy ？》](https://juejin.cn/post/6898588053451833351)
+
+[你知道 Android 为什么会 Crash 吗](https://mp.weixin.qq.com/s/cHXrB582Op1lu3ZlrLKYcg)
