@@ -1,10 +1,10 @@
 ---
 layout: article
 index_img: https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1760390b306b4cf1be6d77c69ae792e5~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp?
-title: 不得不说的Android Binder机制与AIDL
+title: 不得不说的 Android Binder 机制与 AIDL
 date: 2021-08-06 00:48:46
 categories:
-- Android进阶
+- Framework
 tags: [Binder]
 ---
 
@@ -503,6 +503,31 @@ public interface IGradeService extends android.os.IInterface {
 
 接着，Stub类中还有一个名为Proxy的内部类。Proxy类与上一章的BinderProxy相对应。可以看到Proxy类的构造方法并没有修饰符，而BinderProxy的构造方法被声明成了private，都可以防止外部通过构造方法区实例化代理类的对象。Proxy的getStudentGrade方法与BinderProxy中的getStudentGrade一样，通过Binder去读取服务端的写入数据。
 
+有了上述代码之后，我们的服务端Service的代码如下：
+
+```Java
+public class AidlGradeService extends Service {
+    // 实现 Stub 的 getStudentGrade 方法
+    private final IBinder mBinder = new IGradeService.Stub() {
+        @Override
+        public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString) throws RemoteException {
+
+        }
+
+        @Override
+        public int getStudentGrade(String name) throws RemoteException {
+            return StudentMap.getStudentGrade(name);
+        }
+    };
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+}
+```
+
 ### 3.AIDL客户端
 
 使用AIDL的客户端实现几乎与第三章中的代码一致。只不过是在连接到服务端后通过IGradeService.Stub下的asInterface方法来获取Binder或者Binder的代理对象。代码如下：
@@ -556,12 +581,13 @@ public class AidlActivity extends BaseViewBindingActivity<ActivityBinderBinding>
 
 到这里，关于AIDL的介绍就结束了。有没有惊奇的发现AIDL原来这么简单！
 
+
 ## 五、总结
 
 本篇文章主要带大家认识了进程间通信和Binder与AIDL的使用。通过本篇文章的学习可以发现Binder与AIDL其实是非常简单的。了解了Binder之后，我们就可以去更加深入的学习Android Framework层的知识了。
 
 
-[AndroidNote](https://github.com/zhpanvip/AndroidNote)
+[AndroidSample](https://github.com/zhpanvip/AndroidSample)
 
 
 
