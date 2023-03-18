@@ -197,6 +197,56 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2017/09/10/12.Handler%20source%20code%20analysis/">追根溯源--探究Handler的实现原理</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2017/09/10/12.Handler%20source%20code%20analysis/">
+          
+          
+            
+          
+          一、初识Handler要分析一个框架的源码，首先需要了解它的使用。我们就从最基础的知识开始吧！
+场景1：将数据从子线程发送到主线程。我们知道Android系统中更新UI只能在主线程中进行。而通常网络请求实在子线程中进行的。在获取到服务器数据后我们需要切换到主线程来更新UI。通常在这种情况下我们会考虑使用Handler来进行线程切换。我们来模拟一个网络请求，并通过Handler将数据发送出去：
+12
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2017-09-10 02:27" pubdate>
+              2017-09-10
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2017/07/27/11.Android%20night%20mode/">Android夜间模式实现方案</a>
       </h1>
 
@@ -601,55 +651,6 @@ RxJava+
             <i class="iconfont icon-date"></i>
             <time datetime="2016-07-26 10:26" pubdate>
               2016-07-26
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">设计模式</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2016/07/25/2.Java%20design%20patterns(2)/">浅析Java设计模式（二）</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2016/07/25/2.Java%20design%20patterns(2)/">
-          
-          
-            
-          
-          上篇文章我们学习了几种创建型模式 的设计模式，那么本篇文章就继续来学习一下结构型模式的几个常用设计模式。
-一、代理模式（Proxy Pattern）代理模式即为其它对象提供一种代理控制对这个对象的访问。在代理模式中，一个类代表另一个类的功能。这种类型的设计模式属于结构型模式。在代理模式中，我们创建具有现有对象的对象，以便向外界提供功能接口。代理模式的机构图如下：Subject类中定义一个抽象req
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2016-07-25 10:21" pubdate>
-              2016-07-25
             </time>
           </div>
         
