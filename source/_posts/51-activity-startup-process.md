@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ffb4095433cb498a8265538a6ab2e7cc~tplv-k3u1fbpfcp-zoom-crop-mark:1512:1512:1512:851.awebp?
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/activity_start.png
 title: 基于 Android 13 的 Activity 启动流程分析
 date: 2023-03-18 21:43:28
 categories:
