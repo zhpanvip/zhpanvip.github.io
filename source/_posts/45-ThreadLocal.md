@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0e255eff281e4ba998b9bbf7a861a8a2~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp?
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/threadlocal.png
 title: Java并发系列番外篇：ThreadLocal原理其实很简单
 date: 2021-07-19 00:26:00
 categories:

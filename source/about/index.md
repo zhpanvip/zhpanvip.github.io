@@ -16,12 +16,12 @@ banner_img_height: 75
 <body>
 
 <div align="center">
-   <img id="avatar" src="https://github.com/zhpanvip/images/blob/master/blog/favicon.png" />
+   <img id="avatar" src="https://github.com/zhpanvip/images/blob/master/blog/favicon.png?raw=true" />
 </div>
 
 <div class="text-center">
   <div class="about-info">
-    <div class="about-name">张攀</div>
+    <div class="about-name">zhangpan</div>
     <div class="about-intro">Android开发</div>
     <div class="about-icons" style="margin-top:20px;">
         <a href="https://github.com/zhpanvip" class="hint--bottom hint--rounded" aria-label=GitHub>

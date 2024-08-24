@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9c9a5f1afaea45f48f3bfa1e97163fc6~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp?
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/android_message.png
 title: 反思 Android 消息机制设计与实现
 date: 2022-06-17 20:18:46
 categories:

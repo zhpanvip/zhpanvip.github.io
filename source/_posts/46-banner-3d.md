@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4fd6f3ea8b644f5c9cb64d3622926cb3~tplv-k3u1fbpfcp-watermark.image
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/jvm_memory.png
 title: 用BVP一比一还原自如客APP裸眼3D效果（Android原生）
 date: 2021-08-02 22:45:08
 categories:

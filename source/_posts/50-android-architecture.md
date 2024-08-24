@@ -1,6 +1,6 @@
 ---
 layout: article
-index_img: https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/04bb251723d442de8496b788b75f0c47~tplv-k3u1fbpfcp-zoom-crop-mark:3024:3024:3024:1702.awebp?
+index_img: https://raw.githubusercontent.com/zhpanvip/images/master/blog/img/20220820143404.png
 title: Android 架构思想与 MVVM 框架封装
 date: 2022-08-20 14:23:28
 categories:
