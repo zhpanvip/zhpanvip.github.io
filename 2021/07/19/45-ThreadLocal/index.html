@@ -297,13 +297,13 @@
 <p>试想，如果将ThreadLocal声明为强引用，一旦ThreadLocal不再使用，就需要被回收。但是此时由于ThreadLocalMap中的Entry数组持有了ThreadLocal。导致ThreadLocal不能够被回收而出现内存泄漏。那么，如果将ThreadLocal声明为弱引用就可以避免这一问题的出现。</p>
 <p>那么，是否意味着将Entry中的ThreadLocal声明为弱引用，我们就可以肆无忌惮的使用ThreadLocal也不会出现内存泄漏了？事实并非如此。</p>
 <p>我们来看下面的分析。</p>
-<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/41ed98d3156c4dd4bb4ed41c22ad3b55~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="threadlocal.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/threadlocal1.png" srcset="/img/loading.gif" alt="threadlocal.png"></p>
 <p>如上图所示，在ThreadLocal中存在一个这样的引用连。如果Thread一直在运行，那么此时由于强引用的value不能被回收，故此种情况下也可能出现内存泄漏的问题。因此，通常来说，在不需要使用这个ThreadLocal变量的使用，需要调用remove方法来避免内存泄漏的问题。</p>
 <h2 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h2><p>从源码角度来看ThreadLocal,在了解哈希表的情况下，弄懂它的实现原理其实并不难。ThreadLocal的set方法会将自身作为key，连带value封装到Entry中。然后将这个Entry插入到当前线程的ThreadLocalMap中。这个ThreadLocalMap是一个哈希表结构，内部使用线性探测再散列来存储Entry。</p>
 <p>当然，由于可能存在多个ThreadLocal的情况，如下代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs java">ThreadLocal&lt;Integer&gt; threadLocal = <span class="hljs-keyword">new</span> ThreadLocal&lt;&gt;();<br>ThreadLocal&lt;Integer&gt; threadLocal2 = <span class="hljs-keyword">new</span> ThreadLocal&lt;&gt;();<br><br>threadLocal.set(<span class="hljs-number">1</span>);<br>threadLocal2.set(<span class="hljs-number">2</span>);<br></code></pre></td></tr></table></figure>
 <p>因此，可以给出ThreadLocalMap的结构图如下：</p>
-<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1010099b52444e5a8eb1b5e1ef2c15f0~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="threadlocal2.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/threadlocal2.png" srcset="/img/loading.gif" alt="threadlocal2.png"></p>
 
             </div>
             <hr>

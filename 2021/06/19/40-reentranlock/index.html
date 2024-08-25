@@ -365,7 +365,7 @@
 <h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>关于ReentrantLock与AQS的实现相对来说比较难以理解。本篇文章虽然写了很长的篇幅，但是也没有面面俱到的讲完ReentrantLock与AQS的全部知识点。本篇文章的分析仅仅涉及到了排它锁（独占锁），没有分析ReentrantLock共享锁的实现，关于Condition本篇文章并未涉及到，如果后边有时间，可以再写篇文章来分析Condition。</p>
 <p>最后，不妨概括一下ReentrantLock独占锁拿锁和排队的流程：ReentrantLock内部通过FairSync和NonfairSync来实现公平锁和非公平锁。它们都是继承自AQS实现，在AQS内部通过state来标记同步状态，如果state为0，线程可以直接获取锁，如果state大于0，则线程会被封装成Node节点进入CLH队列并阻塞线程。AQS的CLH队列是一个双向的链表结构，头结点是一个空的Node节点。新来的node节点会被插入队尾并开启自旋去判断它的前驱节点是不是头结点。如果是头结点则尝试获取锁，如果不是头结点，则根据条件进行挂起操作。</p>
 <p>画一个流程图大家可做参考：</p>
-<p><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4b9d4b9b98e0483a9f3b4ac8071e226b~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="aqs.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/aqs.png" srcset="/img/loading.gif" alt="aqs.png"></p>
 <h2 id="参考-amp-推荐阅读"><a href="#参考-amp-推荐阅读" class="headerlink" title="参考&amp;推荐阅读"></a>参考&amp;推荐阅读</h2><p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MjM5NjQ5MTI5OA==&mid=2651749434&idx=3&sn=5ffa63ad47fe166f2f1a9f604ed10091&chksm=bd12a5778a652c61509d9e718ab086ff27ad8768586ea9b38c3dcf9e017a8e49bcae3df9bcc8&scene=38#wechat_redirect">【基本功】不可不说的Java“锁”事</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/javazejian/article/details/75043422">深入剖析基于并发AQS的(独占锁)重入锁(ReetrantLock)及其Condition实现原理</a></p>
 <p><a target="_blank" rel="noopener" href="https://tech.meituan.com/2019/12/05/aqs-theory-and-apply.html">从ReentrantLock的实现看AQS的原理及应用</a></p>

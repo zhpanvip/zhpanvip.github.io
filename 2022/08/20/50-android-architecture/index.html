@@ -246,7 +246,7 @@
               <p>关于Android项目架构也是一个老生常谈的话题了，网上关于Android架构的文章不胜枚举，但是通过Google检索关键字，首页的热门文章多数是对于MVC、MVP及MVVM等架构的概念介绍，概念性的文章对于不了解Android架构的同学来说并不一定能起到很好的帮助。本篇文章其实源自笔者在公司内部的技术分享，稍作修改后作为文章发布出来。文章内容涉及从<br>MVC、MVP 到 MVVM 的演化，同时为便于理解，每种架构都做了代码演示，最后基于 Jetpack 提供的组件封装了 MVVM<br>架构。文章内容比较基础，几乎没有晦涩难懂的知识，对于想要了解Android架构的同学会有很大的帮助。</p>
 <h2 id="一、Android-项目架构的演化"><a href="#一、Android-项目架构的演化" class="headerlink" title="一、Android 项目架构的演化"></a>一、Android 项目架构的演化</h2><p>首先，我们应该明白一点，对于架构而言并不分平台。不管MVC、MVP 还是 MVVM<br>都不是Android平台独有的，甚至由于Android平台起步较晚，Android项目的架构或多或少的参考了前端的架构实现。</p>
 <p>对于前端或者Android端项目而言代码可以分为三部分，分别为UI部分、业务逻辑部分以及数据控制部分。这三部分流转的起点来自于用户输入，即用户通过操作UI调起对应的业务逻辑获取数据，并最终将数据反馈到UI界面上，其流转图如下图所示。</p>
-<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/49e8e5c99ecb41ea9ac3169f940b8f67~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5001.webp" srcset="/img/loading.gif" alt="image.png"></p>
 <p>根据这三部分内容，我们可以将代码分为三层，即最初的MVC架构分层。但是随着项目的业务逐渐复杂，MVC架构的弊端显露，不能够支撑已有的业务。于是在此背景下衍生出了MVP架构来弥补MVC的不足。甚至后来谷歌官方推出的部分Jetpack组件来专门解决Android架构问题，从主推MVVM，到如今主推的MVI架构。但是不管架构如何演变，都脱离不了上述提到的三层逻辑，只不过新的架构在已有的基础上弥补了老架构的不足，让项目代码更容易维护。</p>
 <p>接下来的内容我们主要探讨Android项目架构从MVC到MVVM的演化。</p>
 <ol>
@@ -259,9 +259,9 @@
 <li>控制层(Controller) 用于建立Model层与View层的联系，负责处理主要的业务逻辑，并根据用户操作更新 Model 层数据。</li>
 </ul>
 <p>MVC 的结构图如下图所示。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7ea11f97de5a43bebf35d8aa1573335b~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5002.webp" srcset="/img/loading.gif" alt="image.png"></p>
 <p>在 Android 项目的 MVC 架构中由于 Activity 同时充当了 View 层与 Controller 层两个角色，所以 Android 中的 MVC 更像下面的这种结构：</p>
-<p><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/562c78eaf71942498b2865bdd34935e5~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5003.webp" srcset="/img/loading.gif" alt="image.png"></p>
 <p>基于上图，我们可以以APP的登录流程为例实现 Android 中 MVC 架构的代码。</p>
 <h4 id="（1）Model-层代码实现"><a href="#（1）Model-层代码实现" class="headerlink" title="（1）Model 层代码实现"></a>（1）Model 层代码实现</h4><p>Model 层用于处理登录请求并从服务器获取登录相关数据，成功后通知 View 层更新界面。代码如下：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LoginModel</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">login</span><span class="hljs-params">(String username, String password, LoginListener listener)</span> </span>&#123;<br>        RetrofitManager.getApiService()<br>                .login(username, password)<br>                .enqueue(<span class="hljs-keyword">new</span> Callback&lt;User&gt;() &#123;<br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onResponse</span><span class="hljs-params">(Call&lt;User&gt; call, Response&lt;User&gt; response)</span> </span>&#123;<br>                        listener.onSuccess(response.data);<br>                    &#125;<br><br>                    <span class="hljs-meta">@Override</span><br>                    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onFailed</span><span class="hljs-params">(Exception e)</span> </span>&#123;<br>                        listener.onFailed(e.getMessage());<br>                    &#125;<br>                &#125;);<br>        <br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
@@ -291,7 +291,7 @@
 <li>控制层(Presenter) 主要负责处理业务逻辑，并监听Model层数据改变，然后调用View层刷新UI。</li>
 </ul>
 <p>MVP 的结构图如下图所示。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/47edd5445b484e8dbcbb0d63ad83a7fe~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5004.webp" srcset="/img/loading.gif" alt="image.png"></p>
 <p>从上图中可以看出，View直接与Presenter层通信，当View层接收到用户操作后会调用<br>Presenter层去处理业务逻辑。接着Presenter层通过Model去获取数据，Model层获取到数据后又将最新的数据传回 Presenter。<br>由于Presenter层又持有View层的引用，进而将数据传给<code>View</code>层进行展示。</p>
 <p>下面我们我们仍然以登录为例通过代码来演示MVP架构的实现。</p>
 <h4 id="（1）Model-层代码实现-1"><a href="#（1）Model-层代码实现-1" class="headerlink" title="（1）Model 层代码实现"></a>（1）Model 层代码实现</h4><p>MVP中的Model层与MVC中的Model层是一致的，代码如下:</p>
@@ -324,7 +324,7 @@
 <li>视图模型(ViewModel) 主要负责业务逻辑的处理，同时与 Model 层 和 View层交互。与MVP的Presenter相比，ViewModel不再依赖View，使得解耦更加彻底。</li>
 </ul>
 <p>MVVM 架构的结构图如下。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/dee5d989ca3a421eaa5386bc83b01dcd~tplv-k3u1fbpfcp-watermark.image" srcset="/img/loading.gif" alt="image.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5005.webp" srcset="/img/loading.gif" alt="image.png"></p>
 <p>MVVM架构的本质是数据驱动，它的最大的特点是单向依赖。MVVM架构通过观察者模式让ViewModel与View解耦，实现了View依赖ViewModel，ViewModel依赖Model的单向依赖。</p>
 <p>接下来我们仍然以登录为例，通过观察者模式来实现MVVM的架构代码。</p>
 <h4 id="（1）观察者模式"><a href="#（1）观察者模式" class="headerlink" title="（1）观察者模式"></a>（1）观察者模式</h4><p>由于 MVVM 架构需要将 ViewModel 与 View 解耦。因此，这里可以使用观察者模式来实现。下面实现观察者模式的代码。</p>
@@ -359,7 +359,7 @@
 <p>可以看到我们通过观察者模式实现了View-&gt;ViewModel-&gt;<br>Model的单向依赖。相比于MVP，MVVM解耦的更加纯粹。但是，上边的观察者模式是我们自己实现的，如果直接用到项目中肯定是不稳妥的。上面我们提到Google已经为我们提供了一套Jetpack组件来帮助开发者实现MVVM架构。那接下来我们就来认识一下通过Jetpack实现的MVVM架构。</p>
 <h2 id="二、使用-Jetpack-组件封装-MVVM-架构"><a href="#二、使用-Jetpack-组件封装-MVVM-架构" class="headerlink" title="二、使用 Jetpack 组件封装 MVVM 架构"></a>二、使用 Jetpack 组件封装 MVVM 架构</h2><p>如果你已经看到这里了，相信你对项目架构已经有了一定的认识。这里需要再强调一点架构是一种思想，它与我们使用什么工具来实现没有关系。就像上一章中我们通过自己写的观察者模式来实现MVVM一样，只要遵循了这个架构思想，那它就属于这一架构。Google官方推出的这些组件可以更高效的帮助我们来实现MVVM。</p>
 <h3 id="1-Jetpack-MVVM-简介"><a href="#1-Jetpack-MVVM-简介" class="headerlink" title="1. Jetpack MVVM 简介"></a>1. Jetpack MVVM 简介</h3><p>MVVM 是 Google 官方推荐的框架。为此，Google 提供了一系列实现 MVVM 的工具，这些工具都被包含在Jetpack 组件中，例如 LiveData、ViewModel以及<br>DataBinding 等。下面是官方给的一个通过Jetpack组件实现的 MVVM 架构图。</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f9efcc24a9564d6da173784dd6880703~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5006.webp" srcset="/img/loading.gif"></p>
 <p>这张图与我们上一章的MVVM结构图是一致的，只不过这里融入了Jetpack组件。可以看到图中的箭头都是单向的，View层指向了ViewModel层，表示View层持有ViewModel层的引用，但ViewModel层不持有View层。ViewModel层持有Repository层，但Repository层不会持有ViewModel。这张图与MVVM的对应关系如下：</p>
 <ul>
 <li>视图(View) 对应图中的Activity/Fragment，包含了布局文件等于界面相关的东西；</li>

@@ -244,7 +244,7 @@
             
             <div class="markdown-body">
               <p>Java内存分配是Java基础中非常重要的一部分内容，深入理解JVM的内存分配机制将有助于我们解决开发中遇到的很多问题。同时，内存分配这一块也是面试常客。笔者作为面试官也问过不少内存分配的问题，但令笔者惊讶的是不少三五年经验的面试者对于这块内容的回答也是含糊其辞，显然没有完全搞明白。那么本节内容我们就来系统的回顾一下Java中的内存分配机制。</p>
-<h2 id="JVM内存分配概述"><a href="#JVM内存分配概述" class="headerlink" title="JVM内存分配概述"></a>JVM内存分配概述</h2><p>首先，我们应该明白一点，JVM并不是单一的存在，在Java二十多年的发展史中曾经涌现出了许多优秀的虚拟机，如大家耳熟能详的HotSpot虚拟机就是其中之一。不同的虚拟机在内存分配上也略有差异，但总体来说都遵循《Java虚拟机规范》。在《Java虚拟机规范》中规定了五种虚拟机运行时数据区，他们分别为：程序计数器、Java虚拟机栈、本地方法栈、本地方法区、Java堆、以及方法区。如下图所示：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9wOS1qdWVqaW4uYnl0ZWltZy5jb20vdG9zLWNuLWktazN1MWZicGZjcC9lZjYzN2ZhYTg1M2Y0MTQyYjBiYjI4NjBjMmQzMjgyZH50cGx2LWszdTFmYnBmY3Atem9vbS0xLmltYWdl?x-oss-process=image/format,png" srcset="/img/loading.gif"></p>
+<h2 id="JVM内存分配概述"><a href="#JVM内存分配概述" class="headerlink" title="JVM内存分配概述"></a>JVM内存分配概述</h2><p>首先，我们应该明白一点，JVM并不是单一的存在，在Java二十多年的发展史中曾经涌现出了许多优秀的虚拟机，如大家耳熟能详的HotSpot虚拟机就是其中之一。不同的虚拟机在内存分配上也略有差异，但总体来说都遵循《Java虚拟机规范》。在《Java虚拟机规范》中规定了五种虚拟机运行时数据区，他们分别为：程序计数器、Java虚拟机栈、本地方法栈、本地方法区、Java堆、以及方法区。如下图所示：<br><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/2601.png" srcset="/img/loading.gif"></p>
 <p>接下来，我们来对以上五个内存区域进行详细分析。</p>
 <h2 id="一、程序计数器（Program-Counter）"><a href="#一、程序计数器（Program-Counter）" class="headerlink" title="一、程序计数器（Program Counter）"></a>一、程序计数器（Program Counter）</h2><p>程序计数器是用于存放下一条指令所在单元地址的一块内存，在Intel x86和Itanium微处理器中，被称作<strong>指令指针</strong>（instruction pointer，IP），显然“指令指针”这个名字更易于我们理解这个概念。在JVM中，程序计数器是一块较小的内存空间，可以看作是<strong>当前线程所执行字节码的行号指示器</strong>。字节码解释器工作时通过改变这个计数器的值来选取下一条需要执行的字节码指令，分支、循环、跳转、异常处理、线程恢复等功能都需要依赖这个计数器来完成。</p>
 <p>我们知道，多线程的情况下，线程是由CPU调度来执行指令的，在单核CPU中，某一时刻只会有一个线程在执行指令，这就意味着CPU会频繁的切换线程，而在线程切换后需要恢复到正确的执行位置，这就需要<strong>每条线程都有一个独立的程序计数器</strong>，各个线程之间计数器互不影响。</p>
@@ -278,7 +278,7 @@
 <li><strong>本地方法栈区域会抛出StackOverflowError和OutOfMemoryError</strong></li>
 </ul>
 <h2 id="四、Java堆"><a href="#四、Java堆" class="headerlink" title="四、Java堆"></a>四、Java堆</h2><p>堆内存应该是Java开发者最熟悉的一块内存区域了，因为它实在是太重要了！我们所创建的对象实例几乎都是存放在堆内存中。因此，Java堆是虚拟机所管理的最大的一块内存区域。<strong>Java堆是被所有线程共享的一块内存区域</strong>，在虚拟机启动时创建。Java虚拟机规范中对堆内存有这样的描述：<strong>所有的对象实例以及数组都要在堆上分配</strong>，但是随着JIT编译器的发展与逃逸分析技术逐渐成熟，栈上分配、标量替换优化技术将会导致一些微妙的变化，所有的对象都在堆上分配也不是那么绝对了。</p>
-<p>对于Java堆内存我们还可以进行一个细分：<strong>新生代（Young Generation）</strong>、<strong>老年代（Old Generation</strong>）；而新生代则又可以细分为Eden空间、From Survivor空间、To Survivor。如下图所示（注：图片中Permanent Generation即永久代不属于堆内存，而是方法区的一部分）：<br><img src="https://imgconvert.csdnimg.cn/aHR0cHM6Ly9wMS1qdWVqaW4uYnl0ZWltZy5jb20vdG9zLWNuLWktazN1MWZicGZjcC8xZGUwNGMyMmI5NGM0MzIyYTAwNGFlY2FmNWU5MDY4OX50cGx2LWszdTFmYnBmY3Atem9vbS0xLmltYWdl?x-oss-process=image/format,png" srcset="/img/loading.gif"><br>而Java中的垃圾回收就是针对Java堆上不同的区域进行扫描回收，关于Java的GC机制我会在后续“温故知新”系列文章中详细解读。</p>
+<p>对于Java堆内存我们还可以进行一个细分：<strong>新生代（Young Generation）</strong>、<strong>老年代（Old Generation</strong>）；而新生代则又可以细分为Eden空间、From Survivor空间、To Survivor。如下图所示（注：图片中Permanent Generation即永久代不属于堆内存，而是方法区的一部分）：<br><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/2602.png" srcset="/img/loading.gif"><br>而Java中的垃圾回收就是针对Java堆上不同的区域进行扫描回收，关于Java的GC机制我会在后续“温故知新”系列文章中详细解读。</p>
 <p>从内存分配的角度来看，线程共享的Java堆中可能划分出多个线程私有的缓冲区（Thread Local Allocation Buffer，TLAB).</p>
 <p>但是，无论怎么划分，堆上所存放的内容都是对象的实例。进一步划分只不过是为了更好的回收内存或者更快的分配内存。</p>
 <p>另外，Java虚拟机规范中规定，Java堆可以处于物理上不连续的内存空间中。如果虚拟机在为实例分配内存时没有足够的空间，并且堆也无法在扩展，则会抛出OutOfMemoryError异常。</p>

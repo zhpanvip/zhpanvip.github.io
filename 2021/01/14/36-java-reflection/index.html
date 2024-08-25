@@ -278,7 +278,7 @@
 <p>虽然上述定义对反射的描述已经非常清楚。但是对于没有了解过反射的同学来说看了之后可能还是一头雾水。下面，在第一章的基础上来说下我来说下我对反射的理解：</p>
 <p><strong>在Java中，所有已经被虚拟机的类加载器加载过的类（称为T）都会在虚拟机中生成一个唯一的与T类所对应的Class&lt;T&gt;对象。在程序运行时，通过这个Class&lt;T&gt;对象，我们可以实例化出来一个T对象；可以通过Class&lt;T&gt;对象访问T对象中的任意成员变量，调用T对象中的任意方法，甚至可以对T对象中的成员变量进行修改。我们将这一系列操作称为Java的反射机制。</strong></p>
 <p>到这里我们发现，其实Java的反射也没有那么神秘了。说白了就是通过Class对象来操控我们的对象罢了。因此，接下来我们想要弄懂反射只需要来详细的认识一下Class这个类给我们提供的API即可。</p>
-<h3 id="1-Java反射相关类"><a href="#1-Java反射相关类" class="headerlink" title="1.Java反射相关类"></a>1.Java反射相关类</h3><p>我们知道，一个Java类可以包含成员变量、构造方法、以及普通方法。同时，我们又知道Java是一种很纯粹的面向对象的语言。在Java语言中，万物皆对象，类的成员变量、构造方法以及普通方法在Java中也被封装成了对象。它们分别对应Field类、Constructor类以及Method类。这几个类与反射息息相关。因此，在开始之前，我们需要先了解下这几个与反射相关的类，如下图：<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/86c57545a37b4c40bb31900eb1ba4f5c~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
+<h3 id="1-Java反射相关类"><a href="#1-Java反射相关类" class="headerlink" title="1.Java反射相关类"></a>1.Java反射相关类</h3><p>我们知道，一个Java类可以包含成员变量、构造方法、以及普通方法。同时，我们又知道Java是一种很纯粹的面向对象的语言。在Java语言中，万物皆对象，类的成员变量、构造方法以及普通方法在Java中也被封装成了对象。它们分别对应Field类、Constructor类以及Method类。这几个类与反射息息相关。因此，在开始之前，我们需要先了解下这几个与反射相关的类，如下图：<br><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/reflection/1.jpg" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
 <ul>
 <li><strong>Field 类</strong>：位于Java.lang.reflect包下，在Java反射中Field用于获取某个类的属性或该属性的属性值。</li>
 <li><strong>Constructor 类：</strong> 位于java.lang.reflect包下，它代表某个类的构造方法，用来管理所有的构造函数的类。</li>
@@ -407,7 +407,7 @@
 <blockquote>
 <p>修改Object前：java.lang.Object@4926097b<br>newObject：java.lang.Object@762efe5d<br>修改Object后：java.lang.Object@762efe5d</p>
 </blockquote>
-<p>有没有很奇怪？上边的String通过反射修改没有成功，而将代码换成Object之后，同样的代码，Object的成员变量却被修改成功了，这是怎么回事呢？其实，了解Java编译的同学应该比较清楚。编译器在编译Java文件的时候会将final修饰的基本类型和String优化为一个常量。我们来看下反编译后的class文件就明白了。我们将Person编译的class文件在AS中打开，如下图：<br><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d368dd6fcf4f4a2a9258d79949bf83f9~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
+<p>有没有很奇怪？上边的String通过反射修改没有成功，而将代码换成Object之后，同样的代码，Object的成员变量却被修改成功了，这是怎么回事呢？其实，了解Java编译的同学应该比较清楚。编译器在编译Java文件的时候会将final修饰的基本类型和String优化为一个常量。我们来看下反编译后的class文件就明白了。我们将Person编译的class文件在AS中打开，如下图：<br><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/reflection/2.png" srcset="/img/loading.gif" alt="在这里插入图片描述"></p>
 <p>可以清楚的看到在class文件中getSex方法返回的是一个“male”字面量，而getObject返回的却是mObject。所以，即使通过代码将final修饰的String类型修改成功，在get的时候由于编译器的优化无法拿到修改后的值。</p>
 <p>通过上边的例子<strong>可以确定通过反射是能够修改final修饰的成员变量的。只是如果该成员变量是基本数据类型或者String类型会被编译器优化成字面量，从而无法获得修改后的值。</strong></p>
 <h3 id="2-为什么说反射会影响程序性能？"><a href="#2-为什么说反射会影响程序性能？" class="headerlink" title="2.为什么说反射会影响程序性能？"></a>2.为什么说反射会影响程序性能？</h3><p>在项目开发中，我们在能不使用反射的情况下就不使用反射，因为反射会影响程序的性能。这是我们大家都熟知的。但是你知道为什么说反射会影响程序的性能吗？要解开这一个问题就需要我们深入反射的源码来查看反射过程中都做了什么操作。由于这块内容比较庞大，限于篇幅，关于反射影响性能的问题将在下一篇文章中详细分析。敬请期待。</p>

@@ -259,7 +259,7 @@
 <h2 id="一、从synchronized锁看线程等待与唤醒"><a href="#一、从synchronized锁看线程等待与唤醒" class="headerlink" title="一、从synchronized锁看线程等待与唤醒"></a>一、从synchronized锁看线程等待与唤醒</h2><p>初学Java的时候想必大家都用synchronized实现过“生产者-消费者”模型的代码，其中用到了几个Object中的方法如wait()、notify()、notifyAll()，不知道当时的你是否有些困惑，线程等待与唤醒相关的方法为什么会定义在Object类中呢？</p>
 <p>什么？你连“生产者-消费者”模型都忘了是什么了？好吧，我们还是先来看下回顾一下“生产者-消费者”模型吧。</p>
 <h3 id="1-“生产者-消费者”模型"><a href="#1-“生产者-消费者”模型" class="headerlink" title="1.“生产者-消费者”模型"></a>1.“生产者-消费者”模型</h3><p>“生产者-消费者”模型是一个典型的线程协作通信的例子。在这一模型中有两类角色，即若干个生产者线程和若干个消费者线程。生产者线程负责提交用户请求，消费者线程负责处理生产者提交的请求。很多情况下，生产者与消费者不能够达到一定的平衡，即有时候生产者生产的速度过快，消费之来不及消费；而有时候可能是消费者过于旺盛，生产者来不及生产。在此情况下就需要一个生产者与消费者共享的内存缓存区来平衡二者的协作。生产者与消费者之间通过共享内存缓存区进行通信，从而平衡生产者与消费者线程，并将生产者和消费者解耦。如下图所示：</p>
-<p><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/08aa1fce00cb43fb830907d484e6911e~tplv-k3u1fbpfcp-zoom-1.image" srcset="/img/loading.gif" alt="1C2478F7-48B7-4ACA-A575-ABF8B71F40B9.png"></p>
+<p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/wait_notify.png" srcset="/img/loading.gif" alt="1C2478F7-48B7-4ACA-A575-ABF8B71F40B9.png"></p>
 <p>当队列容器中没有商品的时候，就需要让消费者处于等待状态，而当容器满了之后就需要生产者处于等待状态。而消费者每消费一个商品，又会通知正在等待的生产者可以进行生产了；当生产则生产一个商品，也会通知正在等待的消费者可以消费了。</p>
 <h3 id="2-使用synchronized实现“生产者-消费者”模型"><a href="#2-使用synchronized实现“生产者-消费者”模型" class="headerlink" title="2.使用synchronized实现“生产者-消费者”模型"></a>2.使用synchronized实现“生产者-消费者”模型</h3><p>了解了“生产者-消费者”模型后，我们尝试使用synchronized关键字结合wait()与notifyAll()方法来实现一个”生产者-消费者“模型的例子。</p>
 <p>我们选一个比较经典的生产面包的例子来看，首先需要一个面包容器类，容器类中有放入面包和取出面包两个操作，代码如下：</p>
