@@ -36,7 +36,7 @@ tags: [多线程]
 
 从JDK1.5开始，Java在java.util.concurrent.atomic包下引入了一些Atomic相关的原子操作类，这些类避免使用加锁来实现同步，从而更加方便、高效的实现原子操作。atomic包下的所有类如下图所示：
 
-![E0515809-563E-49E5-95F0-2B58164BD732.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f8479d70d32c46e2ac22bd02405c1030~tplv-k3u1fbpfcp-watermark.image)
+![atomic-class](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/atomic-class.png)
 
 Atomic包下所有的原子类都只适用于单个元素，即只能保证一个基本数据类型、对象、或者数组的原子性。根据使用范围，可以将这些类分为四种类型，分别为原子**更新基本类型**、**原子更新数组**、**原子更新引用**、**原子更新属性**。
 
@@ -235,7 +235,7 @@ CAS是Compare And Swap的简称，即比较并交换的意思。CAS是一种无�
 可见CAS其实存在一个循环的过程，如果有多个线程在同时修改这一个变量V，在修改之前会先拿到这个变量的值，再和变量对比看是否相等，如果相等，则说明没有其它线程修改这个变量，自己更新变量即可。如果发现要修改的变量和期望值不一样，则说明再读取变量V的值后，有其它线程对变量V做了修改，那么，放弃本次更新，重新读变量V的值，并再次尝试修改，直到修改成功为止。这个循环过程一般也称作**自旋**，CAS操作的整个过程如下图所示：
 
 
-![cas.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0807dbdc2d47401db8fda3272459195a~tplv-k3u1fbpfcp-watermark.image)
+![cas.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/cas2.png)
 
 ### 2.CAS存在的缺点
 虽然通过CAS可以实现无锁同步，但是CAS也有其局限性和问题所在。
@@ -296,7 +296,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
 可以看到在AtomicInteger类中，所有的操作都是通过一个类型为Unsafe的成员变量来实现的。Unsafe类是位于sun.misc包下的一个类，这个类中提供了用于执行低级别、不安全的操作方法，其中就包括了CAS的能力。
 ## 三、CAS的实现类--Unsafe
 Unsafe是一个神奇且鲜为人知的Java类，因为在平时开发中很少用到它。但是这个类中为我们提供了相当多的功能，它即可以让Java语言像C语言指针一样操作内存，同时还提供了CAS、内存屏障、线程调度、对象操作、数组操作等能力,如下图。
-![Unsafe](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8837b02d843d4ae4b464d53ce7c0bce3~tplv-k3u1fbpfcp-zoom-1.image)
+![cas_unsafe](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/cas_unsafe.webp)
 
 下面就来简单的认识一下Unsafe类。
 

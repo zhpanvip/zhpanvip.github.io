@@ -140,7 +140,7 @@ public void computeScroll() {
 </FrameLayout>
 ```
 
-![123.gif](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4fd6f3ea8b644f5c9cb64d3622926cb3~tplv-k3u1fbpfcp-watermark.image)
+![123.gif](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/4601.gif)
 
 ## 二、BannerViewPager实现裸眼3D轮播图
 
@@ -212,7 +212,7 @@ mBannerForeground.apply {
 最终，实现的效果几乎与自如APP一模一样。如下图：
 
 
-![ezgif-3-aa7e1b542b89.gif](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/36876a30beb74e899c6a6b6583fea81a~tplv-k3u1fbpfcp-watermark.image)
+![ezgif-3-aa7e1b542b89.gif](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/4602.gif)
 
 注：图片来源自如APP
 

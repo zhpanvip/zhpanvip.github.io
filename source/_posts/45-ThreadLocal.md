@@ -272,7 +272,7 @@ private Entry getEntry(ThreadLocal<?> key) {
 我们来看下面的分析。
 
 
-![threadlocal.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/41ed98d3156c4dd4bb4ed41c22ad3b55~tplv-k3u1fbpfcp-watermark.image)
+![threadlocal.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/threadlocal1.png)
 
 如上图所示，在ThreadLocal中存在一个这样的引用连。如果Thread一直在运行，那么此时由于强引用的value不能被回收，故此种情况下也可能出现内存泄漏的问题。因此，通常来说，在不需要使用这个ThreadLocal变量的使用，需要调用remove方法来避免内存泄漏的问题。
 
@@ -293,4 +293,4 @@ threadLocal2.set(2);
 
 
 
-![threadlocal2.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1010099b52444e5a8eb1b5e1ef2c15f0~tplv-k3u1fbpfcp-watermark.image)
+![threadlocal2.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/threadlocal2.png)

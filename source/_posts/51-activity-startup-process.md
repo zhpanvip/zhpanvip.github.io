@@ -810,7 +810,7 @@ public void executeCallbacks(ClientTransaction transaction) {
 
 ClientTransactionItem 的所有子类或相关类均在 frameworks/base/core/java/android/app/servertransaction/ 目录下，如下图所示：
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e963c8bbd86645ecbc53ef3b3581d516~tplv-k3u1fbpfcp-watermark.image?)
+![image.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/framework/5101.webp)
 
 上文中提到的 ActivityLifecycleItem 继承自 ClientTransactionItem ，且其子类均为 Activity 生命周相关的实现，例如，StartActivityItem、ResumeActivityItem、DestroyActivityItem 等。显而易见的是，这里将 Activity 的生命周期以及其它相关方法以面向对象的思想封装成了一个个的对象来执行。相比早些年的 Android 版本代码，所有生命周期以及相关方法都通过 Handler 的 sendMessage 的方式发送出来，这种面向对象的思想的逻辑更加清晰，且代码更容易维护。
 

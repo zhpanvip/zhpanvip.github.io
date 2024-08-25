@@ -23,7 +23,7 @@ tags: [Handler]
 > “生产者-消费者” 问题又称有限缓冲问题（Bounded-buffer problem），是一个多线程同步问题的经典案例。该问题描述了共享固定大小缓冲区的两个线程——即所谓的“生产者”和“消费者”——在实际运行时会发生的问题。生产者的主要作用是生成一定量的数据放到缓冲区中，然后重复此过程。与此同时，消费者会在缓冲区消耗这些数据。该问题的关键就是要保证生产者不会在缓冲区满时加入数据，消费者也不会在缓冲区中空时消耗数据。
 ”生产者-消费者“模型图如下：
 
-![生产者-消费者](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/08aa1fce00cb43fb830907d484e6911e~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![生产者-消费者](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/wait_notify.png)
 
 可以看得出来，图中的 "生产者"和"消费者"处于两个不同的线程，但是他们共用了同一个队列。生产者在完成数据的生产后会通过 notify 方法唤醒消费者线程，当队列满的时候，生产者线程会调用 wait 方法来阻塞自身。同时，消费者线程在被唤醒后则会从队列中取出数据，并通过 notify 方法唤醒生产者线程继续生产数据。当队列中的数据被取空的时候，消费者线程同样会调用 wait 方法阻塞自身。
 

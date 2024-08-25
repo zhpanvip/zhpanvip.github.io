@@ -673,7 +673,7 @@ private void unparkSuccessor(Node node) {
 
 画一个流程图大家可做参考：
 
-![aqs.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4b9d4b9b98e0483a9f3b4ac8071e226b~tplv-k3u1fbpfcp-watermark.image)
+![aqs.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/aqs.png)
 
 
 ## 参考&推荐阅读

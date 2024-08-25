@@ -20,7 +20,7 @@ MVC、MVP 到 MVVM 的演化，同时为便于理解，每种架构都做了代�
 
 对于前端或者Android端项目而言代码可以分为三部分，分别为UI部分、业务逻辑部分以及数据控制部分。这三部分流转的起点来自于用户输入，即用户通过操作UI调起对应的业务逻辑获取数据，并最终将数据反馈到UI界面上，其流转图如下图所示。
 
-![image.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/49e8e5c99ecb41ea9ac3169f940b8f67~tplv-k3u1fbpfcp-watermark.image?)
+![image.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5001.webp)
 
 根据这三部分内容，我们可以将代码分为三层，即最初的MVC架构分层。但是随着项目的业务逐渐复杂，MVC架构的弊端显露，不能够支撑已有的业务。于是在此背景下衍生出了MVP架构来弥补MVC的不足。甚至后来谷歌官方推出的部分Jetpack组件来专门解决Android架构问题，从主推MVVM，到如今主推的MVI架构。但是不管架构如何演变，都脱离不了上述提到的三层逻辑，只不过新的架构在已有的基础上弥补了老架构的不足，让项目代码更容易维护。
 
@@ -37,11 +37,11 @@ MVC、MVP 到 MVVM 的演化，同时为便于理解，每种架构都做了代�
 
 MVC 的结构图如下图所示。
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7ea11f97de5a43bebf35d8aa1573335b~tplv-k3u1fbpfcp-watermark.image?)
+![image.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5002.webp)
 
 在 Android 项目的 MVC 架构中由于 Activity 同时充当了 View 层与 Controller 层两个角色，所以 Android 中的 MVC 更像下面的这种结构：
 
-![image.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/562c78eaf71942498b2865bdd34935e5~tplv-k3u1fbpfcp-watermark.image?)
+![image.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5003.webp)
 
 基于上图，我们可以以APP的登录流程为例实现 Android 中 MVC 架构的代码。
 
@@ -193,7 +193,7 @@ Controller 改为 Presenter，即把逻辑层的代码从 Activity 中抽离到�
 
 MVP 的结构图如下图所示。
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/47edd5445b484e8dbcbb0d63ad83a7fe~tplv-k3u1fbpfcp-watermark.image?)
+![image.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5004.webp)
 
 从上图中可以看出，View直接与Presenter层通信，当View层接收到用户操作后会调用
 Presenter层去处理业务逻辑。接着Presenter层通过Model去获取数据，Model层获取到数据后又将最新的数据传回 Presenter。
@@ -357,7 +357,7 @@ Model-View-ViewModel** 的简称。这一架构在一定程度上解决了MVP架
 
 MVVM 架构的结构图如下。
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/dee5d989ca3a421eaa5386bc83b01dcd~tplv-k3u1fbpfcp-watermark.image?)
+![image.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5005.webp)
 
 MVVM架构的本质是数据驱动，它的最大的特点是单向依赖。MVVM架构通过观察者模式让ViewModel与View解耦，实现了View依赖ViewModel，ViewModel依赖Model的单向依赖。
 
@@ -547,7 +547,7 @@ Model的单向依赖。相比于MVP，MVVM解耦的更加纯粹。但是，上�
 MVVM 是 Google 官方推荐的框架。为此，Google 提供了一系列实现 MVVM 的工具，这些工具都被包含在Jetpack 组件中，例如 LiveData、ViewModel以及
 DataBinding 等。下面是官方给的一个通过Jetpack组件实现的 MVVM 架构图。
 
-![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f9efcc24a9564d6da173784dd6880703~tplv-k3u1fbpfcp-zoom-1.image)
+![](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/5006.webp)
 
 这张图与我们上一章的MVVM结构图是一致的，只不过这里融入了Jetpack组件。可以看到图中的箭头都是单向的，View层指向了ViewModel层，表示View层持有ViewModel层的引用，但ViewModel层不持有View层。ViewModel层持有Repository层，但Repository层不会持有ViewModel。这张图与MVVM的对应关系如下：
 

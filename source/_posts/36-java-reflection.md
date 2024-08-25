@@ -139,7 +139,7 @@ public final class Class<T> implements java.io.Serializable,
 ### 1.Java反射相关类
 
 我们知道，一个Java类可以包含成员变量、构造方法、以及普通方法。同时，我们又知道Java是一种很纯粹的面向对象的语言。在Java语言中，万物皆对象，类的成员变量、构造方法以及普通方法在Java中也被封装成了对象。它们分别对应Field类、Constructor类以及Method类。这几个类与反射息息相关。因此，在开始之前，我们需要先了解下这几个与反射相关的类，如下图：
-![在这里插入图片描述](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/86c57545a37b4c40bb31900eb1ba4f5c~tplv-k3u1fbpfcp-zoom-1.image)
+![在这里插入图片描述](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/reflection/1.jpg)
 - **Field 类**：位于Java.lang.reflect包下，在Java反射中Field用于获取某个类的属性或该属性的属性值。
 - **Constructor 类：** 位于java.lang.reflect包下，它代表某个类的构造方法，用来管理所有的构造函数的类。
 - **Method 类：** 位于java.lang.reflect包下,在Java反射中Method类描述的是类的方法信息（包括：方法修饰符、方法名称、参数列表等等）。
@@ -487,7 +487,7 @@ newObject：java.lang.Object@762efe5d
 修改Object后：java.lang.Object@762efe5d
 
 有没有很奇怪？上边的String通过反射修改没有成功，而将代码换成Object之后，同样的代码，Object的成员变量却被修改成功了，这是怎么回事呢？其实，了解Java编译的同学应该比较清楚。编译器在编译Java文件的时候会将final修饰的基本类型和String优化为一个常量。我们来看下反编译后的class文件就明白了。我们将Person编译的class文件在AS中打开，如下图：
-![在这里插入图片描述](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d368dd6fcf4f4a2a9258d79949bf83f9~tplv-k3u1fbpfcp-zoom-1.image)
+![在这里插入图片描述](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/reflection/2.png)
 
 可以清楚的看到在class文件中getSex方法返回的是一个“male"字面量，而getObject返回的却是mObject。所以，即使通过代码将final修饰的String类型修改成功，在get的时候由于编译器的优化无法拿到修改后的值。
 

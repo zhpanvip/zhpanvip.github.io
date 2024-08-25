@@ -48,7 +48,7 @@ Java内存模型英文为**Java Memory Model**，简称为JMM。JMM本身是一�
 
 为了解决缓存一致性问题，设计者们为CPU制定了一个读写协议，并要求各个CPU在读写缓存时都要遵循这一协议。这类协议有MSI、MESI、MOSI等，被称为**缓存一致性协议**。只要CPU的读写遵循了缓存一致性协议就能很好的解决缓存一致性问题了。关于协议的具体实现，不是本篇文章的内容，这里不再赘述。
 
-![0AC13792-79A8-420E-AD8D-F447E9AEC514.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/28a5340c92ca49d7a9534c6d7d2d0386~tplv-k3u1fbpfcp-watermark.image)
+![0AC13792-79A8-420E-AD8D-F447E9AEC514.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/volatile1.png)
 
 ### 2.Java内存模型（JMM）
 
@@ -57,7 +57,7 @@ Java内存模型英文为**Java Memory Model**，简称为JMM。JMM本身是一�
 **JMM规定所有变量都存储在主内存中，每条线程还有自己的工作内存。线程的工作内存中保存了被线程使用的变量的主内存副本，线程对变量的所有操作都必须在工作内存中进行，而不能直接读写主内存中的数据。不同线程之间也无法直接访问对方的工作内存中的变量，线程间变量值的传递需要通过主内存来完成。** 也就是说Java线程之间的通信采用的是共享内存。
 
 看到这里是不是觉得似曾相识？没错，这里其实跟上一节**缓存一致性**中讲到的多CPU共享主内存是类似的。只不过在虚拟机中不是CPU，而是线程。每条线程都有自己的工作空间，而共享变量存储在共享内存中。线程在运行时会首先将共享内存中的数据读取到自己的工作内存，即在线程的工作内存中复制了一个共享变量的副本，然后对其进行计算，计算完成后线程会将自己工作内存中的这个共享变量副本同步回主内存。线程、工作内存、与主内存的关系如下图所示：
-![FFC84BBD-0C24-42FE-A38C-99A40F967F72.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/366a7954b2da4a15aa21a4ee5ed6bf40~tplv-k3u1fbpfcp-watermark.image)
+![FFC84BBD-0C24-42FE-A38C-99A40F967F72.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/volatile2.png)
 
 到这里，大家对于Java的内存模型应该都有了一个深入的了解。但是，很多同学还是会疑惑Java内存模型和Java的内存区域到底有什么关系？在[深入JVM--Java运行时内存区域详解](https://juejin.cn/post/6868340872698658830)这一篇文章中有讲到虚拟机的内存被分为了程序计数器、Java堆、方法区以及虚拟机栈等几个内存区域，而在这几个内存区域中，虚拟机栈是线程所独有的。到这里，我想有些读者心里应该已经有了答案。其实，Java内存模型与Java内存区域并不是同一个层次对内存的划分，可以说两者并没有什么关系。但是它们之间也存在着比较明显的对应关系，即主内存对应Java堆中的实例数据部分，而工作内存则对应虚拟机栈中的一些区域。
 

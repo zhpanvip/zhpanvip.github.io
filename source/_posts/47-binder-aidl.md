@@ -306,7 +306,7 @@ AIDL是Android Interface Description Languaged 简写。用于描写客户端/�
 
 首先，在要创建AIDL的目录上右键->New->AIDL->AIDl File 来创建一个AIDL文件，如下图所示：
 
-![截屏2021-08-06 上午12.29.39.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/07778cc901ce4de3a0717e4ba65809c7~tplv-k3u1fbpfcp-watermark.image)
+![截屏2021-08-06 上午12.29.39.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/framework/4701.webp)
 
 
 创建一个名为IGradeService的AIDL文件，并添加一个getStudentGrade的方法。代码如下：

@@ -221,7 +221,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
 ConditionObject的结构比较简单，它内部维护了一个Node类型**等待队列**。其中firstWaiter指向队列的头结点，而lastWaiter指向队列的尾结点。关于Node节点，在ReentrantLock那篇文章中已经详细介绍过了，它封装的是一个线程的节点，这里也不再赘述。在线程中调用了Condition的await方法后，线程就会被封装成一个Node节点，并将Node的waitStatus设置成CONDITION状态，然后插入到这个Condition的等待队列中。等到收到singal或者被中断、超时就会被从等待队列中移除。其结构示意图如下：
 
 
-![condition_waitset.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/cfbe952c5f604c38bb6051b37b345c06~tplv-k3u1fbpfcp-watermark.image)
+![condition_waitset.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/condition_waitset.png)
 
 接下来我们从源码的角度来分析Condition的实现。
 
@@ -405,6 +405,6 @@ transferForSignal实际上就是做了一个队列的转移，将node从等待�
 通过对Condition的await与signal方法的分析，可以看得出来这两个方法并非独立存在，而是一个相互配合的关系。await方法会将执行的线程封装成Node加入到等待队列，然后开启一个循环检测这个node看是否被加入到了同步队列，如果被加入到同步队列，那么调用acquireQueued开始排队竞争锁，如果没有被加入同步队列，则会一直挂起线程等待被唤醒。而signal方法则是将等待队列中的队首元素移动到同步队列，这样就触发了await方法的循环终结，继而能够执行acquireQueued方法。其流程如下图所示：
 
 
-![await_singal.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/23db71e929f24c74b85c5ce0a070954d~tplv-k3u1fbpfcp-watermark.image)
+![await_singal.png](https://raw.githubusercontent.com/zhpanvip/images/master/project/article/thread/await_singal.png)
 
 关于Java线程的等待与唤醒机制，到这里就全部结束了，通过本篇文章的学习，更加深入的了解了线程等待与唤醒的原理，其实可以看得出来无论synchronized监视器锁的等待与唤醒还是Lock锁的等待与唤醒都有着类似的原理，只不过synchronized是虚拟机底层实现，而ReentrantLock是基于Java层的实现。
