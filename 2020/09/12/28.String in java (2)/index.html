@@ -243,7 +243,7 @@
             <h1 style="display: none">深入理解Java中的字符串(二)</h1>
             
             <div class="markdown-body">
-              <p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2020/09/08/27.String%20in%20java(1)/">上篇文章</a>我们深入分析了String的内存和它的一些特性。本篇文章我们深入的来分析一下与String相关的另外两个类，它们分别是StringBuilder和StringBuffer。这两个类与String有什么关系呢？首先我们看下下边这张类图：</p>
+              <p><a target="_blank" rel="noopener" href="https://zhangpan.site/2020/09/08/27.String%20in%20java(1)/">上篇文章</a>我们深入分析了String的内存和它的一些特性。本篇文章我们深入的来分析一下与String相关的另外两个类，它们分别是StringBuilder和StringBuffer。这两个类与String有什么关系呢？首先我们看下下边这张类图：</p>
 <p><img src="https://raw.githubusercontent.com/zhpanvip/images/master/project/article/string/2801.webp" srcset="/img/loading.gif"><br>从图中可以看出StringBuilder和StringBuffer都继承了AbstractStringBuilder，而AbstractStringBuilder与String实现了共同的接口CharSequence。</p>
 <p>我们知道，字符串是由一系列字符组成的，String的内部就是基于char数组（jdk9之后基于byte数组）实现的，而数组通常是一块连续的内存区域，在数组初始化的时候就需要指定数组的大小。上一篇文章中我们已经知道String是不可变的，因为它内部的数组被声明为了final，同时，String的字符拼接、插入、删除等操作均是通过实例化新的对象实现的。而今天要认识的StringBuilder和StringBuffer与String相比就具有了动态性。接下来就让我们一起来认识下这两个类。</p>
 <h2 id="一、StringBuilder"><a href="#一、StringBuilder" class="headerlink" title="一、StringBuilder"></a>一、StringBuilder</h2><p>在StringBuilder的父类AbstractStringBuilder 中可以看到如下代码：</p>

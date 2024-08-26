@@ -245,14 +245,14 @@
             <div class="markdown-body">
               <p>多线程并发是Java语言中非常重要的一块内容，同时，也是Java基础的一个难点。说它重要是因为多线程是日常开发中频繁用到的知识，说它难是因为多线程并发涉及到的知识点非常之多，想要完全掌握Java的并发相关知识并非易事。也正因此，Java并发成了Java面试中最高频的知识点之一。本系列文章将从Java内存模型、volatile关键字、synchronized关键字、ReetrantLock、Atomic并发类以及线程池等方面来系统的认识Java的并发知识。通过本系列文章的学习你将深入理解volatile关键字的作用，了解到synchronized实现原理、AQS和CLH队列锁，清晰的认识自旋锁、偏向锁、乐观锁、悲观锁…等等一系列让人眼花缭乱的并发知识。</p>
 <p>多线程并发系列文章：</p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/05/30/37-jmm-volatile/">这一次，彻底搞懂Java内存模型与volatile关键字</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/14/39-synchronized/">这一次，彻底搞懂Java中的synchronized关键字</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/19/40-reentranlock/">这一次，彻底搞懂Java中的ReentrantLock实现原理</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/06/26/41-atomic-cas/">这一次，彻底搞懂Java并发包中的Atomic原子类</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/02/42-wait-notify1/">深入理解Java线程的等待与唤醒机制（一）</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/03/43-wait-notify2/">深入理解Java线程的等待与唤醒机制（二）</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/10/44-thread-pool/">Java并发系列终结篇：彻底搞懂Java线程池的工作原理</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhpanvip.gitee.io/2021/07/19/45-ThreadLocal/">Java并发系列番外篇：ThreadLocal原理其实很简单</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/05/30/37-jmm-volatile/">这一次，彻底搞懂Java内存模型与volatile关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/06/14/39-synchronized/">这一次，彻底搞懂Java中的synchronized关键字</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/06/19/40-reentranlock/">这一次，彻底搞懂Java中的ReentrantLock实现原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/06/26/41-atomic-cas/">这一次，彻底搞懂Java并发包中的Atomic原子类</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/07/02/42-wait-notify1/">深入理解Java线程的等待与唤醒机制（一）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/07/03/43-wait-notify2/">深入理解Java线程的等待与唤醒机制（二）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/07/10/44-thread-pool/">Java并发系列终结篇：彻底搞懂Java线程池的工作原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhangpan.site/2021/07/19/45-ThreadLocal/">Java并发系列番外篇：ThreadLocal原理其实很简单</a></p>
 <p>多线程并发时要解决的一个最重要的问题是多线程共享内存变量同步的问题。前几篇文章无论是volatile、synchronized又或是ReentrantLock和Atomic类无不是解决这一问题。而很多情况下我们只希望某个变量对其他线程不可见，只允许某一个线程访问，而ThreadLocal就提供了这样的能力。本文章是Java并发系列的一个扩展篇，来详细的认识一下ThreadLocal及它的实现原理。</p>
 <h2 id="一、ThreadLocal基础知识"><a href="#一、ThreadLocal基础知识" class="headerlink" title="一、ThreadLocal基础知识"></a>一、ThreadLocal基础知识</h2><p>在平时开发中用到ThreadLocal地方可能并不多，很多同学可能觉得ThreadLocal无足轻重。但事实并非如此，ThreadLocal的地位远比我们认为的重要的多。做Android开发的同学应该都比较了解Android消息机制中的Looper,Looper的底层实现就依赖于ThreadLocal。而Android系统的运行是靠Message驱动的，驱动Message的核心就是Handler和Looper，这意味着Looper支撑了整个Android系统的运行。在后端开发中，ThreadLocal也有它的应用场景，Spring采用Threadlocal的方式，来保证单个线程中的数据库操作使用的是同一个数据库连接。由此可见ThreadLocal在Java体系中占有着举足轻重的地位。</p>
 <h3 id="1-ThreadLocal的使用"><a href="#1-ThreadLocal的使用" class="headerlink" title="1.ThreadLocal的使用"></a>1.ThreadLocal的使用</h3><p>ThreadLocal是一个泛型类，泛型表示ThreadLocal可以存储的类型，它的使用非常简单。举个例子，在子线程中用ThreadLcoal存储一个数字，然后分别在子线程和主线程将中来获取这个值，代码如下：</p>
